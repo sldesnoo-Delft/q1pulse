@@ -1,6 +1,6 @@
 from .builderbase import Statement
 from .register_statements import (
-        RegisterAssignment, RegisterAdd, RegisterAsr
+        RegisterAssignment, RegisterAdd
         )
 
 class BranchStatement(Statement):
@@ -103,7 +103,8 @@ class LinspaceLoopStatement(BranchStatement):
 
     def __repr__(self):
         l = self._loop
-        return f'loop_linspace({l.start}, {l.stop}, {l.n}):{l.loopvar.reg_name}, @{self._label}'
+        endpoint = ', endpoint=False' if not l.endpoint else ''
+        return f'loop_linspace({l.start}, {l.stop}, {l.n}{endpoint}):{l.loopvar.reg_name}, @{self._label}'
 
     def write_instruction(self, generator):
         l = self._loop

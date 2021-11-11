@@ -66,13 +66,15 @@ class RangeLoop(Loop):
         return [self._reg_name, self._loop_stop]
 
 class LinspaceLoop(Loop):
-    def __init__(self, start, stop, n):
+    def __init__(self, start, stop, n, endpoint=True):
         if max(start,stop) > 1.0 or min(start,stop) < -1.0:
             raise Exception('value out of range [-1.0, 1.0]')
         self._start = start
         self._stop = stop
         self._n = n
-        self._increment = (stop - start)/(n-1)
+        self._endpoint = endpoint
+        step_divisor = (n-1) if endpoint else n
+        self._increment = (stop - start)/step_divisor
 
     def set_number(self, number):
         self._number = number
@@ -93,6 +95,10 @@ class LinspaceLoop(Loop):
     @property
     def stop(self):
         return self._stop
+
+    @property
+    def endpoint(self):
+        return self._endpoint
 
     @property
     def increment(self):
