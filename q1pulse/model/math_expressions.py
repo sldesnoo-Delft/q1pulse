@@ -66,7 +66,7 @@ class Addition(BinaryExpression):
         lhs_dtype = get_dtype(self.lhs)
         rhs_dtype = get_dtype(self.rhs)
         if lhs_dtype != rhs_dtype:
-            raise Exception(f'incompatible data types: {self}')
+            raise Exception(f'incompatible data types: {self}, {lhs_dtype.__name__} <> {rhs_dtype.__name__}')
         return lhs_dtype
 
 class Subtraction(BinaryExpression):
