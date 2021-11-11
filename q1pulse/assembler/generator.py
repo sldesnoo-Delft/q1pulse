@@ -26,10 +26,14 @@ def _int_u16(value):
     return value
 
 def _float_to_f16(value):
+    if value < -1.0 or value > 1.0:
+        raise Exception(f'Fixed point value out of range: {value}')
     _f2i16 = (1 << 15) - 0.1
     return _int_u16(math.floor(value * _f2i16))
 
 def _float_to_f32(value):
+    if value < -1.0 or value > 1.0:
+        raise Exception(f'Fixed point value out of range: {value}')
     _f2i30 = (1 << 31) - 0.1
     return _int_u32(math.floor(value * _f2i30))
 
@@ -39,7 +43,7 @@ def register_args(_func=None, *, allow_float=[], require_float=[], translate_reg
     def decorator_register_args(func):
         @wraps(func)
         def func_wrapper(self, *args, **kwargs):
-            print(f'{func.__name__}{args}')
+            # print(f'{func.__name__}{args}')
             args = list(args)
             kwargs = kwargs.copy()
             self._registers.enter_scope()
@@ -151,6 +155,9 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
 
     @register_args(allow_float=(1,2,3))
     def add(self, lhs, rhs, destination):
+        if isinstance(lhs, int):
+            # swap arguments. 1st argument cannot be immediate value
+            lhs,rhs = rhs,lhs
         self._add_instruction('add', lhs, rhs, destination)
 
     @register_args(allow_float=(1,2,3))
@@ -297,7 +304,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         return temp_reg
 
     def _convert_phase(self, phase, hires_regs):
-        print(f'Convert {phase}')
+        # convert float range -1.0 ... +1.0 => 200 ... 399; 0 ... 199
         if isinstance(phase, float):
             n = int(round((phase+2) * 5e8))
             n1,nr = divmod(n, 400*6250)
@@ -306,13 +313,17 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             return n1,n2,n3
 
         if isinstance(phase, Expression):
-            expression = phase
+            # FIX: ugly hack to allocate register to be used in expression
             reg = Register(f'_phase')
             reg._dtype = float
+            self.allocate_reg(reg.name)
+
+            expression = phase
             expression.evaluate(self, reg)
             phase = reg
 
         if isinstance(phase, Register):
+            # shift N bits right to create space for multiplication
             N = 10
             # multiply with 400
             r1 = (phase >> (N-4)) + (phase >> (N-7)) + (phase >> (N-8))
@@ -333,64 +344,6 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                 r2 >>= (32-N)
                 r3 = self._get_dummy_reg()
                 return r1.evaluate(self), r2.evaluate(self), r3
-
-        # -1.0 ... +1.0 => 200 ... 399; 0 ... 199
-        # shift N bits right to create space for multiplication
-        # R1 = R0 >> N
-        # multiply with 400:
-        # r1 = 400*ph => t2 = 16*ph + 128*ph + 256*ph
-        # Thus r1 = (ph >> (N-4)) + (ph >> (N-7)) + (ph >> (N-8))
-        # use t1 as temp reg, accumulate in r1
-        N = 10
-        r1 = self.get_temp_reg()
-        t1 = self.get_temp_reg()
-        # r1 = phase >> (N-4)
-        self.asr(phase, N-4, r1)
-        # t1 = phase >> (N-7)
-        self.asr(phase, N-7, t1)
-        # r1 += t1
-        self.add(r1, t1, r1)
-        # t1 = ph >> (N-8)
-        self.asr(phase, N-8, t1)
-        # r1 += t1
-        self.add(r1, t1, r1)
-        # r1 += 1<<2  -- add small amount for proper rounding
-        self.add(r1, 4, r1)
-
-        if not hires_regs:
-            # r1 = r1 >> (32-N)
-            self.asr(r1, 32-N, r1)
-            r2 = self._get_dummy_reg()
-            r3 = r2
-            return r1,r2,r3
-        else:
-            # r2 is the second cyclic counter: 0 .. 399
-            r2 = self.get_temp_reg()
-            rem1 = self.get_temp_reg()
-            # store remainder in rem1
-            # rem1 = (r1 << N) & 0xFFFF_FFFF
-            self.asl(r1, N, rem1)
-            # r1 = r1 >> (32-N)
-            self.asr(r1, 32-N, r1)
-
-            # multiply rem1 with 400
-            # r2 = rem1 >> (N-4)
-            self.asr(r2, N-4, r1)
-            # t1 = rem1 >> (N-7)
-            self.asr(rem1, N-7, t1)
-            # r2 += t1
-            self.add(r2, t1, r2)
-            # t1 = rem1 >> (N-8)
-            self.asr(rem1, N-8, t1)
-            # r2 += t1
-            self.add(r2, t1, r2)
-            # r2 += 1<<2  -- add small amount for proper rounding
-            self.add(r2, 4, r2)
-            # r2 = r2 >> (32-N)
-            self.asr(r2, 32-N, r2)
-
-            r3 = self._get_dummy_reg()
-            return r1,r2,r3
 
 
     def _format_line(self, label, mnemonic, args, wait_after, comment):
