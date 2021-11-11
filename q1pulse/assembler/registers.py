@@ -60,7 +60,6 @@ class SequencerRegisters:
     def temp_regs(self, n):
         self.enter_scope()
         regs = [self.get_temp_reg() for i in range(n)]
-#        print(f'temp regs: {regs}')
         yield regs if n > 1 else regs[0]
         self.exit_scope()
 
@@ -71,7 +70,7 @@ class SequencerRegisters:
         return self.allocate_reg(name)
 
     def _print_reg_admin(self):
-#        print(f'Free: {self._free_regs}')
+        # print(f'Free: {self._free_regs}')
         reg_names = {f'R{i}':name for name,i in self._allocated_regs.items()}
         print('Allocated:')
         for r,name in sorted(reg_names.items()):

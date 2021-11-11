@@ -156,7 +156,7 @@ class InstructionQueue:
         if rem_wait > 0:
             self._add_instruction('wait', rem_wait)
 
-    def _add_wait_reg(self, time_reg, elapsed=0, less_then_65us=False): # @@@ use option less_then_65us
+    def _add_wait_reg(self, time_reg, elapsed=0, less_then_65us=False): # @@@ make use of option less_then_65us
         if less_then_65us and elapsed == 0 and not self._check_time_reg:
             # single instruction for short simple wait
             self._add_instruction('wait', time_reg)
