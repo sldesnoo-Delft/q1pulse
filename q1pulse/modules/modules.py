@@ -141,8 +141,10 @@ class QrmModule(QbloxModule):
             raise Exception(f'pulsar must be QRM, not {type(pulsar)}')
 
     def _get_seq_paths(self, channels):
-        if len(channels) == 2:
-            raise Exception(f'illegal channel combination {channels}')
+        if len(channels) == 1:
+            channel = channels[0]
+            if channel not in [0, 1]:
+                raise Exception(f'illegal channel combination {channels}')
 
         for channel in channels:
             if channel not in [0, 1]:
