@@ -50,20 +50,35 @@ class ControlBuilder(SequenceBuilder):
         self._add_statement(SetPhaseStatement(t1, phase, hires_regs))
 
     @loopable
-    def block_pulse(self, duration, amplitude, amplitude2=None, t_offset=0):
+    def block_pulse(self, duration, amplitude0, amplitude1=None, t_offset=0):
         if not isinstance(duration, (Register, Expression)):
             with self._local_timeline(t_offset=t_offset, duration=duration):
-                self._add_statement(AwgDcOffsetStatement(self.current_time, amplitude, amplitude2))
+                self.set_offset(amplitude0, amplitude1)
                 self.wait(duration)
+                self.set_offset(0.0, None)
                 self._add_statement(AwgDcOffsetStatement(self.current_time, 0.0, 0.0))
         else:
             # TODO: try to make this cleaner and more flexible.
             if not self._timeline.is_running:
                 raise Exception('Variable pulse length not possible in parallel section')
-            self._add_statement(AwgDcOffsetStatement(self.current_time, amplitude, amplitude2))
+            self.set_offset(amplitude0, amplitude1)
             self._program.wait(duration)
-            self._add_statement(AwgDcOffsetStatement(self.current_time, 0.0, 0.0))
+            self.set_offset(0.0, None)
 
+    @loopable
+    def shaped_pulse(self, wave0, amplitude0, wave1=None, amplitude1=None, t_offset=0):
+        wave0 = self._translate_wave(wave0)
+        wave1 = self._translate_wave(wave1)
+
+        duration = max(
+                len(wave0.data) if wave0 is not None else 0,
+                len(wave1.data) if wave1 is not None else 0
+                )
+        with self._local_timeline(t_offset=t_offset, duration=duration):
+            self.set_gain(amplitude0, amplitude1)
+            self.play(wave0, wave1)
+            self.wait(duration)
+            self.set_gain(0.0, None)
 
 #    @loopable
     # TODO @@@ can v_start/v_end be registers? only if they are managed loopvars. Introduce additional f-register
@@ -113,6 +128,10 @@ class ControlBuilder(SequenceBuilder):
                 raise Exception('Only 1 output path enabled')
 
             return (arg0, None) if path == 0 else (None, arg0)
+
+        # if only one value set, use it for both
+        if arg1 is None:
+            return (arg0, arg0)
 
         # channels could be swapped
         return (args[i] for i in self._enabled_paths)

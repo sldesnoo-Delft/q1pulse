@@ -97,7 +97,7 @@ Program flow and timing instructions:
 - loop_range, loop_linspace
 - parallel: starts parallel section where time is not incremented automatically
 
-Instructions for simultaneous execution on multiple sequences where each sequencer is controlling only 1 output:
+Instructions for simultaneous execution on multiple sequencers where each sequencer is controlling only 1 output:
 - block_pulse
 - ramp
 - set_offsets: Does not advance time.
@@ -109,8 +109,8 @@ Notes: `ramp` instruction does not yet accept variables or expressions as argume
 - add_comment: add a comment line in the q1asm
 - set_offset, set_gain, set_phase, shift_phase : Do not advance time.
 - block_pulse
+- shaped_pulse
 - ramp: creates ramp on 1 output
-- shaped_pulse: (TODO)
 
 Notes: `ramp` instruction does not yet accept variables or expressions as argument.
 

@@ -29,10 +29,10 @@ class SequenceBuilder(BuilderBase):
         self._start_sequence()
 
     def add_wave(self, name, data):
-        self._waves.add_wave(name, data)
+        return self._waves.add_wave(name, data)
 
     def add_acquisition(self, name, num_bins):
-        self._acquisitions.add_section(name, num_bins)
+        return self._acquisitions.add_section(name, num_bins)
 
     def _start_sequence(self):
         self._sequence_stack.append(Sequence(self._timeline))

@@ -1,11 +1,10 @@
 
 from q1pulse.instrument import Q1Instrument
 
-from init_pulsars import qcm0, qrm1
+from init_pulsars import qcm0
 
 instrument = Q1Instrument()
 instrument.add_qcm(0, qcm0)
-instrument.add_qrm(1, qrm1)
 instrument.add_control('P1', 0, [2])
 instrument.add_control('P2', 0, [3])
 
