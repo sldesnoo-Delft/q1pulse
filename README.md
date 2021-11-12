@@ -1,7 +1,7 @@
 # q1pulse
 Pulse sequence builder and compiler for q1asm.
 q1pulse is a simple library to compile pulse sequence to q1asm, the assembly language of Qblox instruments.
-It is inspired on pulse_lib: https://github.com/stephanlphilips/pulse_lib.
+q1pulse supports loops, variables and expressions that are translated to q1asm.
 
 The current status of q1pulse is quite experimental. Code may change without any backwards compatibility.
 
@@ -11,7 +11,7 @@ This project has several goals:
 - explore the possibilities of q1asm and the QCM and QRM
 - have fun with building a compiler for q1asm.
 
-q1pulse is inspired on pulse_lib: https://github.com/stephanlphilips/pulse_lib.
+q1pulse is inspired on [pulse_lib](https://github.com/stephanlphilips/pulse_lib).
 The following features of pulse_lib are **not** available in q1pulse:
 - Virtual matrix for compensation of capacitive coupling of device gates.
 - Channel delay compensation.
@@ -51,6 +51,8 @@ This simple program shows the use of program object and sequence objects.
     P1 = p.P1
     # sequencer P2 using indexer
     P2 = p['P2']
+    # sequencer R1 (readout)
+    R1 = p.R1
 
     # generate a block pulse of 20 ns and amplitude 0.5 on P1
     P1.block_pulse(20, 0.5)
@@ -61,12 +63,17 @@ This simple program shows the use of program object and sequence objects.
     # generate pulse of 200 ns on P1 and P2 simultaneously with amplitudes 0.5 and -0.5
     p.block_pulse(200, [P1, P2], [0.5, -0.5])
 
-    # simultaneous pulses using parallel section
-    # A block pulse on P1 and a ramp on P2
+    # simultaneous pulses using parallel section:
+    # - a block pulse on P1
+    # - an overlapping ramp on P2 with an offset of 20 ns
+    # - acquisition on R1 starts immediately with parallel section (no offset)
+    # - wait(100) has latest end time and determines total duration of section.
     with p.parallel():
         P1.block_pulse(40, -0.1)
         # ramp from 0.05 to 0.4 in 60 ns. Start 20 ns after begin of parallel section
         P2.ramp(60, 0.05, 0.40, t_offset=20)
+        R1.acquire(0, 'increment')
+        p.wait(100)
 
 ### Output channels and sequencer instructions
 Sequencers can be configured to control 1 or 2 outputs.
@@ -75,14 +82,49 @@ Sequencers controlling 2 outputs will most likely be used for the generation of 
 Some instructions intended for voltage control, e.g. ramp, will fail on sequencers controlling 2 output
 channels.
 
-## Instruction arguments: floating point and nanoseconds
+## q1pulse instructions
+
+### Instruction arguments: floating point and nanoseconds
 The arguments that specify an amplitude, offset, gain or phase are all specified as
 floating point values in the range \[-1.0, 1.0\]. For amplitude and gain the actual value
 has to be multiplied with the voltage range of the output channel. The value of the phase
 is in units of PI.
 The time in instructions is always specified in nanoseconds.
 
-## Program variables
+### Program instructions
+Program flow and timing instructions:
+- wait(t): wait t ns
+- loop_range, loop_linspace
+- parallel: starts parallel section where time is not incremented automatically
+
+Instructions for simultaneous execution on multiple sequences where each sequencer is controlling only 1 output:
+- block_pulse
+- ramp
+- set_offsets: Does not advance time.
+
+Notes: `ramp` instruction does not yet accept variables or expressions as argument.
+
+## QCM Sequence instructions
+- add_wave: adds a wave to be used in shaped pulses
+- add_comment: add a comment line in the q1asm
+- set_offset, set_gain, set_phase, shift_phase : Do not advance time.
+- block_pulse
+- ramp: creates ramp on 1 output
+- shaped_pulse: (TODO)
+
+Notes: `ramp` instruction does not yet accept variables or expressions as argument.
+
+## QRM Sequence instructions
+QRM can execute all QCM instructions.
+
+QRM specific instructions:
+- add_acquisition: add a (binned) acquisition specification
+- add_acquisition_weights: add specification for weights (TODO)
+
+- acquire: acquire data, optionally incrementing the bin counter. Doesn't advance time.
+- acquire_weighed: (TODO)
+
+## Variables and expressions
 Programs can make use of variables that will be translated to q1asm registers.
 Variables can be global to the program or local to a sequence.
 Global variables can be created via the R attribute of the program object, `p.R.amplitude = 0.5`.
@@ -153,57 +195,6 @@ be used as such.
     # create a staircase
     with p.loop_linspace(-0.5, 0.5, 20) as v1:
         P1.block_pulse(200, v1)
-
-
-## Program instructions
-Program flow and timing instructions:
-- wait(t): wait t ns
-- loop_range, loop_linspace
-- parallel: starts parallel section where time is not incremented automatically
-
-Instructions for simultaneous execution on multiple sequences where each sequencer is controlling only 1 output:
-- block_pulse
-- ramp
-- set_offsets: Does not advance time.
-
-Notes: `ramp` instruction does not yet accept variables or expressions as argument.
-
-## QCM Sequence instructions
-- add_wave: adds a wave to be used in shaped pulses
-- add_comment: add a comment line in the q1asm
-- set_offset, set_gain, set_phase, shift_phase : Do not advance time.
-- block_pulse
-- ramp: creates ramp on 1 output
-- shaped_pulse: (TODO)
-
-Notes: `ramp` instruction does not yet accept variables or expressions as argument.
-
-## QRM Sequence instructions
-QRM can execute all QCM instructions.
-
-QRM specific instructions:
-- add_acquisition: add a (binned) acquisition specification
-- add_acquisition_weights: add specification for weights (TODO)
-
-- acquire: acquire data, optionally incrementing the bin counter. Doesn't advance time.
-- acquire_weighed: (TODO)
-
-### Example
-
-    with p.loop_range(100, 1000, 10) as t_pulse:
-        #init
-        p.block_pulse(200, gates, v_init)
-        p.wait(20)
-
-        # manip
-        q1.block_pulse(t_pulse, rabi_amplitude)
-
-        # read
-        p.ramp(200, gates, v_manip, v_read)
-        with p.parallel():
-            p.set_offsets(gates, v_read)
-            p.wait(1000)
-            R1.acquire(0, "increment", t_offset=100)
 
 
 ## Instrument
