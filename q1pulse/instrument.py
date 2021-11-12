@@ -19,29 +19,29 @@ class Q1Instrument:
     def add_qrm(self, module_nr, pulsar):
         self.modules[module_nr] = QrmModule(module_nr, pulsar)
 
-    def add_control(self, name, module_nr, channels, lo_frequency=None):
+    def add_control(self, name, module_nr, channels, nco_frequency=None):
         sequencer = self.modules[module_nr].get_sequencer(channels)
-        sequencer.lo_frequency = lo_frequency
+        sequencer.nco_frequency = nco_frequency
         self.controllers[name] = sequencer
 
-    def add_readout(self, name, module_nr, out_channels=[], lo_frequency=None):
+    def add_readout(self, name, module_nr, out_channels=[], nco_frequency=None):
         module = self.modules[module_nr]
         if not isinstance(module, QrmModule):
             raise Exception('Module {module_nr} is not a QRM')
         sequencer = module.get_sequencer(out_channels)
-        sequencer.lo_frequency = lo_frequency
+        sequencer.nco_frequency = nco_frequency
         self.readouts[name] = sequencer
 
     def new_program(self, prog_name):
         program = Program(path=os.path.join(self.path, prog_name))
 
-        for name, sequencer in self.controllers.items():
-            # @@@ add lo_frequency
-            program.add_sequence_builder(ControlBuilder(name, sequencer.enabled_paths))
+        for name, seq in self.controllers.items():
+            seq_builder = ControlBuilder(name, seq.enabled_paths, seq.nco_frequency)
+            program.add_sequence_builder(seq_builder)
 
-        for name, sequencer in self.readouts.items():
-            # @@@ add lo_frequency
-            program.add_sequence_builder(ReadoutBuilder(name, sequencer.enabled_paths))
+        for name, seq in self.readouts.items():
+            seq_builder = ReadoutBuilder(name, seq.enabled_paths, seq.nco_frequency)
+            program.add_sequence_builder(seq_builder)
 
         return program
 

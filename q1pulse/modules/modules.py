@@ -12,7 +12,7 @@ class Sequencer:
     seq_nr: int
     channels: List[int]
     enabled_paths: List[int]
-    lo_frequency: Optional[float] = None
+    nco_frequency: Optional[float] = None
 
 def requires_connection(func):
     @wraps(func)
@@ -83,16 +83,16 @@ class QbloxModule:
         self.__sset(seq_nr, f'channel_map_path{path}_out{channel}_en', True)
 
     @requires_connection
-    def set_nco(self, seq_nr, lo_frequency):
-        self.__sset(seq_nr, 'mod_en_awg', lo_frequency is not None)
-        if lo_frequency is not None:
-            self.__sset(seq_nr, 'nco_freq', lo_frequency)
+    def set_nco(self, seq_nr, nco_frequency):
+        self.__sset(seq_nr, 'mod_en_awg', nco_frequency is not None)
+        if nco_frequency is not None:
+            self.__sset(seq_nr, 'nco_freq', nco_frequency)
 
     @requires_connection
     def seq_configure(self, sequencer):
         seq_nr = sequencer.seq_nr
         self.enable_sync(seq_nr, True)
-        self.set_nco(seq_nr, sequencer.lo_frequency)
+        self.set_nco(seq_nr, sequencer.nco_frequency)
         for ch in sequencer.channels:
             self.enable_out(seq_nr, ch)
 
@@ -151,9 +151,9 @@ class QrmModule(QbloxModule):
         return channels
 
     @requires_connection
-    def set_nco(self, seq_nr, lo_frequency):
-        super().set_nco(seq_nr, lo_frequency)
-        self.__sset(seq_nr, 'demod_en_acq', lo_frequency is not None)
+    def set_nco(self, seq_nr, nco_frequency):
+        super().set_nco(seq_nr, nco_frequency)
+        self.__sset(seq_nr, 'demod_en_acq', nco_frequency is not None)
 
     def __sset(self, seq_nr, name, value):
         return self.pulsar.set(f'sequencer{seq_nr}_{name}', value)

@@ -10,14 +10,14 @@ from .loops import loopable
 from .sequencer_data import Wave
 
 
-# @@@ add lo frequency
 # @@@ DC vs IQ ??
 
 
 class ControlBuilder(SequenceBuilder):
-    def __init__(self, name, enabled_paths):
+    def __init__(self, name, enabled_paths, nco_frequency=None):
         super().__init__(name)
         self._enabled_paths = enabled_paths
+        self._nco_frequency = nco_frequency
 
     @loopable
     def set_offset(self, value0, value1=None, t_offset=0):
@@ -58,7 +58,6 @@ class ControlBuilder(SequenceBuilder):
                 self._add_statement(AwgDcOffsetStatement(self.current_time, 0.0, 0.0))
         else:
             # TODO: try to make this cleaner and more flexible.
-            #       try to make it work for simultaneous pulses
             if not self._timeline.is_running:
                 raise Exception('Variable pulse length not possible in parallel section')
             self._add_statement(AwgDcOffsetStatement(self.current_time, amplitude, amplitude2))

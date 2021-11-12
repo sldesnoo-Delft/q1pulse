@@ -3,8 +3,8 @@ from .timed_statements import AcquireStatement
 
 
 class ReadoutBuilder(ControlBuilder):
-    def __init__(self, name, enabled_paths):
-        super().__init__(name, enabled_paths)
+    def __init__(self, name, enabled_paths, nco_frequency=None):
+        super().__init__(name, enabled_paths, nco_frequency)
 
     def acquire(self, section, bin_index, t_offset=0):
         t1 = self.current_time + t_offset
