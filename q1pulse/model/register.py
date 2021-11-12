@@ -1,8 +1,7 @@
-from .builderbase import Typed
 from .register_statements import RegisterAssignment
-from .math_expressions import Addition, Subtraction, Asl, Asr
+from .math_expressions import Operand
 
-class Register(Typed):
+class Register(Operand):
     def __init__(self, name, local=False):
         self.name = f'Rs.{name}' if local else f'R.{name}'
         self._initialized = False
@@ -22,21 +21,3 @@ class Register(Typed):
 
     def __repr__(self):
         return self.name
-
-    def __add__(self, rhs):
-        return Addition(self, rhs)
-
-    def __radd__(self, lhs):
-        return Addition(lhs, self)
-
-    def __sub__(self, rhs):
-        return Subtraction(self, rhs)
-
-    def __rsub__(self, lhs):
-        return Subtraction(lhs, self)
-
-    def __lshift__(self, rhs):
-        return Asl(self, rhs)
-
-    def __rshift__(self, rhs):
-        return Asr(self, rhs)

@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from .generator_data import GeneratorData
 from .instruction_queue import InstructionQueue
 from .registers import SequencerRegisters
-from ..model.builderbase import get_dtype, Expression
+from ..model.math_expressions import get_dtype, Expression
 from ..model.generator import GeneratorBase
 from ..model.register import Register
 
@@ -184,14 +184,23 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
 
     @register_args
     def bits_and(self, lhs, rhs, destination):
+        if isinstance(lhs, int):
+            # swap arguments. 1st argument cannot be immediate value
+            lhs,rhs = rhs,lhs
         self._add_instruction('and', lhs, rhs, destination)
 
     @register_args
     def bits_or(self, lhs, rhs, destination):
+        if isinstance(lhs, int):
+            # swap arguments. 1st argument cannot be immediate value
+            lhs,rhs = rhs,lhs
         self._add_instruction('or', lhs, rhs, destination)
 
     @register_args
     def bits_xor(self, lhs, rhs, destination):
+        if isinstance(lhs, int):
+            # swap arguments. 1st argument cannot be immediate value
+            lhs,rhs = rhs,lhs
         self._add_instruction('xor', lhs, rhs, destination)
 
     def reset_phase(self, time):

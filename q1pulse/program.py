@@ -2,7 +2,7 @@ import os
 from contextlib import contextmanager
 from numbers import Number
 
-from .model.builderbase import Expression
+from .model.math_expressions import Expression
 from .model.timeline import Timeline
 from .model.registers import Registers
 from .model.register import Register

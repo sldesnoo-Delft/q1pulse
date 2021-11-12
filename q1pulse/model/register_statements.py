@@ -1,5 +1,5 @@
-from .builderbase import Statement, Expression
-from .builderbase import get_dtype
+from .builderbase import Statement
+from .math_expressions import Expression, get_dtype
 
 
 class RegisterAssignment(Statement):
@@ -35,34 +35,12 @@ class RegisterBinOp(Statement):
         self.rhs = rhs
 
 
-class RegisterAdd(RegisterBinOp):
+class RegisterAdd(RegisterBinOp): # @@@ TODO remove
     def __repr__(self):
         return f'{self.destination} = {self.lhs} + {self.rhs}'
 
     def write_instruction(self, generator):
         generator.add(self.lhs, self.rhs, self.destination)
 
-class RegisterSub(RegisterBinOp):
-    def __repr__(self):
-        return f'{self.destination} = {self.lhs} - {self.rhs}'
-
-    def write_instruction(self, generator):
-        generator.sub(self.lhs, self.rhs, self.destination)
-
-
-class RegisterAsr(RegisterBinOp):
-    def __repr__(self):
-        return f'{self.destination} = {self.lhs} >> {self.rhs}'
-
-    def write_instruction(self, generator):
-        generator.asr(self.lhs, self.rhs, self.destination)
-
-
-class RegisterAsl(RegisterBinOp):
-    def __repr__(self):
-        return f'{self.destination} = {self.lhs} << {self.rhs}'
-
-    def write_instruction(self, generator):
-        generator.asl(self.lhs, self.rhs, self.destination)
 
 

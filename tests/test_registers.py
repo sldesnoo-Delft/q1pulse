@@ -23,6 +23,7 @@ p.R.d = p.R.a << 2
 p.R.d = p.R.a >> 2
 p.R.e = 1 - p.R.a
 
+# floating point
 p.R.f = 1.0
 p.R.f -= 0.1
 p.R.g = 0.5
@@ -31,7 +32,12 @@ p.R.h = p.R.f - p.R.g
 seq.Rs.x = 9
 seq.Rs.y = seq.Rs.x + p.R.b
 
-p.R._registers
+# bitwise
+seq.Rs.a = 0b0011
+seq.Rs.b = seq.Rs.a & 0b0101
+seq.Rs.c = seq.Rs.a | 0b0101
+seq.Rs.d = 0b0101 ^ seq.Rs.a
+seq.Rs.e = ~seq.Rs.a
 
 seq.describe()
 
