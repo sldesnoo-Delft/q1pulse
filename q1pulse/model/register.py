@@ -1,11 +1,10 @@
-from .builderbase import Typed, get_dtype
+from .builderbase import Typed
 from .register_statements import RegisterAssignment
 from .math_expressions import Addition, Subtraction, Asl, Asr
 
 class Register(Typed):
-    def __init__(self, name, builder, local=False):
+    def __init__(self, name, local=False):
         self.name = f'Rs.{name}' if local else f'R.{name}'
-        self._builder = builder
         self._initialized = False
         self._dtype = None
 
@@ -19,7 +18,7 @@ class Register(Typed):
             self._initialized = True
         statement = RegisterAssignment(self, value_or_expression,
                                        allocate=allocate, init_section=init_section)
-        self._builder._add_statement(statement) # TODO @@@ return statement add to builder in registers
+        return statement
 
     def __repr__(self):
         return self.name

@@ -25,28 +25,18 @@ class Registers:
             self.add_reg(name)
 
         register = self._registers[name]
-        register.assign(value)
+        statement = register.assign(value)
+        self._builder._add_statement(statement)
 
-    def add_reg(self, name): # @@@ move value to Register.__init__, but conflict in Loops...
-        register = Register(name, self._builder, local=self._local)
+    def add_reg(self, name):
+        register = Register(name, local=self._local)
         self._registers[name] = register
         super().__setattr__(name, register)
         return register
 
-    def init(self, name, default=0): # @@@ used for acquire 'increment'
+    def init(self, name, default=0):
+        # Note: used for acquire with 'increment'
         register = self.add_reg(name)
-        register.assign(default, init_section=True)
+        statement = register.assign(default, init_section=True)
+        self._builder._add_statement(statement)
         return register
-
-#    def _assign(self, register, value_or_expression, init=False):
-##        if value_or_expression == self:
-##            return
-#
-#        # if is_float is None: self.is_float = is_float(value_or_expression)
-#        # else: assert is_float(value_or_expression) == self.is_float
-#        if not self._initialized:
-#            self._dtype = get_dtype(value_or_expression)
-#            self._builder._add_statement(RegisterAllocation(self))
-#            self._initialized = True
-#        statement = RegisterAssignment(self, value_or_expression, init_section=init)
-#        self._builder._add_statement(statement)
