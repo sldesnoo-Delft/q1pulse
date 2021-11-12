@@ -20,12 +20,12 @@ class Registers:
         r = 'Rs' if self._local else 'R'
         raise Exception(f'Register {r}.{name} not initialized')
 
-    def _set_reg(self, name, value):
+    def _set_reg(self, name, value, init_section=False):
         if name not in self._registers:
             self.add_reg(name)
 
         register = self._registers[name]
-        statement = register.assign(value)
+        statement = register.assign(value, init_section=init_section)
         self._builder._add_statement(statement)
 
     def add_reg(self, name):
@@ -36,5 +36,6 @@ class Registers:
 
     def init(self, name, default=0):
         # Note: used for acquire with 'increment'
-        self._set_reg(name, default)
+        if name not in self._registers:
+            self._set_reg(name, default, init_section=True)
         return self._registers[name]
