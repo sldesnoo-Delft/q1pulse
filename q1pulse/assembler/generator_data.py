@@ -1,5 +1,5 @@
 
-from ..model.sequencer_data import Wave, AcquisitionSection
+from ..model.sequencer_data import Wave, AcquisitionBins, AcquisitionWeight
 
 
 class GeneratorData:
@@ -31,7 +31,7 @@ class GeneratorData:
     def translate_acquisition(self, acquisition):
         if acquisition is None:
             return None
-        if not isinstance(acquisition, AcquisitionSection):
+        if not isinstance(acquisition, AcquisitionBins):
             raise Exception(f'Unsupported type for acquisition: {acquisition}')
 
         if acquisition.name not in self.acquisitions:
@@ -41,6 +41,20 @@ class GeneratorData:
                     }
 
         return self.acquisitions[acquisition.name]['index']
+
+    def translate_weight(self, weight):
+        if weight is None:
+            return None
+        if not isinstance(weight, AcquisitionWeight):
+            raise Exception(f'Unsupported type for weight: {weight}')
+
+        if weight.name not in self.weights:
+            self.weights[weight.name] = {
+                    'data': list(weight.data),
+                    'index': len(self.weights),
+                    }
+
+        return self.weights[weight.name]['index']
 
     def get_data_dict(self):
         return {

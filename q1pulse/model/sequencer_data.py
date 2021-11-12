@@ -40,25 +40,50 @@ class WaveCollection:
 
 
 @dataclass
-class AcquisitionSection:
+class AcquisitionBins:
     name: str
     num_bins: int
 
-class AcquisitionSections:
+class AcquisitionBinsCollection:
     def __init__(self):
-        self._sections = {}
+        self._bins = {}
 
     def __getitem__(self, name):
-        return self._get_section(name)
+        return self._get_bins(name)
 
-    def _get_section(self, name):
-        if name not in self._sections:
-            raise Exception(f'Acquisition {name} not defined')
-        return self._waves[name]
+    def _get_bins(self, name):
+        if name not in self._bins:
+            raise Exception(f"Acquisition bins '{name}' not defined")
+        return self._bins[name]
 
-    def add_section(self, name, num_bins):
-        if name in self._sections:
-            raise Exception(f'Acquisition {name} already defined')
-        section = AcquisitionSection(name, num_bins)
-        self._sections[name] = section
-        return section
+    def add_bins(self, name, num_bins):
+        if name in self._bins:
+            raise Exception(f"Acquisition bins '{name}' already defined")
+        bins = AcquisitionBins(name, num_bins)
+        self._bins[name] = bins
+        return bins
+
+@dataclass
+class AcquisitionWeight:
+    name: str
+    data: np.ndarray
+
+class WeightCollection:
+    def __init__(self):
+        self._weights = {}
+
+    def __getitem__(self, name):
+        return self.get_weight(name)
+
+    def get_weight(self, name):
+        if name not in self._weights:
+            raise Exception(f'Weight {name} not defined')
+        return self._weights[name]
+
+    def add_weight(self, name, data):
+        if name in self._weights:
+            raise Exception(f'Weight {name} already defined')
+        weight = AcquisitionWeight(name, data)
+        self._weights[name] = weight
+        return weight
+

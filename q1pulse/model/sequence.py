@@ -10,15 +10,12 @@ from .flow_statements import (
         RepeatStatement, EndRepeatStatement,
         )
 from .loops import LinspaceLoop, RangeLoop, loopable
-from .sequencer_data import WaveCollection, AcquisitionSections
 
 class SequenceBuilder(BuilderBase):
     def __init__(self, name):
         self.name = name
         self._local_loop_cnt = 0
         self.Rs = Registers(self, local=True)
-        self._waves = WaveCollection()
-        self._acquisitions = AcquisitionSections()
         self._sequence_stack = []
         self._local_time = 0
         self._local_time_active = False
@@ -27,12 +24,6 @@ class SequenceBuilder(BuilderBase):
         self._program = program
         self._timeline = timeline
         self._start_sequence()
-
-    def add_wave(self, name, data):
-        return self._waves.add_wave(name, data)
-
-    def add_acquisition(self, name, num_bins):
-        return self._acquisitions.add_section(name, num_bins)
 
     def _start_sequence(self):
         self._sequence_stack.append(Sequence(self._timeline))

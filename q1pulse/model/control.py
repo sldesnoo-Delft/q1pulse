@@ -7,7 +7,7 @@ from .timed_statements import (
         PlayWaveStatement
         )
 from .loops import loopable
-from .sequencer_data import Wave
+from .sequencer_data import Wave, WaveCollection
 
 
 # @@@ DC vs IQ ??
@@ -18,6 +18,10 @@ class ControlBuilder(SequenceBuilder):
         super().__init__(name)
         self._enabled_paths = enabled_paths
         self._nco_frequency = nco_frequency
+        self._waves = WaveCollection()
+
+    def add_wave(self, name, data):
+        return self._waves.add_wave(name, data)
 
     @loopable
     def set_offset(self, value0, value1=None, t_offset=0):

@@ -12,6 +12,7 @@ from .registers import SequencerRegisters
 from ..model.math_expressions import get_dtype, Expression
 from ..model.generator import GeneratorBase
 from ..model.register import Register
+from ..model.sequencer_data import Wave, AcquisitionBins, AcquisitionWeight
 
 # TODO @@ reset_time() for start of loop / set_time() for continuation after loop. ??
 
@@ -38,7 +39,7 @@ def _float_to_f32(value):
     return _int_u32(math.floor(value * _f2i30))
 
 
-def register_args(_func=None, *, allow_float=[], require_float=[], translate_regs=True):
+def register_args(_func=None, *, allow_float=[], require_float=[]):
 
     def decorator_register_args(func):
         @wraps(func)
@@ -59,7 +60,8 @@ def register_args(_func=None, *, allow_float=[], require_float=[], translate_reg
                     if index in require_float and arg is not None:
                         raise Exception(f'Float argument required for arg {index} ({arg})')
 
-                if isinstance(arg, (str, type(None))):
+                if isinstance(arg, (str, type(None),
+                                    Wave, AcquisitionBins, AcquisitionWeight)):
                     pass
                 elif isinstance(arg, int):
                     args[i] = _int_u32(arg)
@@ -71,19 +73,6 @@ def register_args(_func=None, *, allow_float=[], require_float=[], translate_reg
                     else:
                         raise Exception(f'Float argument not allowed for arg {index} ({args[i]})')
                     comments += [f'{arg} -> {args[i]}']
-                elif not translate_regs:
-                    if isinstance(arg, Register):
-                        comments += [f'{arg}:{dtype.__name__}={arg}']
-                    elif isinstance(arg, Expression):
-                        expression = arg
-                        reg = Register(f'arg{i}')
-                        reg._dtype = float
-                        expression.evaluate(self, reg)
-                        comments += [f'{reg}:{dtype.__name__}={arg}']
-                    else:
-                        raise Exception(f'Illegal argument type for arg {index}: {args}')
-                    if index in require_float:
-                        raise Exception(f'Illegal combination of require_float and translate_regs=False')
                 else:
                     if isinstance(arg, Register):
                         asm_reg = self._translate_reg(arg)
@@ -154,7 +143,8 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
     @register_args(allow_float=(1,2))
     def move(self, source, destination, init_section=False):
 #        print(f'move:{source} {destination} {type(destination)}')
-        self._add_instruction('move', source, destination, init_section=init_section)
+        self._add_instruction('move', source, destination,
+                              init_section=init_section)
 
     @register_args(allow_float=(1,2,3))
     def add(self, lhs, rhs, destination):
@@ -206,30 +196,38 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             lhs,rhs = rhs,lhs
         self._add_instruction('xor', lhs, rhs, destination)
 
+    @register_args
+    def set_mrk(self, time, value):
+        self._add_rt_setting('set_mrk', value, time=time, comment=f'@ {time}')
+
     def reset_phase(self, time):
         self._add_rt_setting('reset_ph', time=time, comment=f'@ {time}')
 
     @register_args(require_float=(2,3))
     def awg_offset(self, time, offset0, offset1):
         offset0, offset1 = self._all_reg_or_imm(offset0, offset1)
-        self._add_rt_setting('set_awg_offs', offset0, offset1, time=time, comment=f'@ {time}')
+        self._add_rt_setting('set_awg_offs', offset0, offset1,
+                             time=time, comment=f'@ {time}')
 
     @register_args(require_float=(2,3))
     def awg_gain(self, time, gain0, gain1):
         gain0, gain1 = self._all_reg_or_imm(gain0, gain1)
-        self._add_rt_setting('set_awg_gain', gain0, gain1, time=time, comment=f'@ {time}')
+        self._add_rt_setting('set_awg_gain', gain0, gain1,
+                             time=time, comment=f'@ {time}')
 
-#    @register_args(allow_float=(2,), translate_regs=False)
+#    @register_args(allow_float=(2,)) -- handled in _convert_phase()
     def set_phase(self, time, phase, hires_regs):
         with self.scope():
             v1,v2,v3 = self._convert_phase(phase, hires_regs)
-            self._add_rt_setting('set_ph', v1, v2, v3, time=time, comment=f'@ {time}')
+            self._add_rt_setting('set_ph', v1, v2, v3,
+                                 time=time, comment=f'@ {time}')
 
-#    @register_args(allow_float=(2,), translate_regs=False)
+#    @register_args(allow_float=(2,)) -- handled in _convert_phase()
     def add_phase(self, time, delta, hires_regs):
         with self.scope():
             v1,v2,v3 = self._convert_phase(delta, hires_regs)
-            self._add_rt_setting('set_ph_delta', v1, v2, v3, time=time, comment=f'@ {time}')
+            self._add_rt_setting('set_ph_delta', v1, v2, v3,
+                                 time=time, comment=f'@ {time}')
 
     @register_args
     def wait_reg(self, time, register):
@@ -242,11 +240,24 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
     def play(self, time, wave0, wave1):
         wave0, wave1 = self._data.translate_waves(wave0, wave1)
         wave0, wave1 = self._all_reg_or_imm(wave0, wave1)
-        self._add_rt_command('play', wave0, wave1, time=time, comment=f't={time}')
+        self._add_rt_command('play', wave0, wave1,
+                             time=time, comment=f't={time}')
 
     @register_args
     def acquire(self, time, section, bin_index):
-        self._add_rt_command('acquire', section, bin_index, time=time, comment=f't={time}')
+        section = self._data.translate_acquisition(section)
+        self._add_rt_command('acquire',
+                             section, bin_index,
+                             time=time, comment=f't={time}')
+
+    @register_args
+    def acquire_weighed(self, time, bins, bin_index, weight0, weight1):
+        bins = self._data.translate_acquisition(bins)
+        weight0 = self._data.translate_weight(weight0)
+        weight1 = self._data.translate_weight(weight1)
+        self._add_rt_command('acquire_weighed',
+                             bins, bin_index, weight0, weight1,
+                             time=time, comment=f't={time}')
 
     @contextmanager
     def scope(self):

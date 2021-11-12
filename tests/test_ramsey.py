@@ -19,6 +19,8 @@ P1 = p.P1
 P2 = p.P2
 R1 = p['R1']
 
+R1.add_acquisition_bins('default', 10)
+
 gates=['P1', 'P2']
 v_init = [0.120, 0.040]
 v_manip = [0.0, 0.0]
@@ -37,7 +39,7 @@ with p.loop_range(200, 2000, 10) as t_wait:
     with p.parallel():
         p.set_offsets(gates, v_read)
         p.wait(1000)
-        R1.acquire(0, "increment", t_offset=100)
+        R1.acquire('default', 'increment', t_offset=100)
     p.set_offsets(gates, [0.0, 0.0])
     # short wait required for the execution of set_offsets in loop
     p.wait(4)

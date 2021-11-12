@@ -91,13 +91,32 @@ class AwgGainStatement(TimedStatement):
         generator.awg_gain(self.time, self.gain0, self.gain1)
 
 class AcquireStatement(TimedStatement):
-    def __init__(self, time, section, bin_index):
+    def __init__(self, time, bins, bin_index):
         super().__init__(time)
-        self.section = section
+        self.bins = bins
         self.bin_index = bin_index
 
     def __repr__(self):
-        return f'acquire(section={self.section}, bin={self.bin_index})'
+        return f'acquire(bins={self.bins.name}, bin={self.bin_index})'
 
     def write_instruction(self, generator):
-        generator.acquire(self.time, self.section, self.bin_index)
+        generator.acquire(self.time, self.bins, self.bin_index)
+
+class AcquireWeighedStatement(TimedStatement):
+    def __init__(self, time, bins, bin_index, weight0, weight1):
+        super().__init__(time)
+        self.bins = bins
+        self.bin_index = bin_index
+        self.weight0 = weight0
+        self.weight1 = weight1
+
+    def __repr__(self):
+        weight0 = self.weight0.name if self.weight0 is not None else None
+        weight1 = self.weight1.name if self.weight1 is not None else None
+        return (
+            f'acquire_weighed(bins={self.bins.name}, bin={self.bin_index}, '+
+            f'weight0={weight0}, weight1={weight1})')
+
+    def write_instruction(self, generator):
+        generator.acquire_weighed(self.time, self.bins, self.bin_index,
+                                  self.weight0, self.weight1)

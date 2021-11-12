@@ -15,6 +15,8 @@ P1 = p.P1
 P2 = p.P2
 R1 = p['R1'] # using alternative notation
 
+R1.add_acquisition_bins('default', 10)
+
 gates=[P1, P2] # alternative notation: ['P1', 'P2']
 v_init = [120, 40]
 v_manip = [0, 0]
@@ -33,7 +35,7 @@ with p.loop_linspace(0.0, 1.0, 2) as v2:
         with p.parallel():
             p.wait(t_step)
             P1.set_offset(v1)
-            R1.acquire(0, "increment", t_offset=t_acqdelay)
+            R1.acquire('default', 'increment', t_offset=t_acqdelay)
 
 P1.set_offset(0.0)
 P2.set_offset(0.0)

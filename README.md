@@ -54,6 +54,8 @@ This simple program shows the use of program object and sequence objects.
     # sequencer R1 (readout)
     R1 = p.R1
 
+    R1.add_acquisition_bins('default', 10)
+
     # generate a block pulse of 20 ns and amplitude 0.5 on P1
     P1.block_pulse(20, 0.5)
     # After that generate a block pulse of 100 ns and amplitude -0.25 on P2
@@ -72,7 +74,7 @@ This simple program shows the use of program object and sequence objects.
         P1.block_pulse(40, -0.1)
         # ramp from 0.05 to 0.4 in 60 ns. Start 20 ns after begin of parallel section
         P2.ramp(60, 0.05, 0.40, t_offset=20)
-        R1.acquire(0, 'increment')
+        R1.acquire('default', 'increment')
         p.wait(100)
 
 ### Output channels and sequencer instructions
@@ -122,7 +124,7 @@ QRM specific instructions:
 - add_acquisition_weights: add specification for weights (TODO)
 
 - acquire: acquire data, optionally incrementing the bin counter. Doesn't advance time.
-- acquire_weighed: (TODO)
+- acquire_weighed:
 
 ## Variables and expressions
 Programs can make use of variables that will be translated to q1asm registers.
