@@ -23,7 +23,8 @@ class SequenceBuilder(BuilderBase):
         self._local_time = 0
         self._local_time_active = False
 
-    def start_sequence(self, timeline):
+    def start_sequence(self, program, timeline):
+        self._program = program
         self._timeline = timeline
         self._start_sequence()
 
@@ -182,5 +183,6 @@ class Sequence:
             if isinstance(statement, BranchStatement):
                 with generator.scope():
                     statement.sequence.compile(generator, annotate)
+# TODO: @@@ Replace with contextmanager and add end statement to BranchStatement.
 #                    with statement.branch() as sequence: # @@@ Use contextmanager
 #                        sequence.compile(generator, annotate)

@@ -1,9 +1,11 @@
 
-from q1pulse.instrument import QbInstrument
+from q1pulse.instrument import Q1Instrument
 
-instrument = QbInstrument(dummy=True)
-instrument.add_qcm(0, '192.168.0.2')
-instrument.add_qrm(1, '192.168.0.3')
+from init_pulsars import qcm0, qrm1
+
+instrument = Q1Instrument()
+instrument.add_qcm(0, qcm0)
+instrument.add_qrm(1, qrm1)
 instrument.add_control('P1', 0, [2])
 instrument.add_control('P2', 0, [3])
 instrument.add_readout('R1', 1, [1])
@@ -40,5 +42,4 @@ p.describe()
 
 p.compile(annotate=True, listing=True)
 
-instrument.connect()
 instrument.run_program(p)

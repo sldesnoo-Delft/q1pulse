@@ -1,9 +1,11 @@
 
-from q1pulse.instrument import QbInstrument
+from q1pulse.instrument import Q1Instrument
 
-instrument = QbInstrument()
-instrument.add_qcm(0, '192.168.0.2')
-instrument.add_qrm(1, '192.168.0.3')
+from init_pulsars import qcm0, qrm1
+
+instrument = Q1Instrument()
+instrument.add_qcm(0, qcm0)
+instrument.add_qrm(1, qrm1)
 instrument.add_control('q1', 0, [0,1])
 instrument.add_control('P1', 0, [2])
 instrument.add_control('P2', 0, [3])
@@ -23,22 +25,25 @@ v_manip = [0.0, 0.0]
 v_read = [-0.030, 0.060]
 t_pulse = 80
 
-with p.loop(100, 1000, 10) as t_wait:
+with p.loop_range(200, 2000, 10) as t_wait:
     p.block_pulse(200, gates, v_init)
-#    p.wait(20)
-#    p.ramp(200, gates, v_init, v_manip)
+    p.ramp(20, gates, v_init, v_manip)
 
 #    q1.pulse(t_pulse, v_pulse)
     p.wait(t_wait)
 #    q1.pulse(t_pulse, v_pulse)
 
-    p.ramp(200, gates, v_manip, v_read)
-    p.wait(20)
+    p.ramp(100, gates, v_manip, v_read)
     with p.parallel():
         p.set_offsets(gates, v_read)
         p.wait(1000)
         R1.acquire(0, "increment", t_offset=100)
+    p.set_offsets(gates, [0.0, 0.0])
+    # short wait required for the execution of set_offsets in loop
+    p.wait(4)
 
 p.describe()
 
 p.compile(listing=True, annotate=True)
+
+instrument.run_program(p)

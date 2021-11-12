@@ -1,7 +1,9 @@
-from q1pulse.instrument import QbInstrument
+from q1pulse.instrument import Q1Instrument
 
-instrument = QbInstrument()
-instrument.add_qcm(0, '192.168.0.2')
+from init_pulsars import qcm0
+
+instrument = Q1Instrument()
+instrument.add_qcm(0, qcm0)
 instrument.add_control('P1', 0, [2])
 
 p = instrument.new_program('registers')
@@ -35,3 +37,4 @@ seq.describe()
 
 p.compile(annotate=True, listing=True)
 
+instrument.run_program(p)

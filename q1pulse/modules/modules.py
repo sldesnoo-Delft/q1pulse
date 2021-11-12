@@ -28,12 +28,14 @@ def requires_connection(func):
 class QbloxModule:
     n_sequencers = 6
 
-    def __init__(self, module_nr, ip_addr, dummy=False):
+    def __init__(self, module_nr, pulsar):
         self.module_nr = module_nr
-        self.ip_addr = ip_addr
-        self._use_dummy = dummy
+        self.pulsar = pulsar
         self._allocated_seq = 0
-        self.pulsar = None
+
+        if pulsar:
+            pulsar.reset()
+            print(f'Status {pulsar.name}:', pulsar.get_system_status())
 
     def get_sequencer(self, channels):
         seq_nr = self._allocate_seq_number()
@@ -49,10 +51,6 @@ class QbloxModule:
 
     @abstractmethod
     def _get_seq_paths(self, channels):
-        pass
-
-    @abstractmethod
-    def connect(self):
         pass
 
     @requires_connection
@@ -105,8 +103,10 @@ class QbloxModule:
 class QcmModule(QbloxModule):
     n_channels = 4
 
-    def __init__(self, number, ip_addr, dummy=False):
-        super().__init__(number, ip_addr, dummy)
+    def __init__(self, number, pulsar):
+        super().__init__(number, pulsar)
+        if pulsar is not None and not isinstance(pulsar, (pulsar_qcm, pulsar_qcm_dummy)):
+            raise Exception(f'pulsar must be QCM, not {type(pulsar)}')
 
     def _get_seq_paths(self, channels):
         if len(channels) == 1:
@@ -131,29 +131,14 @@ class QcmModule(QbloxModule):
 
         return seq_channels
 
-    def connect(self):
-        if self.pulsar is not None:
-            print(f'Pulsar {self.module_nr} already connected')
-            return
-
-        if self._use_dummy:
-            print(f'Starting QCM qcm_{self.module_nr} dummy')
-            pulsar = pulsar_qcm_dummy(f'qcm_{self.module_nr}')
-        else:
-            print(f'Connecting Pulsar {self.module_nr} on {self.ip_addr}...')
-            pulsar = pulsar_qcm(f'qcm_{self.module_nr}', self.ip_addr)
-        # Reset the instrument for good measure.
-        pulsar.reset()
-        print("Status:", pulsar.get_system_status())
-
-        self.pulsar = pulsar
-
 
 class QrmModule(QbloxModule):
     n_channels = 2
 
-    def __init__(self, number, ip_addr, dummy=False):
-        super().__init__(number, ip_addr, dummy)
+    def __init__(self, number, pulsar):
+        super().__init__(number, pulsar)
+        if pulsar is not None and not isinstance(pulsar, (pulsar_qrm, pulsar_qrm_dummy)):
+            raise Exception(f'pulsar must be QRM, not {type(pulsar)}')
 
     def _get_seq_paths(self, channels):
         if len(channels) == 2:
@@ -164,24 +149,6 @@ class QrmModule(QbloxModule):
                 raise Exception(f'illegal channel combination {channels}')
 
         return channels
-
-    def connect(self):
-
-        if self.pulsar is not None:
-            print(f'Pulsar {self.module_nr} already connected')
-            return
-
-        if self._use_dummy:
-            print(f'Starting QRM qrm_{self.module_nr} dummy')
-            pulsar = pulsar_qrm_dummy(f'qrm_{self.module_nr}')
-        else:
-            print(f'Connecting Pulsar {self.module_nr} on {self.ip_addr}...')
-            pulsar = pulsar_qrm(f'qrm_{self.module_nr}', self.ip_addr)
-        # Reset the instrument for good measure.
-        pulsar.reset()
-        print("Status:", pulsar.get_system_status())
-
-        self.pulsar = pulsar
 
     @requires_connection
     def set_nco(self, seq_nr, lo_frequency):

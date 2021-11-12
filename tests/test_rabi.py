@@ -1,9 +1,11 @@
 
-from q1pulse.instrument import QbInstrument
+from q1pulse.instrument import Q1Instrument
 
-instrument = QbInstrument(dummy=True)
-instrument.add_qcm(0, '192.168.0.2')
-instrument.add_qrm(1, '192.168.0.3')
+from init_pulsars import qcm0, qrm1
+
+instrument = Q1Instrument()
+instrument.add_qcm(0, qcm0)
+instrument.add_qrm(1, qrm1)
 instrument.add_control('q1', 0, [0,1])
 instrument.add_control('P1', 0, [2])
 instrument.add_control('P2', 0, [3])
@@ -21,17 +23,18 @@ gates=['P1', 'P2']
 v_init = [0.120, 0.040]
 v_manip = [0.0, 0.0]
 v_read = [-0.030, 0.060]
+rabi_amplitude = 0.13
 
-with p.loop(100, 1000, 10) as t_wait:
+with p.loop_range(100, 1000, 10) as t_pulse:
+    #init
     p.block_pulse(200, gates, v_init)
     p.wait(20)
-    p.ramp(200, gates, v_init, v_manip)
-    p.wait(20)
 
-#    q1.pulse(lp.t_pulse, v_pulse)
+    # manip
+    q1.block_pulse(t_pulse, rabi_amplitude)
 
+    # read
     p.ramp(200, gates, v_manip, v_read)
-    p.wait(20)
     with p.parallel():
         p.set_offsets(gates, v_read)
         p.wait(1000)
@@ -41,5 +44,4 @@ p.describe()
 
 p.compile(listing=True)
 
-instrument.connect()
 instrument.run_program(p)

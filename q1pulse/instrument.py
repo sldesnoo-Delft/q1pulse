@@ -5,20 +5,19 @@ from .model.control import ControlBuilder
 from .model.readout import ReadoutBuilder
 from .modules.modules import QcmModule, QrmModule
 
-class QbInstrument:
+class Q1Instrument:
     def __init__(self, path=None, dummy=False):
         self.path = path if path is not None else 'q1'
-        self._dummy = dummy
         os.makedirs(self.path, exist_ok=True)
         self.modules = {}
         self.controllers = {}
         self.readouts = {}
 
-    def add_qcm(self, module_nr, ip_addr):
-        self.modules[module_nr] = QcmModule(module_nr, ip_addr, dummy=self._dummy)
+    def add_qcm(self, module_nr, pulsar):
+        self.modules[module_nr] = QcmModule(module_nr, pulsar)
 
-    def add_qrm(self, module_nr, ip_addr):
-        self.modules[module_nr] = QrmModule(module_nr, ip_addr, dummy=self._dummy)
+    def add_qrm(self, module_nr, pulsar):
+        self.modules[module_nr] = QrmModule(module_nr, pulsar)
 
     def add_control(self, name, module_nr, channels, lo_frequency=None):
         sequencer = self.modules[module_nr].get_sequencer(channels)
@@ -34,16 +33,17 @@ class QbInstrument:
         self.readouts[name] = sequencer
 
     def new_program(self, prog_name):
-        sequence_builders = {}
+        program = Program(path=os.path.join(self.path, prog_name))
+
         for name, sequencer in self.controllers.items():
             # @@@ add lo_frequency
-            sequence_builders[name] = ControlBuilder(name, sequencer.enabled_paths)
+            program.add_sequence_builder(ControlBuilder(name, sequencer.enabled_paths))
 
         for name, sequencer in self.readouts.items():
             # @@@ add lo_frequency
-            sequence_builders[name] = ReadoutBuilder(name, sequencer.enabled_paths)
+            program.add_sequence_builder(ReadoutBuilder(name, sequencer.enabled_paths))
 
-        return Program(sequence_builders, path=os.path.join(self.path, prog_name))
+        return program
 
     def connect(self):
         for module in self.modules.values():
@@ -63,8 +63,8 @@ class QbInstrument:
             module.arm_sequencer(seq.seq_nr)
 
             # Print an overview of the instrument parameters.
-            print("Snapshot:")
-            module.pulsar.print_readable_snapshot(update=True)
+            # print(f'Snapshot {name} ({module.pulsar.name}-{seq.seq_nr}):')
+            # module.pulsar.print_readable_snapshot(update=True)
 
         for module in self.modules.values():
             module.pulsar.start_sequencer()
@@ -72,7 +72,7 @@ class QbInstrument:
         # Wait for completion
         for name,seq in sequencers.items():
             module = self.modules[seq.module_nr]
-            print("Status:")
+            print(f'Status {name} ({module.pulsar.name}:{seq.seq_nr}):')
             print(module.get_sequencer_state(0, 1))
 
 # TODO @@@

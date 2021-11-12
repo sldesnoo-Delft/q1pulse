@@ -10,8 +10,8 @@ from .assembler.generator import Q1asmGenerator
 
 
 class Program:
-    def __init__(self, sequence_builders, path=None):
-        self.sequence_builders = sequence_builders
+    def __init__(self, path=None):
+        self.sequence_builders = {}
         self.path = path if path is not None else os.path.join('q1','_prog')
         os.makedirs(self.path, exist_ok=True)
         self.R = Registers(self, local=False)
@@ -20,10 +20,11 @@ class Program:
         # shared timeline for all sequencers
         self._timeline = Timeline()
 
-        # for all sequencers add attribute with sequence
-        for name, builder in sequence_builders.items():
-            setattr(self, name, builder)
-            builder.start_sequence(self._timeline)
+    def add_sequence_builder(self, sequence_builder):
+        name = sequence_builder.name
+        self.sequence_builders[name] = sequence_builder
+        setattr(self, name, sequence_builder)
+        sequence_builder.start_sequence(self, self._timeline)
 
     def __getitem__(self, item):
         if item not in self.sequence_builders:
@@ -58,13 +59,13 @@ class Program:
         for builder in self.sequence_builders.values():
             builder._add_statement(statement)
 
-    def loop(self, start_stop, stop=None, step=None):
+    def loop_range(self, start_stop, stop=None, step=None):
         ''' range loop '''
         return self.__loop(RangeLoop(start_stop, stop, step))
 
-    def loop_linspace(self, start, end, n):
+    def loop_linspace(self, start, end, n, endpoint=True):
         ''' repeat loop '''
-        return self.__loop(LinspaceLoop(start, end, n))
+        return self.__loop(LinspaceLoop(start, end, n, endpoint))
 
     @contextmanager
     def __loop(self, loop):
@@ -104,7 +105,7 @@ class Program:
         for s, a in zip(sequencers, amplitudes):
             if isinstance(s, str):
                 s = self[s]
-            s.block_pulse(duration, a, t_offset)
+            s.block_pulse(duration, a, t_offset=t_offset)
         self._timeline.enable_update()
 
     def ramp(self, duration, sequencers, v_start, v_stop, t_offset=0):
