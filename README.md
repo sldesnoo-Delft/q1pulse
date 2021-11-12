@@ -135,7 +135,7 @@ Sequence local variables can only be used in sequence instructions.
 ### Variable types
 The type of a variable can be either float or int. It is inferred on the first assignment and
 cannot change within the program.
-Internally the float variables are represented as 32 bit fixed point values in the range \[-1.0, \1.0].
+Internally the float variables are represented as 32 bit **fixed point** values in the range \[-1.0, \1.0].
 Integers are 32 bit signed int, unless otherwise specified.
 Where needed and as far as possible the compiler inserts additional q1asm instructions to emulate
 signed int operations.
@@ -146,7 +146,7 @@ Evaluation order is determined by the Python operator rules.
 
 Notes:
 - The shift right operator does an unsigned shift right.
-- There is no overflow checking on integer and floating point (actually fixed point) operations.
+- There is no overflow checking on integer and fixed point operations.
   So, 1.0 + 0.5 gives -0.5.
 
 ### Example
