@@ -379,7 +379,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
 
         return f'{label:10} {mnemonic:14} {arg_str:10}{c}'
 
-    def q1asm_lines(self):
+    def q1asm_lines(self, skip_comment_lines=False):
         self._flush_pending_update()
         lines = []
         line_nr = 0
@@ -387,7 +387,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         for i in self._init_section + self._instructions:
             if isinstance(i, str):
                 # comment line
-                if self.add_comments:
+                if self.add_comments and not skip_comment_lines:
                     lines += [f'# {i} ']
                 continue
 
@@ -396,15 +396,15 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                                      i.comment, line_nr)
 
             lines += [line]
-        lines += [self._format_line(None, 'stop', None, None, None, line_nr)]
+        lines += [self._format_line(None, 'stop', None, None, None, line_nr+1)]
         return lines
 
-    def q1asm_prog(self):
-        return '\n'.join(self.q1asm_lines())
+    def q1asm_prog(self, skip_comment_lines=False):
+        return '\n'.join(self.q1asm_lines(skip_comment_lines))
 
     def save_prog_and_data_json(self, filename):
         d = self._data.get_data_dict()
-        d['program'] = self.q1asm_prog()
+        d['program'] = self.q1asm_prog(skip_comment_lines=True)
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(d, f, indent=None)
 
