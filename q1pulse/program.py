@@ -2,8 +2,10 @@ import os
 from contextlib import contextmanager
 from numbers import Number
 
+from .model.builderbase import Expression
 from .model.timeline import Timeline
 from .model.registers import Registers
+from .model.register import Register
 from .model.register_statements import RegisterAssignment
 from .model.loops import RangeLoop, LinspaceLoop
 from .assembler.generator import Q1asmGenerator
@@ -101,12 +103,19 @@ class Program:
                 s._add_reg_wait(t)
 
     def block_pulse(self, duration, sequencers, amplitudes, t_offset=0):
-        self._timeline.disable_update()
-        for s, a in zip(sequencers, amplitudes):
-            if isinstance(s, str):
-                s = self[s]
-            s.block_pulse(duration, a, t_offset=t_offset)
-        self._timeline.enable_update()
+        if not isinstance(duration, (Register, Expression)):
+            self._timeline.disable_update()
+            for s, a in zip(sequencers, amplitudes):
+                if isinstance(s, str):
+                    s = self[s]
+                s.block_pulse(duration, a, t_offset=t_offset)
+            self._timeline.enable_update()
+        else:
+            if not self._timeline.is_running:
+                raise Exception('Variable pulse length not possible in parallel section')
+            self.set_offsets(sequencers, amplitudes, t_offset=t_offset)
+            self.wait(duration)
+            self.set_offsets(sequencers, [0.0]*len(sequencers), t_offset=0)
 
     def ramp(self, duration, sequencers, v_start, v_stop, t_offset=0):
         self._timeline.disable_update()
