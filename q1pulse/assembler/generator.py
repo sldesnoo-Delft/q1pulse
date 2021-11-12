@@ -102,7 +102,7 @@ def register_args(_func=None, *, allow_float=[], require_float=[], translate_reg
                     if f not in allow_float:
                         raise Exception(f'Float argument mismatch for argument {f}')
 
-            if len(comments) > 0:
+            if len(comments) > 0 and self._show_arg_conversions:
                 self.add_comment(' -- args: ' + ', '.join(comments))
             res = func(self, *args, **kwargs)
             self._registers.exit_scope()
@@ -117,10 +117,13 @@ def register_args(_func=None, *, allow_float=[], require_float=[], translate_reg
 
 
 class Q1asmGenerator(InstructionQueue, GeneratorBase):
-    def __init__(self, add_comments=False, list_registers=True):
+    def __init__(self, add_comments=False, list_registers=True,
+                 line_numbers=True, comment_arg_conversions=False):
         super().__init__()
         self.add_comments = add_comments
         self._list_registers = list_registers
+        self._line_numbers = line_numbers
+        self._show_arg_conversions = comment_arg_conversions
         self._data = GeneratorData()
         self._registers = SequencerRegisters(self._add_reg_comment)
         self.add_comment('--INIT--', init_section=True)
@@ -351,7 +354,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                 return r1.evaluate(self), r2.evaluate(self), r3
 
 
-    def _format_line(self, label, mnemonic, args, wait_after, comment):
+    def _format_line(self, label, mnemonic, args, wait_after, comment, line_nr):
         if label is not None:
             label = label+':'
         else:
@@ -364,16 +367,22 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             arg_list += [str(wait_after)]
         arg_str = ','.join(arg_list)
 
-        if comment is None or not self.add_comments:
-            comment = ''
+        c = ''
+        if not self.add_comments or (comment is None and not self._line_numbers):
+            c = ''
         else:
-            comment = '# ' + comment
+            c = ' # '
+            if self._line_numbers:
+                c += f'L{line_nr:04} '
+            if comment is not None:
+                c += comment
 
-        return f'{label:10} {mnemonic:14} {arg_str:10} {comment}'
+        return f'{label:10} {mnemonic:14} {arg_str:10}{c}'
 
     def q1asm_lines(self):
         self._flush_pending_update()
         lines = []
+        line_nr = 0
 
         for i in self._init_section + self._instructions:
             if isinstance(i, str):
@@ -382,10 +391,12 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                     lines += [f'# {i} ']
                 continue
 
-            line = self._format_line(i.label, i.mnemonic, i.args, i.wait_after, i.comment)
+            line_nr += 1
+            line = self._format_line(i.label, i.mnemonic, i.args, i.wait_after,
+                                     i.comment, line_nr)
 
             lines += [line]
-        lines += [self._format_line(None, 'stop', None, None, None)]
+        lines += [self._format_line(None, 'stop', None, None, None, line_nr)]
         return lines
 
     def q1asm_prog(self):
