@@ -1,4 +1,5 @@
-
+from .builderbase import Expression
+from .register import Register
 from .sequence import SequenceBuilder
 from .timed_statements import (
         AwgDcOffsetStatement, AwgGainStatement,
@@ -49,23 +50,32 @@ class ControlBuilder(SequenceBuilder):
         self._add_statement(SetPhaseStatement(t1, phase, hires_regs))
 
     @loopable
-    def block_pulse(self, duration, amplitude, t_offset=0):
-        with self._local_timeline(t_offset=t_offset, duration=duration):
-            self._add_statement(AwgDcOffsetStatement(self.current_time, amplitude, None))
-            self.wait(duration)
-            self._add_statement(AwgDcOffsetStatement(self.current_time, 0.0, None))
+    def block_pulse(self, duration, amplitude, amplitude2=None, t_offset=0):
+        if not isinstance(duration, (Register, Expression)):
+            with self._local_timeline(t_offset=t_offset, duration=duration):
+                self._add_statement(AwgDcOffsetStatement(self.current_time, amplitude, amplitude2))
+                self.wait(duration)
+                self._add_statement(AwgDcOffsetStatement(self.current_time, 0.0, 0.0))
+        else:
+            # TODO: try to make this cleaner and more flexible.
+            #       try to make it work for simultaneous pulses
+            if not self._timeline.is_running:
+                raise Exception('Variable pulse length not possible in parallel section')
+            self._add_statement(AwgDcOffsetStatement(self.current_time, amplitude, amplitude2))
+            self._program.wait(duration)
+            self._add_statement(AwgDcOffsetStatement(self.current_time, 0.0, 0.0))
+
 
 #    @loopable
     # TODO @@@ can v_start/v_end be registers? only if they are managed loopvars. Introduce additional f-register
     # for variable duration: unroll!
     def ramp(self, duration, v_start, v_end, t_offset=0):
         with self._local_timeline(t_offset=t_offset, duration=duration):
-            # ramp from 0 to 1.0
-            gain = (v_end - v_start) * 100 / duration
-            self.set_gain(gain)
+            # w_ramp is a wave from 0 to 1.0
             self.set_offset(v_start)
             if duration <= 100:
                 w_ramp = self._waves.get_ramp(duration)
+                self.set_gain(1.0)
                 self.play(w_ramp)
                 self.wait(duration)
                 self.set_offset(v_end)
@@ -76,8 +86,12 @@ class ControlBuilder(SequenceBuilder):
                 rem += 1
                 w_ramp = self._waves.get_ramp(100)
                 self.Rs._ramp_offset = v_start
+                # increment is a fixed point value.
+                # Note: rounding errors become significant when n > 10000, i.e. 1 ms.
                 increment = (v_end - v_start) / n
 
+                gain = (v_end - v_start) * 100 / duration
+                self.set_gain(gain)
                 self.play(w_ramp)
                 with self._seq_repeat(n):
                     self.Rs._ramp_offset += increment
@@ -88,10 +102,6 @@ class ControlBuilder(SequenceBuilder):
                 self.wait(rem)
                 self.set_offset(v_end)
                 self.set_gain(0.0)
-
-        # @@@ long ramps
-        # DAC: +/-32767. max 32 loops for ramp = 3200 ns
-        # But with shift: 2^(5+15) *100 ns = 100 ms
 
     def _apply_paths(self, arg0, arg1):
         if len(self._enabled_paths) == 0:
