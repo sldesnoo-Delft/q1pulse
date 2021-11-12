@@ -28,19 +28,4 @@ class RegisterAssignment(Statement):
             generator.move(self.value_or_expression, self.destination, self.init_section)
 
 
-class RegisterBinOp(Statement):
-    def __init__(self, destination, lhs, rhs):
-        self.destination = destination
-        self.lhs = lhs
-        self.rhs = rhs
-
-
-class RegisterAdd(RegisterBinOp): # @@@ TODO remove
-    def __repr__(self):
-        return f'{self.destination} = {self.lhs} + {self.rhs}'
-
-    def write_instruction(self, generator):
-        generator.add(self.lhs, self.rhs, self.destination)
-
-
 

@@ -322,14 +322,10 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             return n1,n2,n3
 
         if isinstance(phase, Expression):
-            # FIX: ugly hack to allocate register to be used in expression
-            reg = Register(f'_phase')
-            reg._dtype = float
-            self.allocate_reg(reg.name)
-
-            expression = phase
-            expression.evaluate(self, reg)
-            phase = reg
+            reg_phase = Register(f'_phase')
+            statement = reg_phase.assign(phase)
+            statement.write_instruction(self)
+            phase = reg_phase
 
         if isinstance(phase, Register):
             # shift N bits right to create space for multiplication

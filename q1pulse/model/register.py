@@ -15,9 +15,8 @@ class Register(Operand):
         allocate = not self._initialized
         if not self._initialized:
             self._initialized = True
-        statement = RegisterAssignment(self, value_or_expression,
-                                       allocate=allocate, init_section=init_section)
-        return statement
+        return RegisterAssignment(self, value_or_expression,
+                                  allocate=allocate, init_section=init_section)
 
     def __repr__(self):
         return self.name

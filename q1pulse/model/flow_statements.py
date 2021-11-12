@@ -1,7 +1,4 @@
 from .builderbase import Statement
-from .register_statements import (
-        RegisterAssignment, RegisterAdd
-        )
 
 class BranchStatement(Statement):
     def __init__(self, sequence, label):
@@ -13,8 +10,13 @@ class BranchStatement(Statement):
         return self._sequence
 
 
-def _init_reg(generator, register, value):
-    RegisterAssignment(register, value, allocate=True).write_instruction(generator)
+def _assign_reg(generator, register, value):
+    statement = register.assign(value)
+    statement.write_instruction(generator)
+
+def _increment_reg(generator, register, incr):
+    statement = register.assign(register + incr)
+    statement.write_instruction(generator)
 
 
 class RepeatStatement(BranchStatement):
@@ -27,7 +29,7 @@ class RepeatStatement(BranchStatement):
         return f'repeat({self._n}):'
 
     def write_instruction(self, generator):
-        _init_reg(generator, self._loop_register, self._n)
+        _assign_reg(generator, self._loop_register, self._n)
         generator.set_label(self._label)
 
 class EndRepeatStatement(Statement):
@@ -56,11 +58,11 @@ class LoopStatement(BranchStatement):
 
     def write_instruction(self, generator):
         l = self._loop
-        _init_reg(generator, self._loop_register, l.start)
+        _assign_reg(generator, self._loop_register, l.start)
         if generator.emulate_signed and (l.start < 0 or l.stop < 0):
             generator.add_comment('         --- emulate signed')
             stop = l.stop if l.step > 0 else l.stop + 1
-            _init_reg(generator, self._loop_stop_register, stop)
+            _assign_reg(generator, self._loop_stop_register, stop)
             generator.bits_xor(self._loop_stop_register, 0x8000_0000, self._loop_stop_register)
         generator.set_label(self._label)
 
@@ -77,8 +79,8 @@ class EndLoopStatement(Statement):
     def write_instruction(self, generator):
         l = self._loop
         # increment loop register
-        incr = RegisterAdd(self._loop_register, self._loop_register, l.step)
-        incr.write_instruction(generator)
+        _increment_reg(generator, self._loop_register, l.step)
+
         # jlt, register,
         if generator.emulate_signed and (l.start < 0 or l.stop < 0):
             with generator.temp_regs(1) as loop_temp:
@@ -109,7 +111,7 @@ class LinspaceLoopStatement(BranchStatement):
     def write_instruction(self, generator):
         l = self._loop
         for i,value in enumerate([l.n, l.start]):
-            _init_reg(generator, self._loop_registers[i], value)
+            _assign_reg(generator, self._loop_registers[i], value)
         generator.set_label(self._label)
 
 class EndLinspaceLoopStatement(Statement):
@@ -124,8 +126,7 @@ class EndLinspaceLoopStatement(Statement):
     def write_instruction(self, generator):
         l = self._loop
         loopreg, freg = self._loop_registers
-        incr = RegisterAdd(freg, freg, l.increment)
-        incr.write_instruction(generator)
+        _increment_reg(generator, freg, l.increment)
         # loop, register
         generator.loop(loopreg, self._label)
 

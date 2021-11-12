@@ -58,7 +58,7 @@ def get_dtype(value):
 class Expression(Operand, ABC):
 
     @abstractmethod
-    def evaluate(self, builder, destination=None):
+    def evaluate(self, generator, destination=None):
         pass
 
 class UnaryExpression(Expression):
