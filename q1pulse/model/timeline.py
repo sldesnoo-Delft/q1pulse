@@ -16,6 +16,10 @@ class Timeline:
             self._current_time = self._end_time
 
     @property
+    def is_running(self):
+        return not self._disabled
+
+    @property
     def current_time(self):
         return self._current_time
 
