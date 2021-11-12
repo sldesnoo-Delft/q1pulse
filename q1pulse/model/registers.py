@@ -36,7 +36,5 @@ class Registers:
 
     def init(self, name, default=0):
         # Note: used for acquire with 'increment'
-        register = self.add_reg(name)
-        statement = register.assign(default, init_section=True)
-        self._builder._add_statement(statement)
-        return register
+        self._set_reg(name, default)
+        return self._registers[name]
