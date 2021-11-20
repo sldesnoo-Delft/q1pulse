@@ -31,8 +31,7 @@ with p.parallel():
 with p.parallel():
     P1.block_pulse(100, 0.25)
     P2.block_pulse(100, -0.25)
-#    R1.acquire_weighed('default', 'increment', 'gaus100')
-    R1.acquire_weighed('default', 0, 'gaus100') # @@@
+    R1.acquire_weighed('default', 'increment', 'gaus100')
 
 p.describe()
 print()

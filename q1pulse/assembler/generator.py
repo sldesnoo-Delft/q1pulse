@@ -266,9 +266,19 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         bins = self._data.translate_acquisition(bins)
         weight0 = self._data.translate_weight(weight0)
         weight1 = self._data.translate_weight(weight1)
-        self._add_rt_command('acquire_weighed',
-                             bins, bin_index, weight0, weight1,
-                             time=time, comment=f't={time}')
+        # q1asm has no instruction for acquire_weighed imm,reg,imm,imm,imme.
+        # Use acquire_weighed imm,reg,reg,reg,imm instead
+        if not isinstance(bin_index, Number):
+            with self._registers.temp_regs(2) as (rw0, rw1):
+                self.move(weight0, rw0)
+                self.move(weight1, rw1)
+                self._add_rt_command('acquire_weighed',
+                                     bins, bin_index, rw0, rw1,
+                                     time=time, comment=f't={time}')
+        else:
+            self._add_rt_command('acquire_weighed',
+                                 bins, bin_index, weight0, weight1,
+                                 time=time, comment=f't={time}')
 
     @contextmanager
     def scope(self):
