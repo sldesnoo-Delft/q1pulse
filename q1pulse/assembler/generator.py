@@ -451,7 +451,8 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             f.write(np.array2string(np.array(wave['data']),
                                     prefix=prefix,
                                     separator=',',
-                                    formatter={'float_kind':lambda x: f'{x:9.5f}'}))
+                                    formatter={'float_kind':lambda x: f'{x:9.5f}'},
+                                    threshold=1000_000))
             f.write(f",\n")
             f.write(f"        'index':{wave['index']},\n")
             f.write(f'        }},\n')
