@@ -27,6 +27,18 @@ class WaitRegStatement(TimedStatement):
         generator.wait_reg(self.time, self.register)
 
 
+class SetMarkersStatement(TimedStatement):
+    def __init__(self, time, value):
+        super().__init__(time)
+        self.value = value
+
+    def __repr__(self):
+        return f'set_mrk 0b{self.value:04b}'
+
+    def write_instruction(self, generator):
+        generator.set_mrk(self.time, self.value)
+
+
 class PlayWaveStatement(TimedStatement):
     def __init__(self, time, wave0, wave1):
         super().__init__(time)

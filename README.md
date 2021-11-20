@@ -101,28 +101,33 @@ Program flow and timing instructions:
 
 Instructions for simultaneous execution on multiple sequencers where each sequencer is controlling only 1 output:
 - block_pulse
-- ramp
-- set_offsets: Does not advance time.
+- ramp (2)
+- set_offsets (1)
 
-Notes: `ramp` instruction does not yet accept variables or expressions as argument.
+Notes:
+1. instruction does not advance time in sequence.
+2. `ramp` instruction does not yet accept variables or expressions as argument.
 
 ## QCM Sequence instructions
 - add_wave: adds a wave to be used in shaped pulses
 - add_comment: add a comment line in the q1asm
-- set_offset, set_gain, set_phase, shift_phase : Do not advance time.
+- set_markers (1)
+- set_offset, set_gain (1)
+- set_phase, shift_phase (1)
 - block_pulse
 - shaped_pulse
-- ramp: creates ramp on 1 output
+- ramp: creates ramp on 1 output (2)
 
-Notes: `ramp` instruction does not yet accept variables or expressions as argument.
+Notes:
+1. instruction does not advance time in sequence.
+2. `ramp` instruction does not yet accept variables or expressions as argument.
 
 ## QRM Sequence instructions
 QRM can execute all QCM instructions.
 
 QRM specific instructions:
 - add_acquisition: add a (binned) acquisition specification
-- add_acquisition_weights: add specification for weights (TODO)
-
+- add_acquisition_weights: add specification for weights
 - acquire: acquire data, optionally incrementing the bin counter. Doesn't advance time.
 - acquire_weighed:
 
@@ -216,5 +221,4 @@ be used as such.
 
 ## TODO
 - Refactor code to be separate a driver to use with pulse_lib and a standalone pulse sequence builder.
-- Implement markers
 

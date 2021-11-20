@@ -2,6 +2,7 @@ from .math_expressions import Expression
 from .register import Register
 from .sequence import SequenceBuilder
 from .timed_statements import (
+        SetMarkersStatement,
         AwgDcOffsetStatement, AwgGainStatement,
         ShiftPhaseStatement, SetPhaseStatement,
         PlayWaveStatement
@@ -22,6 +23,10 @@ class ControlBuilder(SequenceBuilder):
 
     def add_wave(self, name, data):
         return self._waves.add_wave(name, data)
+
+    def set_markers(self, value, t_offset=0):
+        t1 = self.current_time + t_offset
+        self._add_statement(SetMarkersStatement(t1, value))
 
     @loopable
     def set_offset(self, value0, value1=None, t_offset=0):
