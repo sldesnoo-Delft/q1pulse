@@ -440,23 +440,30 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(d, f, indent=None)
 
+    def _pprint_data(self, data_dict, f):
+        prefix = ' '*12
+        f.write('{\n')
+        for name,wave in data_dict.items():
+            f.write(f"    '{name}':{{\n")
+            f.write(f"        'data':\n")
+            f.write(prefix)
+            # precision of 5 digits is sufficient for 16 bit numbers in range [-1, +1]
+            f.write(np.array2string(np.array(wave['data']),
+                                    prefix=prefix,
+                                    separator=',',
+                                    formatter={'float_kind':lambda x: f'{x:9.5f}'}))
+            f.write(f",\n")
+            f.write(f"        'index':{wave['index']},\n")
+            f.write(f'        }},\n')
+        f.write('    }\n\n')
+
     def save_prog_and_data_txt(self, filename):
         d = self._data.get_data_dict()
         with open(filename, 'w', encoding='utf-8') as f:
-            f.write('waveforms={\n')
-            for name,wave in d['waveforms'].items():
-                f.write(f"    '{name}':{{\n")
-                f.write(f"        'data':\n")
-                prefix = ' '*12
-                f.write(prefix)
-                f.write(np.array2string(np.array(wave['data']), prefix=prefix))
-                f.write(f",\n")
-                f.write(f"        'index':{wave['index']},\n")
-                f.write(f'        }},\n')
-            f.write('    }\n\n')
+            f.write('waveforms=')
+            self._pprint_data(d['waveforms'], f)
             f.write('weights=')
-            pprint(d['weights'], f)
-            f.write('\n')
+            self._pprint_data(d['weights'], f)
             f.write('acquisitions=')
             pprint(d['acquisitions'], f)
             f.write('\n')
