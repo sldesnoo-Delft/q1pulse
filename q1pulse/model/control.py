@@ -11,8 +11,6 @@ from .loops import loopable
 from .sequencer_data import Wave, WaveCollection
 
 
-# @@@ DC vs IQ ??
-
 
 class ControlBuilder(SequenceBuilder):
     def __init__(self, name, enabled_paths, nco_frequency=None):
