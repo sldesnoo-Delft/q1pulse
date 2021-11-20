@@ -142,7 +142,6 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
 
     @register_args(allow_float=(1,2))
     def move(self, source, destination, init_section=False):
-#        print(f'move:{source} {destination} {type(destination)}')
         self._add_instruction('move', source, destination,
                               init_section=init_section)
 
@@ -165,11 +164,23 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
 
     @register_args(allow_float=(1,3))
     def asl(self, lhs, rhs, destination):
-        self._add_instruction('asl', lhs, rhs, destination)
+        # q1asm has no instruction for asl imm,reg,reg. Use asl reg,reg,reg instead
+        if isinstance(lhs, Number):
+            with self._registers.temp_regs(1) as temp:
+                self.move(lhs, temp)
+                self._add_instruction('asl', temp, rhs, destination)
+        else:
+            self._add_instruction('asl', lhs, rhs, destination)
 
     @register_args(allow_float=(1,3))
     def asr(self, lhs, rhs, destination):
-        self._add_instruction('asr', lhs, rhs, destination)
+        # q1asm has no instruction for asr imm,reg,reg. Use asr reg,reg,reg instead
+        if isinstance(lhs, Number):
+            with self._registers.temp_regs(1) as temp:
+                self.move(lhs, temp)
+                self._add_instruction('asr', temp, rhs, destination)
+        else:
+            self._add_instruction('asr', lhs, rhs, destination)
 
     @register_args
     def bits_not(self, source, destination):
