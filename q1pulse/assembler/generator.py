@@ -113,13 +113,35 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         self._list_registers = list_registers
         self._line_numbers = line_numbers
         self._show_arg_conversions = comment_arg_conversions
+        self._repetitions = 1
         self._data = GeneratorData()
         self._registers = SequencerRegisters(self._add_reg_comment)
         self.add_comment('--INIT--', init_section=True)
+        self.set_label('_sync')
         self._add_rt_command('wait_sync', time=0)
         self.reset_phase(4)
         self._reset_time()
         self.add_comment('--START-- (t=0)')
+
+    @property
+    def repetitions(self):
+        return self._repetitions
+
+    @repetitions.setter
+    def repetitions(self, value):
+        self._repetitions = value
+
+    def finalize(self):
+        if self._finalized:
+            return
+        self._flush_pending_update()
+        if self._repetitions > 1:
+            repetitions_reg = self.allocate_reg('_repetitions')
+            self.move(self._repetitions, repetitions_reg,
+                      init_section=True)
+            self.loop(repetitions_reg, '_sync')
+        self._add_instruction('stop')
+        self._finalized = True
 
     def jmp(self, label):
         label = self._translate_label(label)
@@ -412,7 +434,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         return f'{label:10} {mnemonic:14} {arg_str:10}{c}'
 
     def q1asm_lines(self, skip_comment_lines=False):
-        self._flush_pending_update()
+        self.finalize()
         lines = []
         line_nr = 0
 
@@ -428,7 +450,6 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                                      i.comment, line_nr)
 
             lines += [line]
-        lines += [self._format_line(None, 'stop', None, None, None, line_nr+1)]
         return lines
 
     def q1asm_prog(self, skip_comment_lines=False):

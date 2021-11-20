@@ -32,8 +32,11 @@ class InstructionQueue:
         self._rt_time = 0
         self._pending_update = None
         self._last_rt_command = None
+        self._finalized = False
 
     def add_comment(self, line, init_section=False):
+        if self._finalized:
+            raise Exception('Sequence already finalized')
         if init_section:
             self._init_section.append(line)
         else:
@@ -46,12 +49,16 @@ class InstructionQueue:
         self._label = label
 
     def __append_instruction(self, instruction):
+        if self._finalized:
+            raise Exception('Sequence already finalized')
         if self._label is not None:
             instruction.label = self._label
             self._label = None
         self._instructions.append(instruction)
 
     def _add_instruction(self, mnemonic, *args, comment=None, init_section=False):
+        if self._finalized:
+            raise Exception('Sequence already finalized')
         if self._reg_comment:
             comment = self._reg_comment if not comment else comment + ' ' + self._reg_comment
             self._reg_comment = None

@@ -17,7 +17,7 @@ class Program:
         self.path = path if path is not None else os.path.join('q1','_prog')
         os.makedirs(self.path, exist_ok=True)
         self.R = Registers(self, local=False)
-        self.repetitions = 1 # TODO @@@ implement overall loop
+        self.repetitions = 1
         self._loop_cnt = 0
         # shared timeline for all sequencers
         self._timeline = Timeline()
@@ -44,6 +44,7 @@ class Program:
         for builder in self.sequence_builders.values():
             filename = self.seq_filename(builder.name)
             g = Q1asmGenerator(add_comments=add_comments)
+            g.repetitions = self.repetitions
             builder.compile(g, annotate=annotate)
 
             if verbose:
