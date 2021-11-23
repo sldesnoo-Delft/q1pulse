@@ -63,7 +63,6 @@ class ControlBuilder(SequenceBuilder):
                 self.set_offset(amplitude0, amplitude1)
                 self.wait(duration)
                 self.set_offset(0.0, None)
-                self._add_statement(AwgDcOffsetStatement(self.current_time, 0.0, 0.0))
         else:
             # TODO: try to make this cleaner and more flexible.
             if not self._timeline.is_running:
@@ -93,10 +92,10 @@ class ControlBuilder(SequenceBuilder):
     def ramp(self, duration, v_start, v_end, t_offset=0):
         with self._local_timeline(t_offset=t_offset, duration=duration):
             # w_ramp is a wave from 0 to 1.0
-            self.set_offset(v_start)
             if duration <= 100:
                 w_ramp = self._waves.get_ramp(duration)
-                self.set_gain(1.0)
+                self.set_gain(v_end - v_start)
+                self.set_offset(v_start)
                 self.play(w_ramp)
                 self.wait(duration)
                 self.set_offset(v_end)
@@ -109,17 +108,17 @@ class ControlBuilder(SequenceBuilder):
                 self.Rs._ramp_offset = v_start
                 # increment is a fixed point value.
                 # Note: rounding errors become significant when n > 10000, i.e. 1 ms.
-                increment = (v_end - v_start) / n
+                increment = (v_end - v_start) * 100 / duration
 
                 gain = (v_end - v_start) * 100 / duration
                 self.set_gain(gain)
-                self.play(w_ramp)
                 with self._seq_repeat(n):
-                    self.Rs._ramp_offset += increment
-                    self.wait(100)
                     self.set_offset(self.Rs._ramp_offset)
                     self.play(w_ramp)
-
+                    self.Rs._ramp_offset += increment
+                    self.wait(100)
+                self.set_offset(self.Rs._ramp_offset)
+                self.play(w_ramp)
                 self.wait(rem)
                 self.set_offset(v_end)
                 self.set_gain(0.0)
