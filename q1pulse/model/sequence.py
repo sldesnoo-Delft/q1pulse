@@ -19,6 +19,7 @@ class SequenceBuilder(BuilderBase):
         self._sequence_stack = []
         self._local_time = 0
         self._local_time_active = False
+        self._compiled = False
 
     def start_sequence(self, program, timeline):
         self._program = program
@@ -32,7 +33,9 @@ class SequenceBuilder(BuilderBase):
     def sequence(self):
         return self._sequence_stack[-1]
 
-    def _add_statement(self, statement):
+    def _add_statement(self, statement, init_section=False):
+        if self._compiled:
+            raise Exception('Program cannot be changed after compilation')
         self.sequence.add(statement)
 
     def wait(self, t):
@@ -54,6 +57,9 @@ class SequenceBuilder(BuilderBase):
         print()
 
     def compile(self, generator, annotate=False):
+        if not self._compiled:
+            self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time+4))
+            self._compiled = True
         self._sequence_stack[0].compile(generator, annotate)
 
     @property
