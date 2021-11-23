@@ -63,7 +63,7 @@ class ShiftPhaseStatement(TimedStatement):
         return f'phase_delta {self.delta}'
 
     def write_instruction(self, generator):
-        generator.set_phase(self.time, self.delta, self.hires_regs)
+        generator.add_phase(self.time, self.delta, self.hires_regs)
 
 class SetPhaseStatement(TimedStatement):
     def __init__(self, time, delta, hires_regs=False):
