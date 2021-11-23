@@ -19,12 +19,12 @@ class ReadoutBuilder(ControlBuilder):
         return self._weights.add_weight(name, data)
 
     def acquire(self, bins, bin_index, t_offset=0):
-        section = self._translate_bins(bins)
+        bins = self._translate_bins(bins)
         t1 = self.current_time + t_offset
         if bin_index == 'increment':
             reg_name = self._get_bin_reg_name(bins)
             bin_reg = self.Rs.init(reg_name)
-            self._add_statement(AcquireStatement(t1, section, bin_reg))
+            self._add_statement(AcquireStatement(t1, bins, bin_reg))
             self.Rs[reg_name] += 1
         else:
             self._add_statement(AcquireStatement(t1, bins, bin_index))
