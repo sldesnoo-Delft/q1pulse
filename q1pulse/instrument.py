@@ -60,20 +60,25 @@ class Q1Instrument:
             print(f'Sequencer {name} loading {filename}')
             module.upload(seq.seq_nr, filename)
             module.seq_configure(seq)
-            module.arm_sequencer(seq.seq_nr)
 
+        for name,seq in sequencers.items():
+            module = self.modules[seq.module_nr]
+            module.arm_sequencer(seq.seq_nr)
+            print(f'ARM Status {name} ({module.pulsar.name}:{seq.seq_nr}):')
+            print(module.get_sequencer_state(seq.seq_nr, 0))
+
+        for module in self.modules.values():
             # Print an overview of the instrument parameters.
             # print(f'Snapshot {name} ({module.pulsar.name}-{seq.seq_nr}):')
             # module.pulsar.print_readable_snapshot(update=True)
 
-        for module in self.modules.values():
             module.pulsar.start_sequencer()
 
         # Wait for completion
         for name,seq in sequencers.items():
             module = self.modules[seq.module_nr]
             print(f'Status {name} ({module.pulsar.name}:{seq.seq_nr}):')
-            print(module.get_sequencer_state(0, 1))
+            print(module.get_sequencer_state(seq.seq_nr, 1))
 
 # TODO @@@
 #            #Wait for the sequencer to stop with a timeout period of one minute.
@@ -88,3 +93,11 @@ class Q1Instrument:
 #    def close(self):
 #        #Close the instrument connection.
 #        pulsar.close()
+
+    def get_acquisition_bins(self, sequencer_name, bins):
+        seq = self.readouts[sequencer_name]
+        module = self.modules[seq.module_nr]
+        print(f'Acquisition status {sequencer_name} ({module.pulsar.name}:{seq.seq_nr}):')
+        print(module.pulsar.get_acquisition_state(seq.seq_nr, 1))
+        return module.pulsar.get_acquisitions(seq.seq_nr)[bins]['acquisition']['bins']
+
