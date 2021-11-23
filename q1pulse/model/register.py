@@ -11,12 +11,11 @@ class Register(Operand):
     def dtype(self):
         return self._dtype
 
-    def assign(self, value_or_expression, init_section=False):
+    def assign(self, value_or_expression):
         allocate = not self._initialized
         if not self._initialized:
             self._initialized = True
-        return RegisterAssignment(self, value_or_expression,
-                                  allocate=allocate, init_section=init_section)
+        return RegisterAssignment(self, value_or_expression, allocate=allocate)
 
     def __repr__(self):
         return self.name

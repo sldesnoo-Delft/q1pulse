@@ -20,6 +20,7 @@ class SequenceBuilder(BuilderBase):
         self._local_time = 0
         self._local_time_active = False
         self._compiled = False
+        self._init_sequence = Sequence(None)
 
     def start_sequence(self, program, timeline):
         self._program = program
@@ -36,7 +37,10 @@ class SequenceBuilder(BuilderBase):
     def _add_statement(self, statement, init_section=False):
         if self._compiled:
             raise Exception('Program cannot be changed after compilation')
-        self.sequence.add(statement)
+        if init_section:
+            self._init_sequence.add(statement)
+        else:
+            self.sequence.add(statement)
 
     def wait(self, t):
         if self._local_time_active:
@@ -48,11 +52,12 @@ class SequenceBuilder(BuilderBase):
         self._add_statement(comment)
 
     def describe(self):
-        init_section = []
+        init = []
         lines = []
-        self._sequence_stack[0].describe(init_section, lines, indent=0)
+        self._init_sequence.describe(init, init_section=True)
+        self._sequence_stack[0].describe(lines)
         print(f'Sequence:{self.name}')
-        for line in init_section + lines:
+        for line in init + lines:
             print(line)
         print()
 
@@ -60,6 +65,8 @@ class SequenceBuilder(BuilderBase):
         if not self._compiled:
             self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time+4))
             self._compiled = True
+        self._init_sequence.compile(generator, annotate)
+        generator.start_main()
         self._sequence_stack[0].compile(generator, annotate)
 
     @property
@@ -145,7 +152,7 @@ class Sequence:
     def add(self, statement):
         self._statements.append(statement)
 
-    def describe(self, init_section, lines, indent=0):
+    def describe(self, lines, indent=0, init_section=False):
         white = '    ' * indent
         for statement in self._statements:
             statement_str = str(statement)
@@ -153,16 +160,14 @@ class Sequence:
                 continue
             if isinstance(statement, TimedStatement):
                 time = f'{statement.time:6}'
+            elif init_section:
+                time = '-init-'
             else:
                 time = ' '*6
-            if getattr(statement, 'init_section', False):
-                line = f'-init-  {statement}'
-                init_section.append(line)
-            else:
-                line = f'{time}  {white}{statement}'
-                lines.append(line)
+            line = f'{time}  {white}{statement}'
+            lines.append(line)
             if isinstance(statement, BranchStatement):
-                statement.sequence.describe(init_section, lines, indent+1)
+                statement.sequence.describe(lines, indent+1)
 
     def compile(self, generator, annotate=False):
         for statement in self._statements:
@@ -170,8 +175,7 @@ class Sequence:
                 s = str(statement)
                 if isinstance(statement, TimedStatement):
                     s += f' t={statement.time}'
-                init_section = getattr(statement, 'init_section', False)
-                generator.add_comment(s, init_section)
+                generator.add_comment(s)
             if isinstance(statement, str):
                 if not annotate:
                     generator.add_comment(statement)

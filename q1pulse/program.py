@@ -45,7 +45,6 @@ class Program:
             filename = self.seq_filename(builder.name)
             g = Q1asmGenerator(add_comments=add_comments)
             g.repetitions = self.repetitions
-            g.init()
             builder.compile(g, annotate=annotate)
 
             if verbose:
@@ -57,11 +56,11 @@ class Program:
                 g.save_prog_and_data_txt(filename.replace('.json','.txt'))
             g.save_prog_and_data_json(filename)
 
-    def _add_statement(self, statement):
+    def _add_statement(self, statement, init_section=False):
         if not isinstance(statement, RegisterAssignment):
             raise Exception(f'Illegal statement for program {statement}')
         for builder in self.sequence_builders.values():
-            builder._add_statement(statement)
+            builder._add_statement(statement, init_section=init_section)
 
     def loop_range(self, start_stop, stop=None, step=None):
         ''' range loop '''

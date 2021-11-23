@@ -3,11 +3,9 @@ from .math_expressions import Expression, get_dtype
 
 
 class RegisterAssignment(Statement):
-    def __init__(self, destination, value_or_expression,
-                 allocate=False, init_section=False):
+    def __init__(self, destination, value_or_expression, allocate=False):
         self.destination = destination
         self.value_or_expression = value_or_expression
-        self.init_section = init_section
         self.allocate = allocate
         if allocate:
             destination._dtype = get_dtype(value_or_expression)
@@ -25,7 +23,7 @@ class RegisterAssignment(Statement):
                 expression = self.value_or_expression
                 expression.evaluate(generator, self.destination)
         else:
-            generator.move(self.value_or_expression, self.destination, self.init_section)
+            generator.move(self.value_or_expression, self.destination)
 
 
 

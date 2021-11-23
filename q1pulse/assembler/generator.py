@@ -117,11 +117,6 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         self._data = GeneratorData()
         self._registers = SequencerRegisters(self._add_reg_comment)
         self.add_comment('--INIT--', init_section=True)
-        self._add_rt_command('wait_sync', time=0)
-        self.set_label('_start')
-        self.reset_phase(4)
-        self._reset_time()
-        self.add_comment('--START-- (t=0)')
 
     @property
     def repetitions(self):
@@ -131,7 +126,13 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
     def repetitions(self, value):
         self._repetitions = value
 
-    def init(self):
+    def start_main(self):
+        self._add_rt_command('wait_sync', time=0)
+        self.set_label('_start')
+        self.reset_phase(4)
+        self._reset_time()
+        self.add_comment('--START-- (t=0)')
+
         if self._repetitions > 1:
             self.repetitions_reg = self.allocate_reg('_repetitions')
             self.move(self._repetitions, self.repetitions_reg,
@@ -142,9 +143,6 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             return
         self._flush_pending_update()
         if self._repetitions > 1:
-#            repetitions_reg = self.allocate_reg('_repetitions')
-#            self.move(self._repetitions, repetitions_reg,
-#                      init_section=True)
             self.loop(self.repetitions_reg, '_start')
         self._add_instruction('stop')
         self._finalized = True

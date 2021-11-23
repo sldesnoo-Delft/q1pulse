@@ -25,8 +25,8 @@ class Registers:
             self.add_reg(name)
 
         register = self._registers[name]
-        statement = register.assign(value, init_section=init_section)
-        self._builder._add_statement(statement)
+        statement = register.assign(value)
+        self._builder._add_statement(statement, init_section=init_section)
 
     def add_reg(self, name):
         register = Register(name, local=self._local)
