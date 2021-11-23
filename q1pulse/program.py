@@ -45,6 +45,7 @@ class Program:
             filename = self.seq_filename(builder.name)
             g = Q1asmGenerator(add_comments=add_comments)
             g.repetitions = self.repetitions
+            g.init()
             builder.compile(g, annotate=annotate)
 
             if verbose:

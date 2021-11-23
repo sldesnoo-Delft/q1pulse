@@ -117,8 +117,8 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         self._data = GeneratorData()
         self._registers = SequencerRegisters(self._add_reg_comment)
         self.add_comment('--INIT--', init_section=True)
-        self.set_label('_sync')
         self._add_rt_command('wait_sync', time=0)
+        self.set_label('_start')
         self.reset_phase(4)
         self._reset_time()
         self.add_comment('--START-- (t=0)')
@@ -131,15 +131,21 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
     def repetitions(self, value):
         self._repetitions = value
 
+    def init(self):
+        if self._repetitions > 1:
+            self.repetitions_reg = self.allocate_reg('_repetitions')
+            self.move(self._repetitions, self.repetitions_reg,
+                      init_section=True)
+
     def finalize(self):
         if self._finalized:
             return
         self._flush_pending_update()
         if self._repetitions > 1:
-            repetitions_reg = self.allocate_reg('_repetitions')
-            self.move(self._repetitions, repetitions_reg,
-                      init_section=True)
-            self.loop(repetitions_reg, '_sync')
+#            repetitions_reg = self.allocate_reg('_repetitions')
+#            self.move(self._repetitions, repetitions_reg,
+#                      init_section=True)
+            self.loop(self.repetitions_reg, '_start')
         self._add_instruction('stop')
         self._finalized = True
 
@@ -173,6 +179,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             # swap arguments. 1st argument cannot be immediate value
             lhs,rhs = rhs,lhs
         self._add_instruction('add', lhs, rhs, destination)
+        self._add_instruction('nop')
 
     @register_args(allow_float=(1,2,3))
     def sub(self, lhs, rhs, destination):
@@ -366,7 +373,9 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
 
     def _reg_to_f16(self, reg):
         temp_reg = self.get_temp_reg()
+        self._add_instruction('nop')
         self._add_instruction('asr', reg, 16, temp_reg)
+        self._add_instruction('nop')
         return temp_reg
 
     def _convert_phase(self, phase, hires_regs):
