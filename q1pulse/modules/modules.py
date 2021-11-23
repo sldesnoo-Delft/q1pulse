@@ -34,7 +34,7 @@ class QbloxModule:
         self._allocated_seq = 0
 
         if pulsar:
-            pulsar.reset()
+#            pulsar.reset()
             print(f'Status {pulsar.name}:', pulsar.get_system_status())
 
     def get_sequencer(self, channels):
@@ -70,7 +70,7 @@ class QbloxModule:
         self.pulsar.arm_sequencer(seq_nr)
 
     @requires_connection
-    def get_sequencer_state(self, seq_nr, timeout):
+    def get_sequencer_state(self, seq_nr, timeout=0):
         return self.pulsar.get_sequencer_state(seq_nr, timeout)
 
     @requires_connection
@@ -153,6 +153,26 @@ class QrmModule(QbloxModule):
         return channels
 
     @requires_connection
+    def seq_configure(self, sequencer):
+        super().seq_configure(sequencer)
+        seq_nr = sequencer.seq_nr
+        # TODO @@@ move to module_configure
+        self.pulsar.scope_acq_sequencer_select(0)
+        self.pulsar.scope_acq_trigger_mode_path0('sequencer')
+        self.pulsar.scope_acq_trigger_mode_path1('sequencer')
+        # TODO @@@ make configurable
+        self.phase_rotation_acq(seq_nr, 0)
+        self.discretization_threshold_acq(seq_nr, 0)
+
+    @requires_connection
+    def phase_rotation_acq(self, seq_nr, phase_rotation):
+        self.__sset(seq_nr, 'phase_rotation_acq', phase_rotation)
+
+    @requires_connection
+    def discretization_threshold_acq(self, seq_nr, threshold):
+        self.__sset(seq_nr, 'discretization_threshold_acq', threshold)
+
+    @requires_connection
     def set_nco(self, seq_nr, nco_frequency):
         super().set_nco(seq_nr, nco_frequency)
         self.__sset(seq_nr, 'demod_en_acq', nco_frequency is not None)
@@ -160,15 +180,6 @@ class QrmModule(QbloxModule):
     def __sset(self, seq_nr, name, value):
         return self.pulsar.set(f'sequencer{seq_nr}_{name}', value)
 
-
 ## TODO @@@
-##Configure scope mode
-#pulsar.scope_acq_sequencer_select(0)
-#pulsar.scope_acq_trigger_mode_path0("sequencer")
-#pulsar.scope_acq_trigger_mode_path1("sequencer")
 
-##Configure the sequencer
 #pulsar.sequencer0_integration_length_acq(1000)
-#pulsar.sequencer0_phase_rotation_acq(0)
-#pulsar.sequencer0_discretization_threshold_acq(0)
-
