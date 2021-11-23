@@ -9,6 +9,8 @@ class SequencerRegisters:
         # stack with list of registers allcated in scope
         self._scope_regs = []
         self.enter_scope()
+        self.allocate_reg('_always_zero_')
+        self._always_zero_initialized = False
 
     def get_asm_reg(self, name):
         try:
@@ -18,24 +20,21 @@ class SequencerRegisters:
         return f'R{reg_nr}'
 
     def get_dummy_reg(self):
-        name = '_empty_dummy_'
-        if name not in self._allocated_regs:
-            self.allocate_reg(name, global_scope=True)
-            init_reg = True
-        else:
-            init_reg = False
-        asm_reg = self.get_asm_reg(name)
+        init_reg = not self._always_zero_initialized
+        asm_reg = self.get_asm_reg('_always_zero_')
+        if not self._always_zero_initialized:
+            self._log(f'{asm_reg}: always 0 register')
+            self._always_zero_initialized = True
         return asm_reg, init_reg
 
-    def allocate_reg(self, name, global_scope=False):
+    def allocate_reg(self, name):
         if name in self._allocated_regs:
             self._print_reg_admin()
             raise Exception(f'Register {name} already allocated')
 
         reg = self._free_regs.pop()
         self._allocated_regs[name] = reg
-        if not global_scope:
-            self._scope_regs[-1].append(name)
+        self._scope_regs[-1].append(name)
         self._log(f'R{reg}: {name}')
         return self.get_asm_reg(name)
 
