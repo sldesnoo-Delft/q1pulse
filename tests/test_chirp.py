@@ -8,9 +8,9 @@ instrument.add_qcm(0, qcm0)
 
 # use 4 max sequencers for chirp
 for s in 'abcd':
-    seq = instrument.add_control('q1'+s, 0, [0,1])
+    seq = instrument.add_control('q1'+s, 0, [2,3])
 
-instrument.add_control('P1', 0, [2])
+instrument.add_control('P1', 0, [1])
 
 p = instrument.new_program('chirp')
 
@@ -20,7 +20,7 @@ for s in 'abcd':
     qs.append(p['q1'+s])
 
 P1.block_pulse(100, 0.5)
-add_chirp(30000, -40e6, 40e6, 0.1, qs)
+add_chirp(10000, -10e6, 10e6, 0.4, qs)
 
 p.describe()
 print()

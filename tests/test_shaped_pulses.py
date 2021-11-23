@@ -11,7 +11,7 @@ instrument.add_control('P1', 0, [2])
 instrument.add_control('P2', 0, [3])
 
 p = instrument.new_program('shaped')
-p.repetitions = 1000
+p.repetitions = 2
 
 q1 = p.q1
 P1 = p.P1
@@ -22,7 +22,7 @@ gauss80 = q1.add_wave('gauss80', signal.gaussian(80, std=0.12 * 80))
 amplitude = 0.125
 
 q1.shaped_pulse(gauss80, 0.5, gauss80, 0.5)
-p.wait(50)
+p.wait(100)
 q1.shaped_pulse('gauss80', amplitude, 'gauss80', amplitude)
 
 p.wait(50)
