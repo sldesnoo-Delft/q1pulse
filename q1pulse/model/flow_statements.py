@@ -49,7 +49,7 @@ class LoopStatement(BranchStatement):
     def __init__(self, sequence, label, loop_registers, loop):
         super().__init__(sequence, label)
         self._loop_register = loop_registers[0]
-        self._loop_stop_register = loop_registers[1]
+        self._loop_cnt_register = loop_registers[1]
         self._loop = loop
 
     def __repr__(self):
@@ -59,18 +59,14 @@ class LoopStatement(BranchStatement):
     def write_instruction(self, generator):
         l = self._loop
         _assign_reg(generator, self._loop_register, l.start)
-        if generator.emulate_signed and (l.start < 0 or l.stop < 0):
-            generator.add_comment('         --- emulate signed')
-            stop = l.stop if l.step > 0 else l.stop + 1
-            _assign_reg(generator, self._loop_stop_register, stop)
-            generator.bits_xor(self._loop_stop_register, 0x8000_0000, self._loop_stop_register)
+        _assign_reg(generator, self._loop_cnt_register, l.n)
         generator.set_label(self._label)
 
 class EndLoopStatement(Statement):
     def __init__(self, label, loop_registers, loop):
         self._label = label
         self._loop_register = loop_registers[0]
-        self._loop_stop_register = loop_registers[1]
+        self._loop_cnt_register = loop_registers[1]
         self._loop = loop
 
     def __repr__(self):
@@ -80,21 +76,8 @@ class EndLoopStatement(Statement):
         l = self._loop
         # increment loop register
         _increment_reg(generator, self._loop_register, l.step)
-
-        # jlt, register,
-        if generator.emulate_signed and (l.start < 0 or l.stop < 0):
-            with generator.temp_regs(1) as loop_temp:
-                generator.add_comment('         --- emulate signed')
-                generator.bits_xor(self._loop_register, 0x8000_0000, loop_temp)
-                if l.step > 0:
-                    generator.jlt(loop_temp, self._loop_stop_register, self._label)
-                else:
-                    generator.jge(loop_temp, self._loop_stop_register, self._label)
-        else:
-            if l.step > 0:
-                generator.jlt(self._loop_register, l.stop, self._label)
-            else:
-                generator.jge(self._loop_register, l.stop + 1, self._label)
+        # loop, register
+        generator.loop(self._loop_cnt_register, self._label)
 
 
 class LinspaceLoopStatement(BranchStatement):

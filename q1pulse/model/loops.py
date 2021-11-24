@@ -39,12 +39,13 @@ class RangeLoop(Loop):
             self._start = start_stop
             self._stop = stop
         self._step = 1 if step is None else step
+        self._n = (self._stop - self._start) // self._step
 
     def set_number(self, number):
         self._number = number
         self._reg_name = f'_i{self._number}'
         self._loopvar = LoopVar(self._reg_name)
-        self._loop_stop = f'_stop{self._number}'
+        self._loop_cnt = f'_cnt{self._number}'
 
     @property
     def start(self):
@@ -59,11 +60,15 @@ class RangeLoop(Loop):
         return self._step
 
     @property
+    def n(self):
+        return self._n
+
+    @property
     def loopvar(self):
         return self._loopvar
 
     def reg_names(self):
-        return [self._reg_name, self._loop_stop]
+        return [self._reg_name, self._loop_cnt]
 
 class LinspaceLoop(Loop):
     def __init__(self, start, stop, n, endpoint=True):
