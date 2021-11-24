@@ -77,9 +77,7 @@ class SequenceBuilder(BuilderBase):
 
     def set_pulse_end(self, value):
         if self._local_time_active:
-            print(f'local time {self._local_time} add {value - self.current_time}')
             self._local_time += max(0, value - self.current_time)
-            print(f'current time {self.current_time}')
         else:
             self.sequence.timeline.set_pulse_end(value)
 
@@ -150,7 +148,6 @@ class SequenceBuilder(BuilderBase):
             t_loop = self.current_time - t_start
             self._add_statement(LoopDurationStatement(n, t_loop))
             self.set_pulse_end(t_start + n * t_loop)
-            print(f'end repeat: current time {self.current_time}')
 
 
     @loopable
