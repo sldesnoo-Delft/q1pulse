@@ -21,6 +21,7 @@ class ReadoutBuilder(ControlBuilder):
     def acquire(self, bins, bin_index, t_offset=0):
         bins = self._translate_bins(bins)
         t1 = self.current_time + t_offset
+        # TODO @@@ use duration to check for next trigger
         if bin_index == 'increment':
             reg_name = self._get_bin_reg_name(bins)
             bin_reg = self.Rs.init(reg_name)
@@ -39,18 +40,17 @@ class ReadoutBuilder(ControlBuilder):
                 len(weight0.data) if weight0 is not None else 0,
                 len(weight1.data) if weight1 is not None else 0
                 )
-
-        with self._local_timeline(t_offset=t_offset, duration=duration):
-            t1 = self.current_time
-            if bin_index == 'increment':
-                reg_name = self._get_bin_reg_name(bins)
-                bin_reg = self.Rs.init(reg_name)
-                st = AcquireWeighedStatement(t1, bins, bin_reg, weight0, weight1)
-                self._add_statement(st)
-                self.Rs[reg_name] += 1
-            else:
-                st = AcquireWeighedStatement(t1, bins, bin_index, weight0, weight1)
-                self._add_statement(st)
+        # TODO @@@ use duration to check for next trigger
+        t1 = self.current_time + t_offset
+        if bin_index == 'increment':
+            reg_name = self._get_bin_reg_name(bins)
+            bin_reg = self.Rs.init(reg_name)
+            st = AcquireWeighedStatement(t1, bins, bin_reg, weight0, weight1)
+            self._add_statement(st)
+            self.Rs[reg_name] += 1
+        else:
+            st = AcquireWeighedStatement(t1, bins, bin_index, weight0, weight1)
+            self._add_statement(st)
 
     def reset_bin_counter(self, bins):
         reg_name = f'_bin{bins}'

@@ -137,8 +137,11 @@ QRM can execute all QCM instructions.
 QRM specific instructions:
 - add_acquisition: add a (binned) acquisition specification
 - add_acquisition_weights: add specification for weights
-- acquire: acquire data, optionally incrementing the bin counter. Doesn't advance time.
-- acquire_weighed:
+- acquire: acquire data, optionally incrementing the bin counter. (1)
+- acquire_weighed: acquire data using weighed average, optionally incrementing the bin counter. (1)
+
+Notes:
+1. instruction does not advance time in sequence.
 
 ## Variables and expressions
 Programs can make use of variables that will be translated to q1asm registers.
