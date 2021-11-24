@@ -156,10 +156,10 @@ class QrmModule(QbloxModule):
     def seq_configure(self, sequencer):
         super().seq_configure(sequencer)
         seq_nr = sequencer.seq_nr
-        # TODO @@@ move to module_configure
-        self.pulsar.scope_acq_sequencer_select(0)
-        self.pulsar.scope_acq_trigger_mode_path0('sequencer')
-        self.pulsar.scope_acq_trigger_mode_path1('sequencer')
+#        # TODO @@@ move to module_configure
+#        self.pulsar.scope_acq_sequencer_select(0)
+#        self.pulsar.scope_acq_trigger_mode_path0('sequencer')
+#        self.pulsar.scope_acq_trigger_mode_path1('sequencer')
         # TODO @@@ make configurable
         self.phase_rotation_acq(seq_nr, 0)
         self.discretization_threshold_acq(seq_nr, 0)
