@@ -49,6 +49,9 @@ class InstructionQueue:
         '''
         self._label = label
 
+    def adjust_time(self, duration):
+        self._rt_time += duration
+
     def __append_instruction(self, instruction):
         if self._finalized:
             raise Exception('Sequence already finalized')

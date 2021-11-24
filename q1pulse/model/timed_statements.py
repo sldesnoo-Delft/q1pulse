@@ -14,6 +14,18 @@ class SyncTimeStatement(TimedStatement):
     def write_instruction(self, generator):
         generator.wait_till(self.time)
 
+class LoopDurationStatement:
+    ''' Adds loop duration for compiler. Does not add a statement. '''
+    def __init__(self, n, t_loop):
+        self.n = n
+        self.t_loop = t_loop
+
+    def __repr__(self):
+        return f'    --- loop duration: {self.n*self.t_loop}'
+
+    def write_instruction(self, generator):
+        generator.adjust_time((self.n-1) * self.t_loop)
+
 
 class WaitRegStatement(TimedStatement):
     def __init__(self, time, register):

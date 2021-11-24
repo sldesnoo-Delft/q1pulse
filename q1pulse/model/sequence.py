@@ -2,7 +2,12 @@ from contextlib import contextmanager
 
 from .builderbase import BuilderBase
 from .registers import Registers
-from .timed_statements import TimedStatement, SyncTimeStatement, WaitRegStatement
+from .timed_statements import (
+        TimedStatement,
+        SyncTimeStatement,
+        LoopDurationStatement,
+        WaitRegStatement
+        )
 from .flow_statements import (
         BranchStatement,
         LoopStatement, EndLoopStatement,
@@ -43,10 +48,7 @@ class SequenceBuilder(BuilderBase):
             self.sequence.add(statement)
 
     def wait(self, t):
-        if self._local_time_active:
-            self._local_time += t
-        else:
-            self.set_pulse_end(self.current_time + t)
+        self.set_pulse_end(self.current_time + t)
 
     def add_comment(self, comment):
         self._add_statement(comment)
@@ -74,23 +76,32 @@ class SequenceBuilder(BuilderBase):
         return self.sequence.timeline.current_time + self._local_time
 
     def set_pulse_end(self, value):
-        self.sequence.timeline.set_pulse_end(value)
+        if self._local_time_active:
+            print(f'local time {self._local_time} add {value - self.current_time}')
+            self._local_time += max(0, value - self.current_time)
+            print(f'current time {self.current_time}')
+        else:
+            self.sequence.timeline.set_pulse_end(value)
 
 
     @contextmanager
     def _local_timeline(self, duration=None, t_offset=0):
+        end_time = self.current_time + t_offset
+        if duration is not None:
+            end_time += duration
         self._local_time = t_offset
         self._local_time_active = True
         yield
-        self.set_pulse_end(self.current_time)
         self._local_time = 0
         self._local_time_active = False
+        self.set_pulse_end(end_time)
 
     @property
     def end_time(self):
         return self.sequence.timeline.end_time
 
     def enter_loop(self, label, loop):
+        # TODO @@@ incorporate in Sequence() and sequence.compile()
         self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time))
         loop_sequence = Sequence(self._timeline)
         if isinstance(loop, RangeLoop):
@@ -107,6 +118,7 @@ class SequenceBuilder(BuilderBase):
         self._sequence_stack.append(loop_sequence)
 
     def exit_loop(self):
+        # TODO @@@ incorporate in sequence.compile()
         self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time))
         self.sequence.close()
         self._sequence_stack.pop()
@@ -119,6 +131,8 @@ class SequenceBuilder(BuilderBase):
         if n == 1:
             yield
         else:
+            # TODO @@@ incorporate in sequence.compile()
+            t_start = self.current_time
             label = f'local_{self._local_loop_cnt}'
             reg_name = f'_cnt{self._local_loop_cnt}'
             self._local_loop_cnt += 1
@@ -133,6 +147,11 @@ class SequenceBuilder(BuilderBase):
 
             self.sequence.close()
             self._sequence_stack.pop()
+            t_loop = self.current_time - t_start
+            self._add_statement(LoopDurationStatement(n, t_loop))
+            self.set_pulse_end(t_start + n * t_loop)
+            print(f'end repeat: current time {self.current_time}')
+
 
     @loopable
     def _add_reg_wait(self, reg):
