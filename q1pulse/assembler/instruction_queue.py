@@ -19,7 +19,7 @@ RT_RESOLUTION = 4
 MAX_WAIT = (1<<16)-RT_RESOLUTION
 
 class InstructionQueue:
-    _check_time_reg = False
+    _check_time_reg = True
     emulate_signed = True
 
     def __init__(self):
@@ -33,6 +33,7 @@ class InstructionQueue:
         self._pending_update = None
         self._last_rt_command = None
         self._finalized = False
+        self._updating_reg = None
 
     def add_comment(self, line, init_section=False):
         if self._finalized:
@@ -51,6 +52,7 @@ class InstructionQueue:
     def __append_instruction(self, instruction):
         if self._finalized:
             raise Exception('Sequence already finalized')
+        self._wait_register_updates(instruction.mnemonic, instruction.args)
         if self._label is not None:
             instruction.label = self._label
             self._label = None
@@ -181,7 +183,7 @@ class InstructionQueue:
             if self.emulate_signed:
                 self.add_comment('         --- emulate signed')
                 with self.temp_regs(1) as temp_reg:
-                    self._add_instruction('xor', wait_reg, 0x8000_0000 , temp_reg)
+                    self._add_instruction('xor', wait_reg, 0x8000_0000, temp_reg)
                     self._add_instruction('jge', temp_reg, 0x8000_0000 + RT_RESOLUTION, '@'+continue_label)
             else:
                 self._add_instruction('jge', wait_reg, RT_RESOLUTION, '@'+continue_label)
@@ -201,3 +203,16 @@ class InstructionQueue:
             self.set_label(end_label)
 
         self._add_instruction('wait', wait_reg)
+
+    def _wait_register_updates(self, mnemonic, args):
+        '''
+        Inserts a NOP when one of the arguments is a register which
+        has been modified by the previous instruction.
+        Registers are modified by the arithmetic instructions.
+        '''
+        if self._updating_reg in args:
+            self._add_instruction('nop', comment=f' {mnemonic} wait for {self._updating_reg}')
+        if mnemonic in ['move','not','add','sub','and','or','xor','asl','asr']:
+            self._updating_reg = args[-1]
+        else:
+            self._updating_reg = None

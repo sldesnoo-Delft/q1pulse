@@ -177,7 +177,6 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             # swap arguments. 1st argument cannot be immediate value
             lhs,rhs = rhs,lhs
         self._add_instruction('add', lhs, rhs, destination)
-        self._add_instruction('nop')
 
     @register_args(allow_float=(1,2,3))
     def sub(self, lhs, rhs, destination):
@@ -371,9 +370,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
 
     def _reg_to_f16(self, reg):
         temp_reg = self.get_temp_reg()
-        self._add_instruction('nop')
         self._add_instruction('asr', reg, 16, temp_reg)
-        self._add_instruction('nop')
         return temp_reg
 
     def _convert_phase(self, phase, hires_regs):

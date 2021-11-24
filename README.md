@@ -11,6 +11,15 @@ This project has several goals:
 - explore the possibilities of q1asm and the QCM and QRM
 - have fun with building a compiler for q1asm.
 
+q1pulse uses a generic language independent of q1asm and the constraints of its instruction set.
+As a consequence the compiler will have to generate multiple q1asm instructions for some q1pulse statements.
+- Floating point operations are emulated with a fixed point representation.
+- Signed integer comparisons are emulated.
+- Additional (looped) wait instructions are inserted when a wait time is too long for one instruction.
+- Update parameter instructions are inserted only when required.
+- NOP instruction are inserted to wait a cycle for a register being updated.
+- Temporary registers are used for immediate values when the instruction does not support immediate operand.
+
 q1pulse is inspired on [pulse_lib](https://github.com/stephanlphilips/pulse_lib).
 The following features of pulse_lib are **not** available in q1pulse:
 - Virtual matrix for compensation of capacitive coupling of device gates.
