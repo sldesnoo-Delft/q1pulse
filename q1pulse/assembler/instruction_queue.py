@@ -179,6 +179,7 @@ class InstructionQueue:
         self._wait_loop_cnt += 1
 
         if self._check_time_reg:
+            self.add_comment('         --- check for negative wait time')
             continue_label = f'waitc{self._wait_loop_cnt}'
             if self.emulate_signed:
                 self.add_comment('         --- emulate signed')
@@ -187,9 +188,10 @@ class InstructionQueue:
                     self._add_instruction('jge', temp_reg, 0x8000_0000 + RT_RESOLUTION, '@'+continue_label)
             else:
                 self._add_instruction('jge', wait_reg, RT_RESOLUTION, '@'+continue_label)
-            self._add_instruction('illegal')
+            self._add_instruction('illegal', comment='negative value')
             if less_then_65us:
                 self._add_instruction('jlt', wait_reg, MAX_WAIT, '@'+continue_label)
+                self._add_instruction('illegal', comment='larger than 65 us')
             self.set_label(continue_label)
 
         if not less_then_65us:
