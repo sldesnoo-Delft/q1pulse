@@ -28,17 +28,14 @@ R1.add_acquisition_bins('default', N)
 
 rabi_amplitude = 0.1
 
-p.R.bin=0
 with p.loop_range(N):
     q1.block_pulse(100, rabi_amplitude)
     q2.block_pulse(100, rabi_amplitude)
 
     with p.parallel():
         q1.block_pulse(600, rabi_amplitude)
-#        R1.acquire('default', 'increment', t_offset=100)
-        R1.acquire('default', p.R.bin, t_offset=100)
+        R1.acquire('default', 'increment', t_offset=120)
         p.wait(1000)
-        p.R.bin += 1
     p.wait(50_000-1620)
 
 #p.describe()
