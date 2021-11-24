@@ -36,6 +36,7 @@ class QbloxModule:
         if pulsar:
 #            pulsar.reset()
             print(f'Status {pulsar.name}:', pulsar.get_system_status())
+            self.disable_all_out()
 
     def get_sequencer(self, channels):
         seq_nr = self._allocate_seq_number()
@@ -62,7 +63,7 @@ class QbloxModule:
 
     @requires_connection
     def upload(self, seq_nr, filename):
-        print(f'Loading {filename} to sequencer {seq_nr}')
+        print(f'Loading {filename} to sequencer {self.pulsar.name}:{seq_nr}')
         self.__sset(seq_nr, 'waveforms_and_program', filename)
 
     @requires_connection

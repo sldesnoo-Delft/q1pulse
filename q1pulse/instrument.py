@@ -1,4 +1,5 @@
 import os
+import time
 
 from .program import Program
 from .model.control import ControlBuilder
@@ -50,22 +51,24 @@ class Q1Instrument:
             module.connect()
 
     def run_program(self, program):
+        t_start = time.perf_counter()
         sequencers = { **self.controllers, **self.readouts }
-        for module in self.modules.values():
-            module.disable_all_out()
+
         for name,seq in sequencers.items():
             module = self.modules[seq.module_nr]
 
             filename = program.seq_filename(name)
-            print(f'Sequencer {name} loading {filename}')
             module.upload(seq.seq_nr, filename)
+            t = (time.perf_counter() - t_start) * 1000
+            print(f'Sequencer {name} loaded {filename} ({t:5.3f} ms)')
             module.seq_configure(seq)
 
         for name,seq in sequencers.items():
             module = self.modules[seq.module_nr]
             module.arm_sequencer(seq.seq_nr)
-            print(f'ARM Status {name} ({module.pulsar.name}:{seq.seq_nr}):')
-            print(module.get_sequencer_state(seq.seq_nr, 0))
+#            t = (time.perf_counter() - t_start) * 1000
+#            print(f'ARM Status {name} ({module.pulsar.name}:{seq.seq_nr}):')
+#            print(module.get_sequencer_state(seq.seq_nr, 0), f' ({t:5.3f}ms)')
 
         for module in self.modules.values():
             # Print an overview of the instrument parameters.
@@ -74,6 +77,8 @@ class Q1Instrument:
 
             module.pulsar.start_sequencer()
 
+        t = (time.perf_counter() - t_start) * 1000
+        print(f'Duration upload/start: ({t:5.3f}ms)')
         # Wait for completion
         for name,seq in sequencers.items():
             module = self.modules[seq.module_nr]
