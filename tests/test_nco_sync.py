@@ -13,6 +13,9 @@ instrument.add_control('P1', 0, [2])
 instrument.add_control('P2', 0, [3])
 instrument.add_readout('R1', 1, [], nco_frequency=200e6)
 
+qrm1.in0_gain(0)
+qrm1.in1_gain(0)
+
 p = instrument.new_program('rabi')
 p.repetitions = 1
 
@@ -25,6 +28,7 @@ R1 = p['R1']
 N = 10000
 
 R1.add_acquisition_bins('default', N)
+R1.integration_length_acq = 400
 
 rabi_amplitude = 0.1
 
@@ -41,11 +45,6 @@ with p.loop_range(N):
 #p.describe()
 
 p.compile(listing=True)
-
-qrm1.sequencer0_integration_length_acq(400)
-qrm1.sequencer1_integration_length_acq(400)
-qrm1.in0_gain(0)
-qrm1.in1_gain(0)
 
 instrument.run_program(p)
 

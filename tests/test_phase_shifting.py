@@ -11,6 +11,9 @@ instrument.add_control('P1', 0, [0])
 instrument.add_control('q1', 1, [0,1], nco_frequency=200e6)
 instrument.add_readout('R1', 1, [], nco_frequency=200e6)
 
+qrm1.in0_gain(0)
+qrm1.in1_gain(0)
+
 p = instrument.new_program('phase_shifting')
 p.repetitions = 1
 
@@ -20,6 +23,7 @@ R1 = p.R1
 N = 1000
 
 R1.add_acquisition_bins('default', N)
+R1.integration_length_acq = 400
 
 rabi_amplitude = 0.1
 q1.Rs.phase_shift = 0.01
@@ -38,11 +42,6 @@ with p.loop_range(N):
 #p.describe()
 
 p.compile(listing=True)
-
-qrm1.sequencer0_integration_length_acq(400)
-qrm1.sequencer1_integration_length_acq(400)
-qrm1.in0_gain(0)
-qrm1.in1_gain(0)
 
 instrument.run_program(p)
 

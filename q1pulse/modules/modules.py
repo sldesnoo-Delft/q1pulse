@@ -34,9 +34,11 @@ class QbloxModule:
         self._allocated_seq = 0
 
         if pulsar:
-#            pulsar.reset()
             print(f'Status {pulsar.name}:', pulsar.get_system_status())
             self.disable_all_out()
+            # disable all sequencers
+            for seq_nr in range(0, self.n_sequencers):
+                self.enable_sync(seq_nr, False)
 
     def get_sequencer(self, channels):
         seq_nr = self._allocate_seq_number()
@@ -157,13 +159,6 @@ class QrmModule(QbloxModule):
     def seq_configure(self, sequencer):
         super().seq_configure(sequencer)
         seq_nr = sequencer.seq_nr
-#        # TODO @@@ move to module_configure
-#        self.pulsar.scope_acq_sequencer_select(0)
-#        self.pulsar.scope_acq_trigger_mode_path0('sequencer')
-#        self.pulsar.scope_acq_trigger_mode_path1('sequencer')
-        # TODO @@@ make configurable
-        self.phase_rotation_acq(seq_nr, 0)
-        self.discretization_threshold_acq(seq_nr, 0)
 
     @requires_connection
     def phase_rotation_acq(self, seq_nr, phase_rotation):
@@ -174,6 +169,10 @@ class QrmModule(QbloxModule):
         self.__sset(seq_nr, 'discretization_threshold_acq', threshold)
 
     @requires_connection
+    def integration_length_acq(self, seq_nr, length):
+        self.__sset(seq_nr, 'integration_length_acq', length)
+
+    @requires_connection
     def set_nco(self, seq_nr, nco_frequency):
         super().set_nco(seq_nr, nco_frequency)
         self.__sset(seq_nr, 'demod_en_acq', nco_frequency is not None)
@@ -181,6 +180,3 @@ class QrmModule(QbloxModule):
     def __sset(self, seq_nr, name, value):
         return self.pulsar.set(f'sequencer{seq_nr}_{name}', value)
 
-## TODO @@@
-
-#pulsar.sequencer0_integration_length_acq(1000)

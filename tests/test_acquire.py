@@ -12,6 +12,9 @@ instrument.add_control('P1', 0, [0])
 instrument.add_control('P2', 1, [1])
 instrument.add_readout('R1', 1, [])
 
+qrm1.in0_gain(0)
+qrm1.in1_gain(0)
+
 p = instrument.new_program('acquire')
 p.repetitions = 1
 
@@ -24,6 +27,7 @@ n_acq = N*N*p.repetitions
 R1.add_acquisition_bins('non-weighed', n_acq)
 R1.add_acquisition_bins('weighed', n_acq)
 R1.add_weight('gaus100', signal.gaussian(100, 12))
+R1.integration_length_acq = 100
 
 amplitude = 0.125
 
@@ -53,12 +57,6 @@ with p.loop_linspace(-v1_max, v1_max, N) as v1:
 #print()
 
 p.compile(listing=True, annotate=True)
-
-# @@@ add to program.readout
-qrm1.sequencer0_integration_length_acq(100)
-qrm1.sequencer1_integration_length_acq(100)
-qrm1.in0_gain(0)
-qrm1.in1_gain(0)
 
 instrument.run_program(p)
 

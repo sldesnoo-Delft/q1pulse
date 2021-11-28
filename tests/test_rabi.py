@@ -12,6 +12,9 @@ instrument.add_control('P2', 0, [3])
 instrument.add_readout('R1', 1, [], nco_frequency=200e6)
 instrument.add_control('Ro1', 1, [0,1], nco_frequency=200e6)
 
+qrm1.in0_gain(0)
+qrm1.in1_gain(0)
+
 p = instrument.new_program('rabi')
 p.repetitions = 1
 
@@ -22,6 +25,7 @@ R1 = p['R1']
 Ro1 = p['Ro1']
 
 R1.add_acquisition_bins('default', 20)
+R1.integration_length_acq = 400
 
 gates=['P1', 'P2']
 v_init = [0.220, 0.040]
@@ -54,10 +58,6 @@ with p.loop_range(100, 2001, 100) as t_pulse:
 
 p.compile(listing=True)
 
-qrm1.sequencer0_integration_length_acq(400)
-qrm1.sequencer1_integration_length_acq(400)
-qrm1.in0_gain(0)
-qrm1.in1_gain(0)
 
 instrument.run_program(p)
 

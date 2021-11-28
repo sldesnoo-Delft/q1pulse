@@ -11,6 +11,33 @@ class ReadoutBuilder(ControlBuilder):
         super().__init__(name, enabled_paths, nco_frequency)
         self._acquisitions = AcquisitionBinsCollection()
         self._weights = WeightCollection()
+        self._integration_length_acq = 4
+        self._phase_rotation_acq = 0
+        self._discretization_threshold_acq = 0
+
+    @property
+    def phase_rotation_acq(self):
+        return self._phase_rotation_acq
+
+    @phase_rotation_acq.setter
+    def phase_rotation_acq(self, rotation):
+        self._phase_rotation_acq = rotation
+
+    @property
+    def discretization_threshold_acq(self):
+        return self._discretization_threshold_acq
+
+    @discretization_threshold_acq.setter
+    def discretization_threshold_acq(self, threshold):
+        self._discretization_threshold_acq = threshold
+
+    @property
+    def integration_length_acq(self):
+        return self._integration_length_acq
+
+    @integration_length_acq.setter
+    def integration_length_acq(self, length):
+        self._integration_length_acq = length
 
     def add_acquisition_bins(self, name, num_bins):
         return self._acquisitions.add_bins(name, num_bins)

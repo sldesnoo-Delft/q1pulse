@@ -38,6 +38,5 @@ def add_module(module_type, module_nr, ip_addr):
 qcm0 = add_module('qcm', 0, '192.168.0.2')
 qrm1 = add_module('qrm', 1, '192.168.0.3')
 
-# TODO @@@ move to instrument
 qcm0.reference_source('internal')
 qrm1.reference_source('external')

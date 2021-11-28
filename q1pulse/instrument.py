@@ -35,7 +35,6 @@ class Q1Instrument:
 
     def new_program(self, prog_name):
         program = Program(path=os.path.join(self.path, prog_name))
-
         for name, seq in self.controllers.items():
             seq_builder = ControlBuilder(name, seq.enabled_paths, seq.nco_frequency)
             program.add_sequence_builder(seq_builder)
@@ -46,14 +45,10 @@ class Q1Instrument:
 
         return program
 
-    def connect(self):
-        for module in self.modules.values():
-            module.connect()
-
     def run_program(self, program):
         t_start = time.perf_counter()
-        sequencers = { **self.controllers, **self.readouts }
 
+        sequencers = { **self.controllers, **self.readouts }
         for name,seq in sequencers.items():
             module = self.modules[seq.module_nr]
 
@@ -62,6 +57,13 @@ class Q1Instrument:
             t = (time.perf_counter() - t_start) * 1000
             print(f'Sequencer {name} loaded {filename} ({t:5.3f} ms)')
             module.seq_configure(seq)
+
+        for name,seq in self.readouts.items():
+            readout = program[name]
+            module = self.modules[seq.module_nr]
+            module.phase_rotation_acq(seq.seq_nr, readout.phase_rotation_acq)
+            module.discretization_threshold_acq(seq.seq_nr, readout.discretization_threshold_acq)
+            module.integration_length_acq(seq.seq_nr, readout.integration_length_acq)
 
         for name,seq in sequencers.items():
             module = self.modules[seq.module_nr]
