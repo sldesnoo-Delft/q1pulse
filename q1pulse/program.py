@@ -2,12 +2,12 @@ import os
 from contextlib import contextmanager
 from numbers import Number
 
-from .model.math_expressions import Expression
-from .model.timeline import Timeline
-from .model.registers import Registers
-from .model.register import Register
-from .model.register_statements import RegisterAssignment
-from .model.loops import RangeLoop, LinspaceLoop
+from .lang.math_expressions import Expression
+from .lang.timeline import Timeline
+from .lang.registers import Registers
+from .lang.register import Register
+from .lang.register_statements import RegisterAssignment
+from .lang.loops import RangeLoop, LinspaceLoop
 from .assembler.generator import Q1asmGenerator
 
 

@@ -9,10 +9,10 @@ from contextlib import contextmanager
 from .generator_data import GeneratorData
 from .instruction_queue import InstructionQueue
 from .registers import SequencerRegisters
-from ..model.math_expressions import get_dtype, Expression
-from ..model.generator import GeneratorBase
-from ..model.register import Register
-from ..model.sequencer_data import Wave, AcquisitionBins, AcquisitionWeight
+from ..lang.math_expressions import get_dtype, Expression
+from ..lang.generator import GeneratorBase
+from ..lang.register import Register
+from ..lang.sequencer_data import Wave, AcquisitionBins, AcquisitionWeight
 
 # TODO @@ reset_time() for start of loop / set_time() for continuation after loop. ??
 
