@@ -120,9 +120,12 @@ Notes:
 ## QCM Sequence instructions
 - add_wave: adds a wave to be used in shaped pulses
 - add_comment: add a comment line in the q1asm
+Basic instructions:
 - set_markers (1)
 - set_offset, set_gain (1)
 - set_phase, shift_phase (1)
+- play (1)
+Composite instructions:
 - block_pulse
 - shaped_pulse
 - ramp: creates ramp on 1 output (2)
@@ -167,6 +170,10 @@ Notes:
 - The shift right operator does an unsigned shift right.
 - There is no overflow checking on integer and fixed point operations.
   So, 1.0 + 0.5 gives -0.5.
+
+Multiplication and division operators are not implemented, because the emulation with
+q1asm would take too long to be practical. The emulated multiplication of two 32-bit values
+would take more than 1 microsecond.
 
 ### Example
 

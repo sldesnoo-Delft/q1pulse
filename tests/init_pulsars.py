@@ -8,7 +8,7 @@ if not qc.Station.default:
 else:
     station = qc.Station.default
 
-_use_dummy=False
+_use_dummy=True
 
 def add_module(module_type, module_nr, ip_addr):
     name = f'{module_type}_{module_nr}'
