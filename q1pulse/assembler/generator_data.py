@@ -1,5 +1,5 @@
 
-from ..lang.sequencer_data import Wave, AcquisitionBins, AcquisitionWeight
+from ..sequencer.sequencer_data import Wave, AcquisitionBins, AcquisitionWeight
 
 
 class GeneratorData:

@@ -1,5 +1,5 @@
 from .control import ControlBuilder
-from .timed_statements import AcquireStatement, AcquireWeighedStatement
+from ..lang.timed_statements import AcquireStatement, AcquireWeighedStatement
 from .sequencer_data import (
         AcquisitionWeight, WeightCollection,
         AcquisitionBins, AcquisitionBinsCollection

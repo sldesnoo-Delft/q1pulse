@@ -1,4 +1,4 @@
-from .builderbase import Statement
+from .base import Statement
 
 class TimedStatement(Statement):
     def __init__(self, time):

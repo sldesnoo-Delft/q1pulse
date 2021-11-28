@@ -1,4 +1,4 @@
-from .builderbase import Statement
+from .base import Statement
 
 class BranchStatement(Statement):
     def __init__(self, sequence, label):

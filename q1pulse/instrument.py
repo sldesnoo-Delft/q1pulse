@@ -2,8 +2,8 @@ import os
 import time
 
 from .program import Program
-from .lang.control import ControlBuilder
-from .lang.readout import ReadoutBuilder
+from .sequencer.control import ControlBuilder
+from .sequencer.readout import ReadoutBuilder
 from .modules.modules import QcmModule, QrmModule
 
 class Q1Instrument:

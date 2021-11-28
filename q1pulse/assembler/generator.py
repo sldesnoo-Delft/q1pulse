@@ -12,7 +12,7 @@ from .registers import SequencerRegisters
 from ..lang.math_expressions import get_dtype, Expression
 from ..lang.generator import GeneratorBase
 from ..lang.register import Register
-from ..lang.sequencer_data import Wave, AcquisitionBins, AcquisitionWeight
+from ..sequencer.sequencer_data import Wave, AcquisitionBins, AcquisitionWeight
 
 # TODO @@ reset_time() for start of loop / set_time() for continuation after loop. ??
 

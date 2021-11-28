@@ -1,6 +1,5 @@
-from .builderbase import Statement
+from .base import Statement
 from .math_expressions import Expression, get_dtype
-
 
 class RegisterAssignment(Statement):
     def __init__(self, destination, value_or_expression, allocate=False):

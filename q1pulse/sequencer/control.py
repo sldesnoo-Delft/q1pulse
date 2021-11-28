@@ -1,15 +1,14 @@
-from .math_expressions import Expression
-from .register import Register
-from .sequence import SequenceBuilder
-from .timed_statements import (
+from .sequencer import SequenceBuilder
+from .sequencer_data import Wave, WaveCollection
+from ..lang.math_expressions import Expression
+from ..lang.register import Register
+from ..lang.timed_statements import (
         SetMarkersStatement,
         AwgDcOffsetStatement, AwgGainStatement,
         ShiftPhaseStatement, SetPhaseStatement,
         PlayWaveStatement
         )
-from .loops import loopable
-from .sequencer_data import Wave, WaveCollection
-
+from ..lang.loops import loopable
 
 
 class ControlBuilder(SequenceBuilder):
