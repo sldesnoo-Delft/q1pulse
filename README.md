@@ -115,7 +115,8 @@ Instructions for simultaneous execution on multiple sequencers where each sequen
 
 Notes:
 1. instruction does not advance time in sequence.
-2. `ramp` instruction does not yet accept variables or expressions as argument.
+2. `ramp` voltage sweep is limited to 50% of full scale.
+
 
 ## QCM Sequence instructions
 - add_wave: adds a wave to be used in shaped pulses
@@ -132,7 +133,7 @@ Composite instructions:
 
 Notes:
 1. instruction does not advance time in sequence.
-2. `ramp` instruction does not yet accept variables or expressions as argument.
+2. `ramp` voltage sweep is limited to 50% of full scale.
 
 ## QRM Sequence instructions
 QRM can execute all QCM instructions.
