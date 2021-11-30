@@ -53,7 +53,7 @@ def get_dtype(value):
         return float
     if isinstance(value, Operand):
         return value.dtype
-
+    return None
 
 class Expression(Operand, ABC):
 
