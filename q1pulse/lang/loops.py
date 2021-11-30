@@ -1,23 +1,16 @@
-from functools import wraps
-from dataclasses import dataclass
-from abc import abstractmethod, ABC
+from .register import Register
 
-class Loop(ABC):
-    def set_number(self, number):
-        self._number = number
+class LoopVar(Register):
+    def __init__(self, name, loop, **kwargs):
+        super().__init__(name, **kwargs)
+        self._loop = loop
 
-    @property
-    @abstractmethod
-    def loopvar(self):
-        pass
 
-class RepeatLoop(Loop):
-    def __init__(self, n):
+class Loop:
+    def __init__(self, loop_number, n, local=False):
+        self._loop_number = loop_number
         self._n = n
-
-    def set_number(self, number):
-        self._number = number
-        self._reg_name = f'_i{self._number}'
+        self._loop_reg = LoopVar(f'_cnt{self._loop_number}', self, local=local)
 
     @property
     def n(self):
@@ -27,11 +20,12 @@ class RepeatLoop(Loop):
     def loopvar(self):
         return None
 
-    def reg_name(self):
-        return self._reg_name
+    def __repr__(self):
+        return f'repeat({self._n}):'
+
 
 class RangeLoop(Loop):
-    def __init__(self, start_stop, stop=None, step=None):
+    def __init__(self, loop_number, start_stop, stop=None, step=None):
         if stop is None:
             self._start = 0
             self._stop = start_stop
@@ -39,13 +33,11 @@ class RangeLoop(Loop):
             self._start = start_stop
             self._stop = stop
         self._step = 1 if step is None else step
-        self._n = (self._stop - self._start) // self._step
+        n = (self._stop - self._start) // self._step
 
-    def set_number(self, number):
-        self._number = number
-        self._reg_name = f'_i{self._number}'
-        self._loopvar = LoopVar(self._reg_name)
-        self._loop_cnt = f'_cnt{self._number}'
+        super().__init__(loop_number, n)
+        self._reg_name = f'_i{self._loop_number}'
+        self._loopvar = LoopVar(self._reg_name, self, dtype=int)
 
     @property
     def start(self):
@@ -67,31 +59,21 @@ class RangeLoop(Loop):
     def loopvar(self):
         return self._loopvar
 
-    def reg_names(self):
-        return [self._reg_name, self._loop_cnt]
+    def __repr__(self):
+        return f'loop_range({self.start}, {self.stop}, {self.step}):{self._loopvar}'
 
 class LinspaceLoop(Loop):
-    def __init__(self, start, stop, n, endpoint=True):
+    def __init__(self, loop_number, start, stop, n, endpoint=True):
+        super().__init__(loop_number, n)
         if max(start,stop) > 1.0 or min(start,stop) < -1.0:
             raise Exception('value out of range [-1.0, 1.0]')
         self._start = start
         self._stop = stop
-        self._n = n
         self._endpoint = endpoint
         step_divisor = (n-1) if endpoint else n
         self._increment = (stop - start)/step_divisor
-
-    def set_number(self, number):
-        self._number = number
-        self._reg_names = [
-                f'_i{self._number}',
-                f'_f{self._number}',
-                ]
-        self._loopvar = LoopVar(self._reg_names[1])
-
-    @property
-    def n(self):
-        return self._n
+        self._reg_name = f'_f{self._loop_number}'
+        self._loopvar = LoopVar(self._reg_name, self, dtype=float)
 
     @property
     def start(self):
@@ -113,30 +95,7 @@ class LinspaceLoop(Loop):
     def loopvar(self):
         return self._loopvar
 
-    def reg_names(self):
-        return self._reg_names
-
-
-@dataclass
-class LoopVar:
-    reg_name: str
-
-
-def loopable(func):
-
-    @wraps(func)
-    def func_wrapper(self, *args, **kwargs):
-        args = list(args)
-        kwargs = kwargs.copy()
-        for i,arg in enumerate(args):
-            if isinstance(arg, LoopVar):
-                args[i] = self.Rs[arg.reg_name]
-        for k,v in kwargs.items():
-            if isinstance(v, LoopVar):
-                kwargs[k] = self.Rs[v.reg_name]
-
-        return func(self, *args, **kwargs)
-
-
-    return func_wrapper
+    def __repr__(self):
+        endpoint = ', endpoint=False' if not self.endpoint else ''
+        return f'loop_linspace({self.start}, {self.stop}, {self.n}{endpoint}):{self.loopvar}'
 

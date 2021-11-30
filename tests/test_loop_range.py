@@ -29,7 +29,7 @@ with p.loop_range(-2, 2, 1) as t_wait:
 # 4 pulses
 with p.loop_range(80, 0, -20) as t_wait:
     P1.block_pulse(20, 0.1)
-    p.wait(t_wait)
+    p.wait(t_wait + 10)
 
 #p.describe()
 #print()

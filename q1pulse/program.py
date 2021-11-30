@@ -64,26 +64,23 @@ class Program:
 
     def loop_range(self, start_stop, stop=None, step=None):
         ''' range loop '''
-        return self.__loop(RangeLoop(start_stop, stop, step))
+        return self.__loop(RangeLoop(self._loop_cnt, start_stop, stop, step))
 
     def loop_linspace(self, start, end, n, endpoint=True):
         ''' repeat loop '''
-        return self.__loop(LinspaceLoop(start, end, n, endpoint))
+        return self.__loop(LinspaceLoop(self._loop_cnt, start, end, n, endpoint))
 
     @contextmanager
     def __loop(self, loop):
         label = f'loop_{self._loop_cnt}'
-        loop.set_number(self._loop_cnt)
         self._loop_cnt += 1
         for s in self.sequence_builders.values():
             s.enter_loop(label, loop)
-#        self._timeline.reset() # probably not needed. All time is relative. Other perspective: time is repeated.
 
         yield loop.loopvar
 
         for s in self.sequence_builders.values():
             s.exit_loop()
-#        self._timeline.reset()
 
 
     @contextmanager

@@ -2,6 +2,7 @@ from contextlib import contextmanager
 
 from .builderbase import BuilderBase
 from ..lang.sequence import Sequence
+from ..lang.loops import Loop
 from ..lang.registers import Registers
 from ..lang.timed_statements import (
         SyncTimeStatement,
@@ -13,7 +14,7 @@ from ..lang.flow_statements import (
         LinspaceLoopStatement, EndLinspaceLoopStatement,
         RepeatStatement, EndRepeatStatement,
         )
-from ..lang.loops import LinspaceLoop, RangeLoop, loopable
+from ..lang.loops import LinspaceLoop, RangeLoop
 
 class SequenceBuilder(BuilderBase):
     def __init__(self, name):
@@ -102,13 +103,11 @@ class SequenceBuilder(BuilderBase):
         self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time))
         loop_sequence = Sequence(self._timeline)
         if isinstance(loop, RangeLoop):
-            loop_registers = [self.Rs.add_reg(name) for name in loop.reg_names()]
-            loop_statement = LoopStatement(loop_sequence, label, loop_registers, loop)
-            loop_sequence.exit_statement = EndLoopStatement(label, loop_registers, loop)
+            loop_statement = LoopStatement(loop_sequence, label, loop)
+            loop_sequence.exit_statement = EndLoopStatement(label, loop)
         elif isinstance(loop, LinspaceLoop):
-            loop_registers = [self.Rs.add_reg(name) for name in loop.reg_names()]
-            loop_statement = LinspaceLoopStatement(loop_sequence, label, loop_registers, loop)
-            loop_sequence.exit_statement = EndLinspaceLoopStatement(label, loop_registers, loop)
+            loop_statement = LinspaceLoopStatement(loop_sequence, label, loop)
+            loop_sequence.exit_statement = EndLinspaceLoopStatement(label, loop)
         else:
             raise Exception('Unknown loop')
         self._add_statement(loop_statement)
@@ -131,12 +130,11 @@ class SequenceBuilder(BuilderBase):
             # TODO @@@ incorporate in sequence.compile()
             t_start = self.current_time
             label = f'local_{self._local_loop_cnt}'
-            reg_name = f'_cnt{self._local_loop_cnt}'
+            loop = Loop(self._local_loop_cnt, n, local=True)
             self._local_loop_cnt += 1
-            loop_register = self.Rs.add_reg(reg_name)
             loop_sequence = Sequence(self._timeline)
-            loop_statement = RepeatStatement(loop_sequence, label, loop_register, n)
-            loop_sequence.exit_statement = EndRepeatStatement(label, loop_register)
+            loop_statement = RepeatStatement(loop_sequence, label, loop)
+            loop_sequence.exit_statement = EndRepeatStatement(label, loop)
             self._add_statement(loop_statement)
             self._sequence_stack.append(loop_sequence)
 
@@ -149,7 +147,6 @@ class SequenceBuilder(BuilderBase):
             self.set_pulse_end(t_start + n * t_loop)
 
 
-    @loopable
     def _add_reg_wait(self, reg):
         self._add_statement(WaitRegStatement(self.sequence.timeline.end_time, reg))
 

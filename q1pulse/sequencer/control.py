@@ -8,7 +8,6 @@ from ..lang.timed_statements import (
         ShiftPhaseStatement, SetPhaseStatement,
         PlayWaveStatement
         )
-from ..lang.loops import loopable
 
 
 class ControlBuilder(SequenceBuilder):
@@ -25,19 +24,16 @@ class ControlBuilder(SequenceBuilder):
         t1 = self.current_time + t_offset
         self._add_statement(SetMarkersStatement(t1, value))
 
-    @loopable
     def set_offset(self, value0, value1=None, t_offset=0):
         value0, value1 = self._apply_paths(value0, value1)
         t1 = self.current_time + t_offset
         self._add_statement(AwgDcOffsetStatement(t1, value0, value1))
 
-    @loopable
     def set_gain(self, value0, value1=None, t_offset=0):
         value0, value1 = self._apply_paths(value0, value1)
         t1 = self.current_time + t_offset
         self._add_statement(AwgGainStatement(t1, value0, value1))
 
-    @loopable
     def play(self, wave0, wave1=None, t_offset=0):
         wave0, wave1 = self._apply_paths(wave0, wave1)
         t1 = self.current_time + t_offset
@@ -45,17 +41,14 @@ class ControlBuilder(SequenceBuilder):
         wave1 = self._translate_wave(wave1)
         self._add_statement(PlayWaveStatement(t1, wave0, wave1))
 
-    @loopable
     def shift_phase(self, delta, t_offset=0, hires_regs=False):
         t1 = self.current_time + t_offset
         self._add_statement(ShiftPhaseStatement(t1, delta, hires_regs))
 
-    @loopable
     def set_phase(self, phase, t_offset=0, hires_regs=False):
         t1 = self.current_time + t_offset
         self._add_statement(SetPhaseStatement(t1, phase, hires_regs))
 
-    @loopable
     def block_pulse(self, duration, amplitude0, amplitude1=None, t_offset=0):
         if not isinstance(duration, (Register, Expression)):
             with self._local_timeline(t_offset=t_offset, duration=duration):
@@ -70,7 +63,6 @@ class ControlBuilder(SequenceBuilder):
             self._program.wait(duration)
             self.set_offset(0.0, None)
 
-    @loopable
     def shaped_pulse(self, wave0, amplitude0, wave1=None, amplitude1=None, t_offset=0):
         wave0 = self._translate_wave(wave0)
         wave1 = self._translate_wave(wave1)
@@ -85,7 +77,6 @@ class ControlBuilder(SequenceBuilder):
             self.wait(duration)
             self.set_gain(0.0, None)
 
-#    @loopable
     # TODO @@@ can v_start/v_end be registers? only if they are managed loopvars. Introduce additional f-register
     # for variable duration: unroll!
     def ramp(self, duration, v_start, v_end, t_offset=0):
