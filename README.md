@@ -64,6 +64,8 @@ This simple program shows the use of program object and sequence objects.
     R1 = p.R1
 
     R1.add_acquisition_bins('default', 10)
+    # 60 ns acquisition
+    R1.integration_length_acq = 60
 
     # generate a block pulse of 20 ns and amplitude 0.5 on P1
     P1.block_pulse(20, 0.5)
