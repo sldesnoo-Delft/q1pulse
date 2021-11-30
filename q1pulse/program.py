@@ -7,7 +7,7 @@ from .lang.timeline import Timeline
 from .lang.registers import Registers
 from .lang.register import Register
 from .lang.register_statements import RegisterAssignment
-from .lang.loops import RangeLoop, LinspaceLoop
+from .lang.loops import RangeLoop, LinspaceLoop, ArrayLoop
 from .assembler.generator import Q1asmGenerator
 
 
@@ -69,6 +69,10 @@ class Program:
     def loop_linspace(self, start, end, n, endpoint=True):
         ''' repeat loop '''
         return self.__loop(LinspaceLoop(self._loop_cnt, start, end, n, endpoint))
+
+    def loop_array(self, values):
+        ''' array loop '''
+        return self.__loop(ArrayLoop(self._loop_cnt, values))
 
     @contextmanager
     def __loop(self, loop):

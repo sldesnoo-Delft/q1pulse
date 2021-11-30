@@ -10,11 +10,12 @@ from ..lang.timed_statements import (
         WaitRegStatement
         )
 from ..lang.flow_statements import (
-        LoopStatement, EndLoopStatement,
+        LoopRangeStatement, EndLoopRangeStatement,
         LinspaceLoopStatement, EndLinspaceLoopStatement,
         RepeatStatement, EndRepeatStatement,
+        ArrayLoopStatement, EndArrayLoopStatement,
         )
-from ..lang.loops import LinspaceLoop, RangeLoop
+from ..lang.loops import LinspaceLoop, RangeLoop, ArrayLoop
 
 class SequenceBuilder(BuilderBase):
     def __init__(self, name):
@@ -103,11 +104,14 @@ class SequenceBuilder(BuilderBase):
         self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time))
         loop_sequence = Sequence(self._timeline)
         if isinstance(loop, RangeLoop):
-            loop_statement = LoopStatement(loop_sequence, label, loop)
-            loop_sequence.exit_statement = EndLoopStatement(label, loop)
+            loop_statement = LoopRangeStatement(loop_sequence, label, loop)
+            loop_sequence.exit_statement = EndLoopRangeStatement(label, loop)
         elif isinstance(loop, LinspaceLoop):
             loop_statement = LinspaceLoopStatement(loop_sequence, label, loop)
             loop_sequence.exit_statement = EndLinspaceLoopStatement(label, loop)
+        elif isinstance(loop, ArrayLoop):
+            loop_statement = ArrayLoopStatement(loop_sequence, label, loop)
+            loop_sequence.exit_statement = EndArrayLoopStatement(label, loop)
         else:
             raise Exception('Unknown loop')
         self._add_statement(loop_statement)

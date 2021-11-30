@@ -1,3 +1,6 @@
+from numbers import Number
+
+from .math_expressions import get_dtype
 from .register import Register
 
 class LoopVar(Register):
@@ -99,3 +102,27 @@ class LinspaceLoop(Loop):
         endpoint = ', endpoint=False' if not self.endpoint else ''
         return f'loop_linspace({self.start}, {self.stop}, {self.n}{endpoint}):{self.loopvar}'
 
+class ArrayLoop(Loop):
+    def __init__(self, loop_number, values):
+        super().__init__(loop_number, len(values))
+        self.values = values
+        dtype = get_dtype(values[0])
+        for value in values[1:]:
+            if get_dtype(values[0]) != dtype:
+                raise Exception('Array values must all be same type')
+        if dtype == float:
+            literal_values = [value for value in values if isinstance(value, Number)]
+            if max(literal_values) > 1.0 or min(literal_values) < -1.0:
+                raise Exception('value out of range [-1.0, 1.0]')
+
+        self._reg_name = f'_f{self._loop_number}'
+        self._loopvar = LoopVar(self._reg_name, self, dtype=dtype)
+        self._table_label = f'_table{self._loop_number}'
+        self._data_ptr = Register(f'_ptr{self._loop_number}')
+
+    @property
+    def loopvar(self):
+        return self._loopvar
+
+    def __repr__(self):
+        return f'loop_array({self.values}):{self.loopvar}'

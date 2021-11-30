@@ -53,6 +53,9 @@ def get_dtype(value):
         return float
     if isinstance(value, Operand):
         return value.dtype
+    # process label as type int.
+    if isinstance(value, str) and value[0] == '@':
+        return int
     return None
 
 class Expression(Operand, ABC):
