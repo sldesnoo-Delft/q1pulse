@@ -77,9 +77,10 @@ class ControlBuilder(SequenceBuilder):
             self.wait(duration)
             self.set_gain(0.0, None)
 
-    # TODO @@@ can v_start/v_end be registers? only if they are managed loopvars. Introduce additional f-register
-    # for variable duration: unroll!
     def ramp(self, duration, v_start, v_end, t_offset=0):
+        if isinstance(duration, (Register, Expression)):
+            raise Exception('Ramp duration cannot be a variable or expression; '
+                            'Unroll loop using Python for-loop.')
         with self._local_timeline(t_offset=t_offset, duration=duration):
             # w_ramp is a wave from 0 to 1.0
             if duration <= 100:
@@ -88,9 +89,8 @@ class ControlBuilder(SequenceBuilder):
                 self.set_offset(v_start)
                 self.play(w_ramp)
                 self.wait(duration)
-                self.set_offset(v_end)
-                self.set_gain(0.0)
-            else:
+            elif (not isinstance(v_start, (Register, Expression))
+                  and not isinstance(v_end, (Register, Expression))):
                 # divmod, but with rem [1,100], and n > 1
                 n, rem = divmod(duration-1, 100)
                 rem += 1
@@ -110,8 +110,28 @@ class ControlBuilder(SequenceBuilder):
                 self.set_offset(self.Rs._ramp_offset)
                 self.play(w_ramp)
                 self.wait(rem)
-                self.set_offset(v_end)
-                self.set_gain(0.0)
+            else:
+                # divide duration till smallest multiple of 4 larger than or equal to 200
+                shift = 0
+                wave_duration = duration
+                while wave_duration > 200 and wave_duration % 8 == 0:
+                    wave_duration >>=1
+                    shift += 1
+                self.Rs._ramp_step = (v_end - v_start)
+                if shift >= 1:
+                    self.Rs._ramp_step >>= shift
+                w_ramp = self._waves.get_ramp(wave_duration)
+                self.Rs._ramp_offset = v_start
+                self.set_gain(self.Rs._ramp_step)
+                with self._seq_repeat(1 << shift):
+                    self.set_offset(self.Rs._ramp_offset)
+                    self.play(w_ramp)
+                    self.Rs._ramp_offset += self.Rs._ramp_step
+                    self.wait(wave_duration)
+
+            # keep end volage. @@@ Or should it go to 0.0?
+            self.set_offset(v_end)
+            self.set_gain(0.0)
 
     def _apply_paths(self, arg0, arg1):
         if len(self._enabled_paths) == 0:
