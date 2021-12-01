@@ -47,6 +47,9 @@ class InstructionQueue:
         '''
         Label to be added to next instruction
         '''
+        if self._label is not None:
+            raise Exception('Compilation error: cannot put two labels on '
+                            f'one line "{self._label}","{label}"')
         self._label = label
 
     def adjust_time(self, duration):
@@ -185,7 +188,7 @@ class InstructionQueue:
             self.add_comment('         --- check for negative wait time')
             continue_label = f'waitc{self._wait_loop_cnt}'
             if self.emulate_signed:
-                self.add_comment('         --- emulate signed')
+                self.add_comment('         --- emulate signed wait time')
                 with self.temp_regs(1) as temp_reg:
                     self._add_instruction('xor', wait_reg, 0x8000_0000, temp_reg)
                     self._add_instruction('jge', temp_reg, 0x8000_0000 + RT_RESOLUTION, '@'+continue_label)

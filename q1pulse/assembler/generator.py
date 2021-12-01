@@ -116,7 +116,10 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         self._repetitions = 1
         self._data = GeneratorData()
         self._registers = SequencerRegisters(self._add_reg_comment)
+        # counter for signed ASR emulation
+        self._asr_jumps = 0
         self.add_comment('--INIT--', init_section=True)
+
 
     @property
     def repetitions(self):
@@ -199,14 +202,59 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             self._add_instruction('asl', lhs, rhs, destination)
 
     @register_args(allow_float=(1,3))
-    def asr(self, lhs, rhs, destination):
-        # q1asm has no instruction for asr imm,reg,reg. Use asr reg,reg,reg instead
+    def lsr(self, lhs, rhs, destination):
+        # NOTE: q1asm asr is unsigned, so actually it is an logical shift right
         if isinstance(lhs, Number):
+            # q1asm has no instruction for asr imm,reg,reg. Use asr reg,reg,reg instead
             with self._registers.temp_regs(1) as temp:
                 self.move(lhs, temp)
                 self._add_instruction('asr', temp, rhs, destination)
         else:
             self._add_instruction('asr', lhs, rhs, destination)
+
+    @register_args(allow_float=(1,3))
+    def asr(self, lhs, rhs, destination):
+        with self.scope():
+            if isinstance(lhs, Number):
+                # q1asm has no instruction for asr imm,reg,reg. Use asr reg,reg,reg instead
+                temp = self.get_temp_reg()
+                self.move(lhs, temp)
+                lhs = temp
+            if self.emulate_signed:
+                self.add_comment('         --- emulate signed ASR')
+                if isinstance(rhs, Number):
+                    # This emulation adds 3 instructions: AND, JLT, OR
+                    # This implementation works only for literal rhs.
+                    # It is more efficient than the other emulation below.
+                    label = f'asr_end{self._asr_jumps}'
+                    self._asr_jumps += 1
+                    sign = self.get_temp_reg()
+                    # get sign of lhs
+                    self.bits_and(lhs, 0x8000_0000, sign)
+                    # actual ASR
+                    self._add_instruction('asr', lhs, rhs, destination)
+                    # add sign extension bits if signed
+                    self.jlt(sign, 0x8000_0000, label)
+                    sign_extension = 0xFFFF_FFFF << (31-rhs)
+                    sign_extension &= 0xFFFF_FFFF
+                    self.bits_or(destination, sign_extension, destination)
+                    self.set_label(label)
+                else:
+                    # This emulation adds 6 instructions: AND, ASR, NOP, SUB, NOP, OR
+                    sign = self.get_temp_reg()
+                    sign_extension = self.get_temp_reg()
+                    # get sign of lhs
+                    self.bits_and(lhs, 0x8000_0000, sign)
+                    # actual ASR
+                    self._add_instruction('asr', lhs, rhs, destination)
+                    # compute sign extension bits
+                    self.lsr(sign, rhs, sign) # explicit unsigned shift
+                    zero = self.get_zero_reg()
+                    self.sub(zero, sign, sign_extension)
+                    self.bits_or(destination, sign_extension, destination)
+            else:
+                self._add_instruction('asr', lhs, rhs, destination)
+
 
     @register_args
     def bits_not(self, source, destination):
@@ -307,6 +355,13 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                                  time=time, comment=f't={time}')
 
     @contextmanager
+    def unsigned_registers(self):
+        emulate_signed = self.emulate_signed
+        self.emulate_signed = False
+        yield
+        self.emulate_signed = emulate_signed
+
+    @contextmanager
     def scope(self):
         self._registers.enter_scope()
         yield
@@ -348,12 +403,12 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                 if t == 'imm':
                     result[i] = 0
                 else:
-                    result[i] = self._get_dummy_reg()
+                    result[i] = self.get_zero_reg()
 
         return result
 
-    def _get_dummy_reg(self):
-        asm_reg, init_reg = self._registers.get_dummy_reg()
+    def get_zero_reg(self):
+        asm_reg, init_reg = self._registers.get_zero_reg()
         if init_reg:
             self._add_instruction('move', 0, asm_reg, init_section=True)
         return asm_reg
@@ -382,34 +437,39 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             n2,n3 = divmod(nr, 6250)
             return n1,n2,n3
 
+        self.add_comment('         --- phase register -> 3 phase instruction arguments')
+
         if isinstance(phase, Expression):
+            # evaluate expression and store result in register
             reg_phase = Register(f'_phase')
             statement = reg_phase.assign(phase)
             statement.write_instruction(self)
             phase = reg_phase
 
         if isinstance(phase, Register):
-            # shift N bits right to create space for multiplication
-            N = 10
-            # multiply with 400
-            r1 = (phase >> (N-4)) + (phase >> (N-7)) + (phase >> (N-8))
-            # add small amount for proper rounding
-            r1 += 3.5/(1<<31)
-            if not hires_regs:
-                r1 >>= (32-N)
-                r2 = self._get_dummy_reg()
-                r3 = r2
-                return r1.evaluate(self), r2, r3
-            else:
-                rem1 = r1 << N
-                r1 >>= (32-N)
+            # use unsigned operations for multiplication
+            with self.unsigned_registers():
+                # shift N bits right to create space for multiplication
+                N = 10
                 # multiply with 400
-                r2 = (rem1 >> (N-4)) + (rem1 >> (N-7)) + (rem1 >> (N-8))
+                r1 = (phase >> (N-4)) + (phase >> (N-7)) + (phase >> (N-8))
                 # add small amount for proper rounding
-                r2 += 3.5/(1<<31)
-                r2 >>= (32-N)
-                r3 = self._get_dummy_reg()
-                return r1.evaluate(self), r2.evaluate(self), r3
+                r1 += 3.5/(1<<31)
+                if not hires_regs:
+                    r1 >>= (32-N)
+                    r2 = self.get_zero_reg()
+                    r3 = r2
+                    return r1.evaluate(self), r2, r3
+                else:
+                    rem1 = r1 << N
+                    r1 >>= (32-N)
+                    # multiply with 400
+                    r2 = (rem1 >> (N-4)) + (rem1 >> (N-7)) + (rem1 >> (N-8))
+                    # add small amount for proper rounding
+                    r2 += 3.5/(1<<31)
+                    r2 >>= (32-N)
+                    r3 = self.get_zero_reg()
+                    return r1.evaluate(self), r2.evaluate(self), r3
 
 
     def _format_line(self, label, mnemonic, args, wait_after, comment, line_nr):

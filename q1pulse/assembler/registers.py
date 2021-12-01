@@ -19,7 +19,7 @@ class SequencerRegisters:
             raise Exception(f'Register {name} not defined')
         return f'R{reg_nr}'
 
-    def get_dummy_reg(self):
+    def get_zero_reg(self):
         init_reg = not self._always_zero_initialized
         asm_reg = self.get_asm_reg('_always_zero_')
         if not self._always_zero_initialized:
