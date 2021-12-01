@@ -124,7 +124,7 @@ class ArrayLoopStatement(BranchStatement):
         # start loop
         generator.set_label(self._label)
         # increment data pointer with 2 for next value
-        _increment_reg(generator, l._data_ptr, -2)
+        _increment_reg(generator, l._data_ptr, 2)
 
 class EndArrayLoopStatement(Statement):
     def __init__(self, label, loop):

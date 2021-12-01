@@ -24,6 +24,10 @@ with p.loop_array([12,24,48,56,64]) as t_wait:
     P1.block_pulse(40, 0.25)
     p.wait(4)
 
+with p.loop_array([0.1, -0.2, 0.3, -0.4, 0.5]) as v:
+    P2.block_pulse(40, v)
+    p.wait(4)
+
 p.wait(100)
 
 p.describe()
