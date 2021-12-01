@@ -170,7 +170,8 @@ The following Python operations are supported: `+`, `-`, `<<`, `>>` and bitwise 
 Evaluation order is determined by the Python operator rules.
 
 Notes:
-- The shift right operator does an unsigned shift right.
+- The shift right operator does a **signed** shift right, just like Python does.
+  The signed shift is emulated.
 - There is no overflow checking on integer and fixed point operations.
   So, 1.0 + 0.5 gives -0.5.
 
@@ -206,10 +207,13 @@ would take more than 1 microsecond.
 ## Loops
 Loops can be created on program level and will be executed on all sequences in parallel to
 ensure synchronized execution of all sequences.
-There are two types of loops. `loop_range` creates a loop in q1asm which is similar to `for i in range(...)`.
+There are three types of loops.
+- `loop_range` creates a loop in q1asm which is similar to `for i in range(...)`.
 It uses the same  arguments as `range`.
-`loop_linspace` creates a loop in q1asm with a fixed point variable which is similar to `for x in numpy.linspace(...)`
+- `loop_linspace` creates a loop in q1asm with a fixed point variable which is similar to `for x in numpy.linspace(...)`
 It uses the same  arguments as `numpy.linspace`.
+- `loop_array` creates a loop in q1asm iterating the values of the array. The array can contain
+either integer or float values.
 The loops should be used with a `with` statement. The statements return a global variable that can
 be used as such.
 
