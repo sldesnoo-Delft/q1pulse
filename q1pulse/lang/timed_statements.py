@@ -87,7 +87,7 @@ class SetPhaseStatement(TimedStatement):
         return f'set_phase {self.delta}'
 
     def write_instruction(self, generator):
-        generator.add_phase(self.time, self.delta, self.hires_regs)
+        generator.set_phase(self.time, self.delta, self.hires_regs)
 
 class AwgDcOffsetStatement(TimedStatement):
     def __init__(self, time, offset0, offset1):
