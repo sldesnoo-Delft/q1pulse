@@ -8,6 +8,7 @@ class Instruction:
     comment: Optional[str] = None
     label: Optional[str] = None
     wait_after: Optional[int] = None
+    overwritten: bool = False
 
 @dataclass
 class PendingUpdate:
@@ -73,6 +74,7 @@ class InstructionQueue:
         instruction = Instruction(mnemonic, args, comment=comment)
         self.__append_instruction(instruction)
         self._schedule_update(time)
+        return instruction
 
     def _add_rt_command(self, mnemonic, *args, time=None, comment=None,
                         index=None):
@@ -85,6 +87,10 @@ class InstructionQueue:
             self._instructions.insert(index, instruction)
         self._last_rt_command = instruction
         self._rt_time += wait_after
+
+    def _overwrite_rt_setting(self, instruction):
+        instruction.overwritten = True
+        instruction.comment += ' = overwritten ='
 
     def _reset_time(self):
         self._flush_pending_update()

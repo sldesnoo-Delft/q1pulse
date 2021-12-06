@@ -12,7 +12,7 @@ class SyncTimeStatement(TimedStatement):
         return f'sync_seq'
 
     def write_instruction(self, generator):
-        generator._schedule_update(self.time)
+        generator.sync(self.time)
 
 class LoopDurationStatement:
     ''' Adds loop duration for compiler. Does not add a statement. '''

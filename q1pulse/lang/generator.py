@@ -36,6 +36,10 @@ class GeneratorBase(ABC):
         pass
 
     @abstractmethod
+    def sync(self, time):
+        pass
+
+    @abstractmethod
     def jmp(self, label):
         pass
 
@@ -85,10 +89,6 @@ class GeneratorBase(ABC):
 
     @abstractmethod
     def bits_xor(self, lhs, rhs, destination):
-        pass
-
-    @abstractmethod
-    def wait_till(self, time):
         pass
 
     @abstractmethod

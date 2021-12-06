@@ -118,6 +118,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         self._line_numbers = line_numbers
         self._show_arg_conversions = comment_arg_conversions
         self._repetitions = 1
+        self._last_rt_settings = {}
         self._data = GeneratorData()
         self._registers = SequencerRegisters(self._add_reg_comment)
         # counter for signed ASR emulation
@@ -296,14 +297,24 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
     @register_args(require_float=(2,3))
     def awg_offset(self, time, offset0, offset1):
         offset0, offset1 = self._all_reg_or_imm(offset0, offset1)
-        self._add_rt_setting('set_awg_offs', offset0, offset1,
-                             time=time, comment=f'@ {time}')
+        last = self._last_rt_settings.get('set_awg_offs')
+        if last is not None and last[0] == time:
+            self.add_comment(f'-- Overwrites set_awg_offs at {time} --')
+            self._overwrite_rt_setting(last[1])
+        instr = self._add_rt_setting('set_awg_offs', offset0, offset1,
+                                     time=time, comment=f'@ {time}')
+        self._last_rt_settings['set_awg_offs'] = (time, instr)
 
     @register_args(require_float=(2,3))
     def awg_gain(self, time, gain0, gain1):
         gain0, gain1 = self._all_reg_or_imm(gain0, gain1)
-        self._add_rt_setting('set_awg_gain', gain0, gain1,
-                             time=time, comment=f'@ {time}')
+        last = self._last_rt_settings.get('set_awg_gain')
+        if last is not None and last[0] == time:
+            self.add_comment(f'-- Overwrites set_awg_gain at {time} --')
+            self._overwrite_rt_setting(last[1])
+        instr = self._add_rt_setting('set_awg_gain', gain0, gain1,
+                                     time=time, comment=f'@ {time}')
+        self._last_rt_settings['set_awg_gain'] = (time, instr)
 
 #    @register_args(allow_float=(2,)) -- handled in _convert_phase()
     def set_phase(self, time, phase, hires_regs):
@@ -324,8 +335,10 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         elapsed = self._wait_till(time, return_negative=True)
         self._add_wait_reg(register, elapsed)
 
-    def wait_till(self, time):
-        self._wait_till(time)
+    def sync(self, time):
+        self._schedule_update(time)
+        # rt_settings may not be overwritten across sync boundary
+        self._last_rt_settings = {}
 
     def play(self, time, wave0, wave1):
         wave0, wave1 = self._data.translate_waves(wave0, wave1)
@@ -495,7 +508,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             c = ''
         else:
             c = ' # '
-            if self._line_numbers:
+            if self._line_numbers and line_nr is not None:
                 c += f'L{line_nr:04} '
             if comment is not None:
                 c += comment
@@ -520,6 +533,11 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                     raise Exception('Compilation error: cannot put two labels on '
                                     f'one line "{i.label}","{label}"')
                 label = i.label
+                continue
+            if i.overwritten:
+                lines+= [self._format_line('# ------',
+                                           i.mnemonic, i.args, i.wait_after,
+                                           i.comment, None)]
                 continue
             line_nr += 1
             line = self._format_line(label, i.mnemonic, i.args, i.wait_after,
