@@ -7,6 +7,8 @@ from .sequencer_data import (
 
 
 class ReadoutBuilder(ControlBuilder):
+    MIN_ACQUISITION_INTERVAL = 1040
+
     def __init__(self, name, enabled_paths, nco_frequency=None):
         super().__init__(name, enabled_paths, nco_frequency)
         self._acquisitions = AcquisitionBinsCollection()
@@ -48,7 +50,7 @@ class ReadoutBuilder(ControlBuilder):
     def acquire(self, bins, bin_index, t_offset=0):
         bins = self._translate_bins(bins)
         t1 = self.current_time + t_offset
-        # TODO @@@ use duration to check for next trigger
+        # TODO @@@ keep track of acquisition trigger interval to prevent overruns?
         if bin_index == 'increment':
             reg_name = self._get_bin_reg_name(bins)
             bin_reg = self.Rs.init(reg_name)
@@ -63,11 +65,6 @@ class ReadoutBuilder(ControlBuilder):
         bins = self._translate_bins(bins)
         weight0 = self._translate_weight(weight0)
         weight1 = self._translate_weight(weight1)
-        duration = max(
-                len(weight0.data) if weight0 is not None else 0,
-                len(weight1.data) if weight1 is not None else 0
-                )
-        # TODO @@@ use duration to check for next trigger
         t1 = self.current_time + t_offset
         if bin_index == 'increment':
             reg_name = self._get_bin_reg_name(bins)
@@ -79,8 +76,35 @@ class ReadoutBuilder(ControlBuilder):
             st = AcquireWeighedStatement(t1, bins, bin_index, weight0, weight1)
             self._add_statement(st)
 
+    def repeated_acquire(self, n, period, bins, bin_index, t_offset=0):
+        if period < ReadoutBuilder.MIN_ACQUISITION_INTERVAL:
+            raise Exception(f'Acquisition period ({period} ns) too small. '
+                            f'Minimum is {ReadoutBuilder.MIN_ACQUISITION_INTERVAL} ns')
+        with self._local_timeline(t_offset=t_offset, duration=(n-1)*period):
+            # Repeat only n-1 times to avoid wait after last acquire.
+            # A wait after the last acquire could create unwanted waits in the
+            # control sequencers, because acquisition is ~100 ns delayed w.r.t. control.
+            with self._seq_repeat(n-1):
+                self.acquire(bins, bin_index)
+                self.wait(period)
+            self.acquire(bins, bin_index)
+
+    def repeated_acquire_weighed(self, n, period, bins, bin_index,
+                                 weight0, weight1=None, t_offset=0):
+        if period < ReadoutBuilder.MIN_ACQUISITION_INTERVAL:
+            raise Exception(f'Acquisition period ({period} ns) too small. '
+                            f'Minimum is {ReadoutBuilder.MIN_ACQUISITION_INTERVAL} ns')
+        with self._local_timeline(t_offset=t_offset, duration=(n-1)*period):
+            # Repeat only n-1 times to avoid wait after last acquire.
+            # A wait after the last acquire could create unwanted waits in the
+            # control sequencers, because acquisition is ~100 ns delayed w.r.t. control.
+            with self._seq_repeat(n-1):
+                self.acquire_weighed(bins, bin_index, weight0, weight1)
+                self.wait(period)
+            self.acquire_weighed(bins, bin_index, weight0, weight1)
+
     def reset_bin_counter(self, bins):
-        reg_name = f'_bin{bins}'
+        reg_name = self._get_bin_reg_name(bins)
         self.Rs[reg_name] = 0
 
     def _get_bin_reg_name(self, bins):

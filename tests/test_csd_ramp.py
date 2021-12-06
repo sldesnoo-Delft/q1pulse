@@ -19,10 +19,7 @@ N = 100
 R1.add_acquisition_bins('default', N*N)
 
 gates=[P1, P2] # alternative notation: ['P1', 'P2']
-v_init = [120, 40]
-v_manip = [0, 0]
-v_read = [-30, 60]
-t_measure = 2_000
+t_measure = 2_000_00
 t_acqdelay = 500
 t_step = t_measure + t_acqdelay
 
@@ -31,7 +28,9 @@ with p.loop_linspace(-0.5, 0.5, N) as v2:
         p.wait(t_step*N+4)
         P2.set_offset(v2)
         P1.ramp(t_step*N, -0.5, 0.5)
-        R1.acquire('default', 'increment', t_offset=t_acqdelay)
+        R1.repeated_acquire(N, t_step,
+                            'default', 'increment',
+                            t_offset=t_acqdelay)
 
 P1.set_offset(0.0)
 P2.set_offset(0.0)

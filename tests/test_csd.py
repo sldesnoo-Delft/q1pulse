@@ -19,9 +19,6 @@ N = 10
 R1.add_acquisition_bins('default', N*N)
 
 gates=[P1, P2] # alternative notation: ['P1', 'P2']
-v_init = [120, 40]
-v_manip = [0, 0]
-v_read = [-30, 60]
 t_measure = 2000
 t_acqdelay = 500
 t_step = t_measure + t_acqdelay
