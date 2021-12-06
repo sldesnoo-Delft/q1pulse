@@ -44,58 +44,62 @@ def register_args(_func=None, *, allow_float=[], require_float=[]):
     def decorator_register_args(func):
         @wraps(func)
         def func_wrapper(self, *args, **kwargs):
-            # print(f'{func.__name__}{args}')
-            args = list(args)
-            kwargs = kwargs.copy()
-            self._registers.enter_scope()
-            comments = []
-            floats = []
-            for i,arg in enumerate(args):
-                index = i+1
-                dtype = get_dtype(arg)
-                if dtype == float:
-                    if index in allow_float:
-                        floats.append(index)
-                else:
-                    if index in require_float and arg is not None:
-                        raise Exception(f'Float argument required for arg {index} ({arg})')
-
-                if isinstance(arg, (str, type(None),
-                                    Wave, AcquisitionBins, AcquisitionWeight)):
-                    pass
-                elif isinstance(arg, int):
-                    args[i] = _int_u32(arg)
-                elif isinstance(arg, float):
-                    if index in allow_float:
-                        args[i] = _float_to_f32(arg)
-                    elif index in require_float:
-                        args[i] = _float_to_f16(arg)
+            try:
+                # print(f'{func.__name__} {args}')
+                args = list(args)
+                kwargs = kwargs.copy()
+                self._registers.enter_scope()
+                comments = []
+                floats = []
+                for i,arg in enumerate(args):
+                    index = i+1
+                    dtype = get_dtype(arg)
+                    if dtype == float:
+                        if index in allow_float:
+                            floats.append(index)
                     else:
-                        raise Exception(f'Float argument not allowed for arg {index} ({args[i]})')
-                    comments += [f'{arg} -> {args[i]}']
-                else:
-                    if isinstance(arg, Register):
-                        asm_reg = self._translate_reg(arg)
-                    elif isinstance(arg, Expression):
-                        expression = arg
-                        asm_reg = expression.evaluate(self)
+                        if index in require_float and arg is not None:
+                            raise Exception(f'Float argument required for arg {index} ({arg})')
+
+                    if isinstance(arg, (str, type(None),
+                                        Wave, AcquisitionBins, AcquisitionWeight)):
+                        pass
+                    elif isinstance(arg, int):
+                        args[i] = _int_u32(arg)
+                    elif isinstance(arg, float):
+                        if index in allow_float:
+                            args[i] = _float_to_f32(arg)
+                        elif index in require_float:
+                            args[i] = _float_to_f16(arg)
+                        else:
+                            raise Exception(f'Float argument not allowed for arg {index} ({args[i]})')
+                        comments += [f'{arg} -> {args[i]}']
                     else:
-                        raise Exception(f'Illegal argument type for arg {index}: {args}')
-                    if index in require_float:
-                        asm_reg = self._reg_to_f16(asm_reg)
-                    comments += [f'{asm_reg}:{dtype.__name__}={arg}']
-                    args[i] = asm_reg
+                        if isinstance(arg, Register):
+                            asm_reg = self._translate_reg(arg)
+                        elif isinstance(arg, Expression):
+                            expression = arg
+                            asm_reg = expression.evaluate(self)
+                        else:
+                            raise Exception(f'Illegal argument type for arg {index}: {args}')
+                        if index in require_float:
+                            asm_reg = self._reg_to_f16(asm_reg)
+                        comments += [f'{asm_reg}:{dtype.__name__}={arg}']
+                        args[i] = asm_reg
 
-            if len(floats) > 0:
-                for f in floats:
-                    if f not in allow_float:
-                        raise Exception(f'Float argument mismatch for argument {f}')
+                if len(floats) > 0:
+                    for f in floats:
+                        if f not in allow_float:
+                            raise Exception(f'Float argument mismatch for argument {f}')
 
-            if len(comments) > 0 and self._show_arg_conversions:
-                self.add_comment(' -- args: ' + ', '.join(comments))
-            res = func(self, *args, **kwargs)
-            self._registers.exit_scope()
-            return res
+                if len(comments) > 0 and self._show_arg_conversions:
+                    self.add_comment(' -- args: ' + ', '.join(comments))
+                res = func(self, *args, **kwargs)
+                self._registers.exit_scope()
+                return res
+            except:
+                print(f'Error calling: {func.__name__} {args} {kwargs}')
+                raise
 
         return func_wrapper
 
@@ -498,7 +502,6 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         return f'{label:10} {mnemonic:14} {arg_str:10}{c}'
 
     def q1asm_lines(self, skip_comment_lines=False):
-        self.finalize()
         lines = []
         line_nr = 0
 

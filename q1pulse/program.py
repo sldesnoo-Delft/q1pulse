@@ -46,6 +46,7 @@ class Program:
             g = Q1asmGenerator(add_comments=add_comments)
             g.repetitions = self.repetitions
             builder.compile(g, annotate=annotate)
+            g.finalize()
 
             if verbose:
                 print(f'seq_{builder.name}="""')
@@ -53,7 +54,7 @@ class Program:
                 print('"""')
                 print()
             if listing:
-                g.save_prog_and_data_txt(filename.replace('.json','.txt'))
+                g.save_prog_and_data_txt(filename.replace('.json','.q1asm'))
             g.save_prog_and_data_json(filename)
 
     def _add_statement(self, statement, init_section=False):
