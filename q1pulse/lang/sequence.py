@@ -42,10 +42,14 @@ class Sequence:
                 if not annotate:
                     generator.add_comment(statement)
                 continue
-            statement.write_instruction(generator)
+            try:
+                statement.write_instruction(generator)
+            except Exception as ex:
+                raise Exception(f'Compilation error on statement {statement}') from ex
             if isinstance(statement, BranchStatement):
                 with generator.scope():
                     statement.sequence.compile(generator, annotate)
+
 # TODO: @@@ Replace with contextmanager and add end statement to BranchStatement.
 #                    with statement.branch() as sequence: # @@@ Use contextmanager
 #                        sequence.compile(generator, annotate)
