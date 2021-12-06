@@ -108,6 +108,7 @@ class SequenceBuilder(BuilderBase):
 
     def enter_loop(self, label, loop):
         # TODO @@@ incorporate in Sequence() and sequence.compile()
+        # --- align loop start with other sequencers, needed here because it can insert wait instructions
         self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time))
         loop_sequence = Sequence(self._timeline)
         if isinstance(loop, RangeLoop):
@@ -123,13 +124,16 @@ class SequenceBuilder(BuilderBase):
             raise Exception('Unknown loop')
         self._add_statement(loop_statement)
         self._sequence_stack.append(loop_sequence)
+        # --- needed here because it moves the last upd_param for current time to the start of the loop
         self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time))
 
     def exit_loop(self):
         # TODO @@@ incorporate in sequence.compile()
+        # --- needed here because it adds required wait time at end of loop
         self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time))
         self.sequence.close()
         self._sequence_stack.pop()
+        # --- needed here because it moves the last upd_param out of the loop
         self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time))
 
     @contextmanager
@@ -141,6 +145,7 @@ class SequenceBuilder(BuilderBase):
             yield
         else:
             # TODO @@@ incorporate in sequence.compile()
+            # --- needed here because it can insert wait instructions
             self._add_statement(SyncTimeStatement(self.current_time))
             t_start = self.current_time
             label = f'local_{self._local_loop_cnt}'
@@ -151,6 +156,7 @@ class SequenceBuilder(BuilderBase):
             loop_sequence.exit_statement = EndRepeatStatement(label, loop)
             self._add_statement(loop_statement)
             self._sequence_stack.append(loop_sequence)
+            # --- needed here because it moves the last upd_param for current time to the start of the loop
             self._add_statement(SyncTimeStatement(self.current_time))
 
             yield
