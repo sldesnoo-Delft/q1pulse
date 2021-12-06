@@ -65,12 +65,19 @@ class SequenceBuilder(BuilderBase):
         print()
 
     def compile(self, generator, annotate=False):
-        if not self._compiled:
-            self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time+4))
-            self._compiled = True
-        self._init_sequence.compile(generator, annotate)
-        generator.start_main()
-        self._sequence_stack[0].compile(generator, annotate)
+        try:
+            if not self._compiled:
+                self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time+4))
+                self._compiled = True
+            self._init_sequence.compile(generator, annotate)
+            generator.start_main()
+            self._sequence_stack[0].compile(generator, annotate)
+        except:
+            print(f'Exception in {self.name} while compiling:')
+            lines = generator.q1asm_lines()
+            for line in lines:
+                print(line)
+            raise
 
     @property
     def current_time(self):
@@ -125,13 +132,14 @@ class SequenceBuilder(BuilderBase):
 
     @contextmanager
     def _seq_repeat(self, n):
-        ''' repeat loop not synchronizing with other sequencers. Internal use only '''
+        ''' repeat loop not synchronizing with other sequencers. Internal use only ''' # @@@ looks like it can be used normally
         if n == 0:
             return
         if n == 1:
             yield
         else:
             # TODO @@@ incorporate in sequence.compile()
+            self._add_statement(SyncTimeStatement(self.current_time))
             t_start = self.current_time
             label = f'local_{self._local_loop_cnt}'
             loop = Loop(self._local_loop_cnt, n, local=True)
