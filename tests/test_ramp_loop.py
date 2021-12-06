@@ -23,8 +23,8 @@ p.wait(20)
 
 with p.loop_linspace(-0.5, 0.5, 5) as v_ramp:
     with p.parallel():
-        P2.ramp(280, v_ramp, -0.4)#, v_after=None)
-        P1.ramp(80, v_ramp, -0.4, t_offset=8)#, v_after=None)
+        P2.ramp(280, v_ramp, -0.4)
+        P1.ramp(80, v_ramp, -0.4, t_offset=8)
         P1.ramp(180, -0.4, v_ramp, t_offset=88)
     P2.ramp(480, v_ramp, v_ramp + 0.2)
 
