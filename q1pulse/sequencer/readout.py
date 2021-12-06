@@ -48,6 +48,7 @@ class ReadoutBuilder(ControlBuilder):
         return self._weights.add_weight(name, data)
 
     def acquire(self, bins, bin_index, t_offset=0):
+        self.add_comment(f'acquire({bins}, {bin_index})')
         bins = self._translate_bins(bins)
         t1 = self.current_time + t_offset
         # TODO @@@ keep track of acquisition trigger interval to prevent overruns?
@@ -60,6 +61,7 @@ class ReadoutBuilder(ControlBuilder):
             self._add_statement(AcquireStatement(t1, bins, bin_index))
 
     def acquire_weighed(self, bins, bin_index, weight0, weight1=None, t_offset=0):
+        self.add_comment(f'acquire_weighed({bins}, {bin_index})')
         if weight1 is None:
             weight1 = weight0
         bins = self._translate_bins(bins)
@@ -77,6 +79,7 @@ class ReadoutBuilder(ControlBuilder):
             self._add_statement(st)
 
     def repeated_acquire(self, n, period, bins, bin_index, t_offset=0):
+        self.add_comment(f'repeated_acquire({n}, {period}, {bins}, {bin_index})')
         if period < ReadoutBuilder.MIN_ACQUISITION_INTERVAL:
             raise Exception(f'Acquisition period ({period} ns) too small. '
                             f'Minimum is {ReadoutBuilder.MIN_ACQUISITION_INTERVAL} ns')
@@ -91,6 +94,7 @@ class ReadoutBuilder(ControlBuilder):
 
     def repeated_acquire_weighed(self, n, period, bins, bin_index,
                                  weight0, weight1=None, t_offset=0):
+        self.add_comment(f'repeated_acquire_weighed({n}, {period}, {bins}, {bin_index})')
         if period < ReadoutBuilder.MIN_ACQUISITION_INTERVAL:
             raise Exception(f'Acquisition period ({period} ns) too small. '
                             f'Minimum is {ReadoutBuilder.MIN_ACQUISITION_INTERVAL} ns')

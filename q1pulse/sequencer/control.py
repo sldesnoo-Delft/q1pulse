@@ -50,6 +50,7 @@ class ControlBuilder(SequenceBuilder):
         self._add_statement(SetPhaseStatement(t1, phase, hires_regs))
 
     def block_pulse(self, duration, amplitude0, amplitude1=None, t_offset=0):
+        self.add_comment(f'block_pulse({duration}, {amplitude0}, {amplitude1})')
         if not isinstance(duration, (Register, Expression)):
             with self._local_timeline(t_offset=t_offset, duration=duration):
                 self.set_offset(amplitude0, amplitude1)
@@ -64,6 +65,7 @@ class ControlBuilder(SequenceBuilder):
             self.set_offset(0.0, None)
 
     def shaped_pulse(self, wave0, amplitude0, wave1=None, amplitude1=None, t_offset=0):
+        self.add_comment(f'shaped_pulse({wave0}, {amplitude0}, {wave1}, {amplitude1})')
         wave0 = self._translate_wave(wave0)
         wave1 = self._translate_wave(wave1)
 
@@ -82,6 +84,7 @@ class ControlBuilder(SequenceBuilder):
             raise Exception('Ramp duration cannot be a variable or expression; '
                             'Unroll loop using Python for-loop.')
 
+        self.add_comment(f'ramp({duration}, {v_start}, {v_end})')
         with self._local_timeline(t_offset=t_offset, duration=duration):
             # w_ramp is a wave from 0 to 1.0
             if duration <= 100:

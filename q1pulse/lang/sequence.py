@@ -17,6 +17,7 @@ class Sequence:
     def describe(self, lines, indent=0, init_section=False):
         white = '    ' * indent
         for statement in self._statements:
+            is_comment = isinstance(statement, str)
             statement_str = str(statement)
             if statement_str == 'endloop':
                 continue
@@ -24,6 +25,8 @@ class Sequence:
                 time = f'{statement.time:6}'
             elif init_section:
                 time = '-init-'
+            elif is_comment:
+                time = '#     '
             else:
                 time = ' '*6
             line = f'{time}  {white}{statement}'
