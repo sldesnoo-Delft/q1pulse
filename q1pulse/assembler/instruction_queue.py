@@ -27,7 +27,6 @@ class InstructionQueue:
         self._init_section = []
         self._instructions = []
         self._reg_comment = None
-        self._label = None
         self._wait_loop_cnt = 0
         self._rt_time = 0
         self._pending_update = None
@@ -47,10 +46,7 @@ class InstructionQueue:
         '''
         Label to be added to next instruction
         '''
-        if self._label is not None:
-            raise Exception('Compilation error: cannot put two labels on '
-                            f'one line "{self._label}","{label}"')
-        self._label = label
+        self._instructions.append(Instruction(None, label=label))
 
     def adjust_time(self, duration):
         self._rt_time += duration
@@ -59,9 +55,6 @@ class InstructionQueue:
         if self._finalized:
             raise Exception('Sequence already finalized')
         self._wait_register_updates(instruction.mnemonic, instruction.args)
-        if self._label is not None:
-            instruction.label = self._label
-            self._label = None
         self._instructions.append(instruction)
 
     def _add_instruction(self, mnemonic, *args, comment=None, init_section=False):

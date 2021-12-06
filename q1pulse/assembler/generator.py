@@ -148,6 +148,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
     def finalize(self):
         if self._finalized:
             return
+        self.add_comment('--END--')
         self._flush_pending_update()
         if self._repetitions > 1:
             self.loop(self.repetitions_reg, '_start')
@@ -504,6 +505,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
     def q1asm_lines(self, skip_comment_lines=False):
         lines = []
         line_nr = 0
+        label = None
 
         for i in self._init_section + self._instructions:
             if isinstance(i, str):
@@ -512,10 +514,17 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                     lines += [f'# {i} ']
                 continue
 
+            if i.label is not None:
+                # TODO @@@ cleaner implementation
+                if label is not None:
+                    raise Exception('Compilation error: cannot put two labels on '
+                                    f'one line "{i.label}","{label}"')
+                label = i.label
+                continue
             line_nr += 1
-            line = self._format_line(i.label, i.mnemonic, i.args, i.wait_after,
+            line = self._format_line(label, i.mnemonic, i.args, i.wait_after,
                                      i.comment, line_nr)
-
+            label = None
             lines += [line]
         return lines
 
