@@ -67,7 +67,7 @@ class SequenceBuilder(BuilderBase):
     def compile(self, generator, annotate=False):
         try:
             if not self._compiled:
-                self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time+4))
+                self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time))
                 self._compiled = True
             self._init_sequence.compile(generator, annotate)
             generator.start_main()
@@ -123,12 +123,14 @@ class SequenceBuilder(BuilderBase):
             raise Exception('Unknown loop')
         self._add_statement(loop_statement)
         self._sequence_stack.append(loop_sequence)
+        self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time))
 
     def exit_loop(self):
         # TODO @@@ incorporate in sequence.compile()
         self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time))
         self.sequence.close()
         self._sequence_stack.pop()
+        self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time))
 
     @contextmanager
     def _seq_repeat(self, n):
@@ -149,6 +151,7 @@ class SequenceBuilder(BuilderBase):
             loop_sequence.exit_statement = EndRepeatStatement(label, loop)
             self._add_statement(loop_statement)
             self._sequence_stack.append(loop_sequence)
+            self._add_statement(SyncTimeStatement(self.current_time))
 
             yield
 

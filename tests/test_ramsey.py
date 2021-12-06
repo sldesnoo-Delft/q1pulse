@@ -26,14 +26,15 @@ v_init = [0.120, 0.040]
 v_manip = [0.0, 0.0]
 v_read = [-0.030, 0.060]
 t_pulse = 80
+v_pulse = 0.8
 
 with p.loop_range(200, 2000, 10) as t_wait:
     p.block_pulse(200, gates, v_init)
     p.ramp(20, gates, v_init, v_manip)
 
-#    q1.pulse(t_pulse, v_pulse)
+    q1.block_pulse(t_pulse, v_pulse)
     p.wait(t_wait)
-#    q1.pulse(t_pulse, v_pulse)
+    q1.block_pulse(t_pulse, v_pulse)
 
     p.ramp(100, gates, v_manip, v_read)
     with p.parallel():
@@ -41,8 +42,6 @@ with p.loop_range(200, 2000, 10) as t_wait:
         p.wait(1000)
         R1.acquire('default', 'increment', t_offset=100)
     p.set_offsets(gates, [0.0, 0.0])
-    # short wait required for the execution of set_offsets in loop
-    p.wait(4)
 
 p.describe()
 

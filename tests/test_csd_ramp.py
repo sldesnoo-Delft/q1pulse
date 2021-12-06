@@ -25,7 +25,7 @@ t_step = t_measure + t_acqdelay
 
 with p.loop_linspace(-0.5, 0.5, N) as v2:
     with p.parallel():
-        p.wait(t_step*N+4)
+        p.wait(t_step*N)
         P2.set_offset(v2)
         P1.ramp(t_step*N, -0.5, 0.5)
         R1.repeated_acquire(N, t_step,
