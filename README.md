@@ -145,6 +145,8 @@ QRM specific instructions:
 - add_acquisition_weights: add specification for weights
 - acquire: acquire data, optionally incrementing the bin counter. (1)
 - acquire_weighed: acquire data using weighed average, optionally incrementing the bin counter. (1)
+- repeated_acquire: N times acquire data, optionally incrementing the bin counter.
+- repeated_acquire_weighed: N times acquire data using weighed average, optionally incrementing the bin counter.
 
 Notes:
 1. instruction does not advance time in sequence.
