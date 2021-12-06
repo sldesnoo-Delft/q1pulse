@@ -77,10 +77,11 @@ class ControlBuilder(SequenceBuilder):
             self.wait(duration)
             self.set_gain(0.0, None)
 
-    def ramp(self, duration, v_start, v_end, t_offset=0):
+    def ramp(self, duration, v_start, v_end, v_after=0.0, t_offset=0):
         if isinstance(duration, (Register, Expression)):
             raise Exception('Ramp duration cannot be a variable or expression; '
                             'Unroll loop using Python for-loop.')
+
         with self._local_timeline(t_offset=t_offset, duration=duration):
             # w_ramp is a wave from 0 to 1.0
             if duration <= 100:
@@ -89,28 +90,8 @@ class ControlBuilder(SequenceBuilder):
                 self.set_offset(v_start)
                 self.play(w_ramp)
                 self.wait(duration)
-            elif (not isinstance(v_start, (Register, Expression))
-                  and not isinstance(v_end, (Register, Expression))):
-                # divmod, but with rem [1,100], and n > 1
-                n, rem = divmod(duration-1, 100)
-                rem += 1
-                w_ramp = self._waves.get_ramp(100)
-                self.Rs._ramp_offset = v_start
-                # increment is a fixed point value.
-                # Note: rounding errors become significant when n > 10000, i.e. 1 ms.
-                increment = (v_end - v_start) * 100 / duration
-
-                gain = (v_end - v_start) * 100 / duration
-                self.set_gain(gain)
-                with self._seq_repeat(n):
-                    self.set_offset(self.Rs._ramp_offset)
-                    self.play(w_ramp)
-                    self.Rs._ramp_offset += increment
-                    self.wait(100)
-                self.set_offset(self.Rs._ramp_offset)
-                self.play(w_ramp)
-                self.wait(rem)
-            else:
+            elif (isinstance(v_start, (Register, Expression))
+                  or isinstance(v_end, (Register, Expression))):
                 # divide duration till smallest multiple of 4 larger than or equal to 200
                 shift = 0
                 wave_duration = duration
@@ -122,16 +103,58 @@ class ControlBuilder(SequenceBuilder):
                     self.Rs._ramp_step >>= shift
                 w_ramp = self._waves.get_ramp(wave_duration)
                 self.Rs._ramp_offset = v_start
-                self.set_gain(self.Rs._ramp_step)
                 with self._seq_repeat(1 << shift):
+                    self.set_gain(self.Rs._ramp_step) # @@@ this could be outside loop
                     self.set_offset(self.Rs._ramp_offset)
                     self.play(w_ramp)
                     self.Rs._ramp_offset += self.Rs._ramp_step
                     self.wait(wave_duration)
+            else:
+                step = (v_end - v_start) * 100 / duration
+                # step is a fixed point value in q1asm.  Resolution is 1/65536 of LSB output.
+                # Gain range: -1/32768 ... +1/32768
+                if abs(step) > 1/(2**15):
+                    # divmod, but with rem [1,100], and n > 1
+                    n, rem = divmod(duration-1, 100)
+                    rem += 1
+                    w_ramp = self._waves.get_ramp(100)
+                    self.Rs._ramp_offset = v_start
 
-            # keep end volage. @@@ Or should it go to 0.0?
-            self.set_offset(v_end)
-            self.set_gain(0.0)
+                    with self._seq_repeat(n):
+                        self.set_gain(step) # @@@ this could be outside loop
+                        self.set_offset(self.Rs._ramp_offset)
+                        self.play(w_ramp)
+                        self.Rs._ramp_offset += step
+                        self.wait(100)
+                    self.set_offset(self.Rs._ramp_offset)
+                    self.play(w_ramp)
+                    self.wait(rem)
+                else:
+                    # steps of 1 LSB
+                    min_step = 1/(2**16)
+                    n_steps = int(abs(v_end - v_start) / min_step)
+                    # minimum time multiple of 4 ns
+                    t_step = int(duration / n_steps)
+                    t_step = int(t_step / 4) * 4
+                    # divmod, but with rem [1,100], and n > 1
+                    n, rem = divmod(duration-1, t_step)
+                    rem += 1
+                    step = (v_end - v_start) * t_step / duration
+                    self.Rs._ramp_offset = v_start
+                    with self._seq_repeat(n):
+                        self.set_offset(self.Rs._ramp_offset)
+                        self.Rs._ramp_offset += step
+                        self.wait(t_step)
+                    self.set_offset(self.Rs._ramp_offset)
+                    self.wait(rem)
+
+            if v_after is not None:
+                # set constant value
+                self.set_offset(v_after)
+                self.set_gain(0.0)
+            else:
+                # assume there will be another instruction setting offset and gain.
+                pass
 
     def _apply_paths(self, arg0, arg1):
         if len(self._enabled_paths) == 0:
