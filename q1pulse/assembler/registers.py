@@ -9,7 +9,7 @@ class SequencerRegisters:
         # stack with list of registers allcated in scope
         self._scope_regs = []
         self.enter_scope()
-        self.allocate_reg('_always_zero_')
+        self.allocate_reg('_always_zero_', log=False)
         self._always_zero_initialized = False
 
     def get_asm_reg(self, name):
@@ -27,7 +27,7 @@ class SequencerRegisters:
             self._always_zero_initialized = True
         return asm_reg, init_reg
 
-    def allocate_reg(self, name):
+    def allocate_reg(self, name, log=True):
         if name in self._allocated_regs:
             self._print_reg_admin()
             raise Exception(f'Register {name} already allocated')
@@ -35,7 +35,8 @@ class SequencerRegisters:
         reg = self._free_regs.pop()
         self._allocated_regs[name] = reg
         self._scope_regs[-1].append(name)
-        self._log(f'R{reg}: {name}')
+        if log:
+            self._log(f'R{reg}: {name}')
         return self.get_asm_reg(name)
 
     def _release_reg(self, name):
@@ -58,15 +59,19 @@ class SequencerRegisters:
     @contextmanager
     def temp_regs(self, n):
         self.enter_scope()
-        regs = [self.get_temp_reg() for i in range(n)]
+        regs = [self.get_temp_reg(log=False) for i in range(n)]
+        self._log(f'temp {regs}')
         yield regs if n > 1 else regs[0]
         self.exit_scope()
 
-    def get_temp_reg(self):
+    def get_temp_reg(self, log=True):
         # forge name for register that will be used
         nr = self._free_regs[-1]
         name = f'_R{nr}'
-        return self.allocate_reg(name)
+        asm_reg = self.allocate_reg(name, log=False)
+        if log:
+            self._log(f'temp {asm_reg}')
+        return asm_reg
 
     def _print_reg_admin(self):
         # print(f'Free: {self._free_regs}')

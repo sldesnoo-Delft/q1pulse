@@ -126,6 +126,8 @@ class InstructionQueue:
                 return -wait_time
             raise Exception(f'Too short wait time of {wait_time} ns at {time}')
         if wait_time > 0:
+            if wait_time > 50000:
+                self.add_comment(f'wait {wait_time} (t={time})')
             if self._last_rt_command is not None:
                 if self._last_rt_command.wait_after + wait_time < MAX_WAIT:
                     self._last_rt_command.wait_after += wait_time
@@ -150,7 +152,6 @@ class InstructionQueue:
             self._rt_time += wait_after
 
     def __add_wait_instruction(self, time):
-#        self.add_comment(f'WAIT {time}')
         if time < 0:
             raise Exception(f'Illegal wait time {time}')
         n_max,rem_wait = divmod(time, MAX_WAIT)
