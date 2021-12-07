@@ -4,10 +4,10 @@ from q1pulse.instrument import Q1Instrument
 from init_pulsars import qcm0, qrm1
 
 instrument = Q1Instrument()
-instrument.add_qcm(0, qcm0)
-instrument.add_qrm(1, qrm1)
-instrument.add_control('P1', 1, [0])
-instrument.add_control('P2', 0, [1])
+instrument.add_qcm(qcm0)
+instrument.add_qrm(qrm1)
+instrument.add_control('P1', qcm0.name, [0])
+instrument.add_control('P2', qcm0.name, [1])
 
 p = instrument.new_program('sync_wave')
 p.repetitions = 10_000_000

@@ -10,24 +10,23 @@ else:
 
 _use_dummy=True
 
-def add_module(module_type, module_nr, ip_addr):
-    name = f'{module_type}_{module_nr}'
+def add_module(module_type, name, ip_addr):
     try:
         pulsar = station[name]
     except:
         if module_type == 'qrm':
             if _use_dummy:
-                print(f'Starting QRM qrm_{module_nr} dummy')
+                print(f'Starting QRM {name} dummy')
                 pulsar = pulsar_qrm_dummy(name)
             else:
-                print(f'Connecting QRM {module_nr} on {ip_addr}...')
+                print(f'Connecting QRM {name} on {ip_addr}...')
                 pulsar = pulsar_qrm(name, ip_addr)
         else:
             if _use_dummy:
-                print(f'Starting QCM qcm_{module_nr} dummy')
+                print(f'Starting QCM {name} dummy')
                 pulsar = pulsar_qcm_dummy(name)
             else:
-                print(f'Connecting QCM {module_nr} on {ip_addr}...')
+                print(f'Connecting QCM {name} on {ip_addr}...')
                 pulsar = pulsar_qcm(name, ip_addr)
 
         pulsar.reset()
@@ -35,8 +34,8 @@ def add_module(module_type, module_nr, ip_addr):
 
     return pulsar
 
-qcm0 = add_module('qcm', 0, '192.168.0.2')
-qrm1 = add_module('qrm', 1, '192.168.0.3')
+qcm0 = add_module('qcm', 'qcm0', '192.168.0.2')
+qrm1 = add_module('qrm', 'qrm1', '192.168.0.3')
 
 qcm0.reference_source('internal')
 qrm1.reference_source('external')

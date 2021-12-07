@@ -1,15 +1,14 @@
-from pprint import pprint
 from q1pulse.instrument import Q1Instrument
 
 from init_pulsars import qcm0, qrm1
 
 instrument = Q1Instrument()
-instrument.add_qcm(0, qcm0)
-instrument.add_qrm(1, qrm1)
-instrument.add_control('P1', 1, [0])
-instrument.add_control('P2', 0, [1])
-instrument.add_control('P3', 0, [2])
-instrument.add_control('P4', 0, [3])
+instrument.add_qcm(qcm0)
+instrument.add_qrm(qrm1)
+instrument.add_control('P1', qrm1.name, [0])
+instrument.add_control('P2', qcm0.name, [1])
+instrument.add_control('P3', qcm0.name, [2])
+instrument.add_control('P4', qcm0.name, [3])
 
 p = instrument.new_program('sync')
 p.repetitions = 10_000_000

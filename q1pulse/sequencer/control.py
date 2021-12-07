@@ -11,9 +11,11 @@ from ..lang.timed_statements import (
 
 
 class ControlBuilder(SequenceBuilder):
-    def __init__(self, name, enabled_paths, nco_frequency=None):
+    def __init__(self, name, enabled_paths, max_output_voltage,
+                 nco_frequency=None):
         super().__init__(name)
         self._enabled_paths = enabled_paths
+        self.max_output_voltage = max_output_voltage
         self._nco_frequency = nco_frequency
         self._waves = WaveCollection()
 

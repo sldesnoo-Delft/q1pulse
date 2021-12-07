@@ -4,13 +4,13 @@ from q1pulse.util.shapes import add_chirp
 from init_pulsars import qcm0
 
 instrument = Q1Instrument()
-instrument.add_qcm(0, qcm0)
+instrument.add_qcm(qcm0)
 
 # use 4 max sequencers for chirp
 for s in 'abcd':
-    seq = instrument.add_control('q1'+s, 0, [2,3])
+    seq = instrument.add_control('q1'+s, qcm0.name, [2,3])
 
-instrument.add_control('P1', 0, [1])
+instrument.add_control('P1', qcm0.name, [1])
 
 p = instrument.new_program('chirp')
 

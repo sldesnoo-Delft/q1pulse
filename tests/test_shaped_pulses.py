@@ -5,10 +5,10 @@ from q1pulse.instrument import Q1Instrument
 from init_pulsars import qcm0
 
 instrument = Q1Instrument()
-instrument.add_qcm(0, qcm0)
-instrument.add_control('q1', 0, [0,1])
-instrument.add_control('P1', 0, [2])
-instrument.add_control('P2', 0, [3])
+instrument.add_qcm(qcm0)
+instrument.add_control('q1', qcm0.name, [0,1])
+instrument.add_control('P1', qcm0.name, [2])
+instrument.add_control('P2', qcm0.name, [3])
 
 p = instrument.new_program('shaped')
 p.repetitions = 2

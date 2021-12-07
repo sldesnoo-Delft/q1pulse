@@ -5,11 +5,11 @@ from q1pulse.instrument import Q1Instrument
 from init_pulsars import qcm0, qrm1
 
 instrument = Q1Instrument()
-instrument.add_qcm(0, qcm0)
-instrument.add_qrm(1, qrm1)
-instrument.add_control('P1', 0, [0])
-instrument.add_control('q1', 1, [0,1], nco_frequency=200e6)
-instrument.add_readout('R1', 1, [], nco_frequency=200e6)
+instrument.add_qcm(qcm0)
+instrument.add_qrm(qrm1)
+instrument.add_control('P1', qcm0.name, [0])
+instrument.add_control('q1', qrm1.name, [0,1], nco_frequency=200e6)
+instrument.add_readout('R1', qrm1.name, [], nco_frequency=200e6)
 
 qrm1.in0_gain(0)
 qrm1.in1_gain(0)

@@ -4,10 +4,10 @@ from q1pulse.instrument import Q1Instrument
 from init_pulsars import qcm0, qrm1
 
 instrument = Q1Instrument()
-instrument.add_qcm(0, qcm0)
-instrument.add_qrm(1, qrm1)
-instrument.add_control('P1', 0, [2])
-instrument.add_control('P2', 1, [0])
+instrument.add_qcm(qcm0)
+instrument.add_qrm(qrm1)
+instrument.add_control('P1', qcm0.name, [2])
+instrument.add_control('P2', qrm1.name, [0])
 
 p = instrument.new_program('markers')
 p.repetitions = 1000

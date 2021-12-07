@@ -8,17 +8,18 @@ from pulsar_qrm.pulsar_qrm import pulsar_qrm, pulsar_qrm_dummy
 
 @dataclass
 class Sequencer:
-    module_nr: int
+    module_name: str
     seq_nr: int
     channels: List[int]
     enabled_paths: List[int]
+    max_output_voltage: float
     nco_frequency: Optional[float] = None
 
 def requires_connection(func):
     @wraps(func)
     def func_wrapper(self, *args, **kwargs):
         if not self.pulsar:
-            raise Exception(f'Module {self.module_nr} not connected')
+            raise Exception(f'Module {self.name} not connected')
 
         return func(self, *args, **kwargs)
 
@@ -28,8 +29,8 @@ def requires_connection(func):
 class QbloxModule:
     n_sequencers = 6
 
-    def __init__(self, module_nr, pulsar):
-        self.module_nr = module_nr
+    def __init__(self, pulsar):
+        self.name = pulsar.name
         self.pulsar = pulsar
         self._allocated_seq = 0
 
@@ -43,11 +44,12 @@ class QbloxModule:
     def get_sequencer(self, channels):
         seq_nr = self._allocate_seq_number()
         seq_paths = self._get_seq_paths(channels)
-        return Sequencer(self.module_nr, seq_nr, channels, seq_paths)
+        return Sequencer(self.name, seq_nr, channels, seq_paths,
+                         self.max_output_voltage)
 
     def _allocate_seq_number(self):
         if self._allocated_seq == self.n_sequencers:
-            raise Exception(f'No more sequencers for channels {self.channels} of module {self.module_nr}')
+            raise Exception(f'No more sequencers for channels {self.channels} of module {self.name}')
         sequencer_nr = self._allocated_seq
         self._allocated_seq += 1
         return sequencer_nr
@@ -105,14 +107,19 @@ class QbloxModule:
 
 class QcmModule(QbloxModule):
     n_channels = 4
+    max_output_voltage = 2.5
 
-    def __init__(self, number, pulsar):
-        super().__init__(number, pulsar)
+    def __init__(self, pulsar):
+        super().__init__(pulsar)
         if pulsar is not None and not isinstance(pulsar, (pulsar_qcm, pulsar_qcm_dummy)):
             raise Exception(f'pulsar must be QCM, not {type(pulsar)}')
 
     def _get_seq_paths(self, channels):
-        if len(channels) == 1:
+        if len(channels) == 0:
+            # no output, only markers
+            seq_channels = []
+
+        elif len(channels) == 1:
             channel = channels[0]
             if channel in [0, 1]:
                 seq_channels = [channel]
@@ -137,9 +144,10 @@ class QcmModule(QbloxModule):
 
 class QrmModule(QbloxModule):
     n_channels = 2
+    max_output_voltage = 0.5
 
-    def __init__(self, number, pulsar):
-        super().__init__(number, pulsar)
+    def __init__(self, pulsar):
+        super().__init__(pulsar)
         if pulsar is not None and not isinstance(pulsar, (pulsar_qrm, pulsar_qrm_dummy)):
             raise Exception(f'pulsar must be QRM, not {type(pulsar)}')
 

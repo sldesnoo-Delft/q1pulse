@@ -9,8 +9,9 @@ from .sequencer_data import (
 class ReadoutBuilder(ControlBuilder):
     MIN_ACQUISITION_INTERVAL = 1040
 
-    def __init__(self, name, enabled_paths, nco_frequency=None):
-        super().__init__(name, enabled_paths, nco_frequency)
+    def __init__(self, name, enabled_paths, max_output_voltage,
+                 nco_frequency=None):
+        super().__init__(name, enabled_paths, max_output_voltage, nco_frequency)
         self._acquisitions = AcquisitionBinsCollection()
         self._weights = WeightCollection()
         self._integration_length_acq = 4
@@ -42,7 +43,7 @@ class ReadoutBuilder(ControlBuilder):
         self._integration_length_acq = length
 
     def add_acquisition_bins(self, name, num_bins):
-        return self._acquisitions.add_bins(name, num_bins)
+        return self._acquisitions.define_bins(name, num_bins)
 
     def add_weight(self, name, data):
         return self._weights.add_weight(name, data)

@@ -236,13 +236,13 @@ be used as such.
 
 
     instrument = Q1Instrument()
-    instrument.add_qcm(0, qcm0)
-    instrument.add_qrm(1, qrm1)
+    instrument.add_qcm(qcm0)
+    instrument.add_qrm(qrm1)
     # add sequencers with output channels
-    instrument.add_control('q1', 0, [0,1])
-    instrument.add_control('P1', 0, [2])
-    instrument.add_control('P2', 0, [3])
-    instrument.add_readout('R1', 1, [1])
+    instrument.add_control('q1', qcm0.name, [0,1])
+    instrument.add_control('P1', qcm0.name, [2])
+    instrument.add_control('P2', qcm0.name, [3])
+    instrument.add_readout('R1', qrm1.name, [1])
 
     p = instrument.new_program('my_q1_program')
 

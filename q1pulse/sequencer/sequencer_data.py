@@ -56,11 +56,13 @@ class AcquisitionBinsCollection:
             raise Exception(f"Acquisition bins '{name}' not defined")
         return self._bins[name]
 
-    def add_bins(self, name, num_bins):
+    def define_bins(self, name, num_bins):
         if name in self._bins:
-            raise Exception(f"Acquisition bins '{name}' already defined")
-        bins = AcquisitionBins(name, num_bins)
-        self._bins[name] = bins
+            bins = self._bins[name]
+            bins.num_bins = num_bins
+        else:
+            bins = AcquisitionBins(name, num_bins)
+            self._bins[name] = bins
         return bins
 
 @dataclass
