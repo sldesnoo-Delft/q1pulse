@@ -13,7 +13,8 @@ class Loop:
     def __init__(self, loop_number, n, local=False):
         self._loop_number = loop_number
         self._n = n
-        self._loop_reg = LoopVar(f'_cnt{self._loop_number}', self, local=local)
+        self._loop_reg = LoopVar(f'_cnt{self._loop_number}',
+                                 self, local=local, dtype=int)
 
     @property
     def n(self):

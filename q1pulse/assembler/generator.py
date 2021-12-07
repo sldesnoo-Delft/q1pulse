@@ -64,9 +64,9 @@ def register_args(_func=None, *, allow_float=[], require_float=[]):
                     if isinstance(arg, (str, type(None),
                                         Wave, AcquisitionBins, AcquisitionWeight)):
                         pass
-                    elif isinstance(arg, int):
+                    elif isinstance(arg, (int, np.integer)):
                         args[i] = _int_u32(arg)
-                    elif isinstance(arg, float):
+                    elif isinstance(arg, (float, np.float)):
                         if index in allow_float:
                             args[i] = _float_to_f32(arg)
                         elif index in require_float:
@@ -81,7 +81,8 @@ def register_args(_func=None, *, allow_float=[], require_float=[]):
                             expression = arg
                             asm_reg = expression.evaluate(self)
                         else:
-                            raise Exception(f'Illegal argument type for arg {index}: {args}')
+                            raise Exception(f'Illegal argument type for arg {index}: '
+                                            f'{arg},{type(arg)} ({args})')
                         if index in require_float:
                             asm_reg = self._reg_to_f16(asm_reg)
                         comments += [f'{asm_reg}:{dtype.__name__}={arg}']

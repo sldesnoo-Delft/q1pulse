@@ -1,5 +1,7 @@
 from abc import abstractmethod, ABC
 
+import numpy as np
+
 class Operand(ABC):
 
     @property
@@ -47,15 +49,18 @@ class Operand(ABC):
         return BitwiseNot(self)
 
 def get_dtype(value):
-    if isinstance(value, int):
+    if isinstance(value, (int, np.integer)):
         return int
-    if isinstance(value, float):
+    if isinstance(value, (float, np.float)):
         return float
     if isinstance(value, Operand):
         return value.dtype
     # process label as type int.
     if isinstance(value, str) and value[0] == '@':
         return int
+    if value is None:
+        return type(None)
+
     return None
 
 class Expression(Operand, ABC):
