@@ -24,31 +24,37 @@ class ControlBuilder(SequenceBuilder):
 
     def set_markers(self, value, t_offset=0):
         t1 = self.current_time + t_offset
+        self.set_pulse_end(t1)
         self._add_statement(SetMarkersStatement(t1, value))
 
     def set_offset(self, value0, value1=None, t_offset=0):
         value0, value1 = self._apply_paths(value0, value1)
         t1 = self.current_time + t_offset
+        self.set_pulse_end(t1)
         self._add_statement(AwgDcOffsetStatement(t1, value0, value1))
 
     def set_gain(self, value0, value1=None, t_offset=0):
         value0, value1 = self._apply_paths(value0, value1)
         t1 = self.current_time + t_offset
+        self.set_pulse_end(t1)
         self._add_statement(AwgGainStatement(t1, value0, value1))
 
     def play(self, wave0, wave1=None, t_offset=0):
         wave0, wave1 = self._apply_paths(wave0, wave1)
         t1 = self.current_time + t_offset
+        self.set_pulse_end(t1)
         wave0 = self._translate_wave(wave0)
         wave1 = self._translate_wave(wave1)
         self._add_statement(PlayWaveStatement(t1, wave0, wave1))
 
     def shift_phase(self, delta, t_offset=0, hires_regs=False):
         t1 = self.current_time + t_offset
+        self.set_pulse_end(t1)
         self._add_statement(ShiftPhaseStatement(t1, delta, hires_regs))
 
     def set_phase(self, phase, t_offset=0, hires_regs=False):
         t1 = self.current_time + t_offset
+        self.set_pulse_end(t1)
         self._add_statement(SetPhaseStatement(t1, phase, hires_regs))
 
     def block_pulse(self, duration, amplitude0, amplitude1=None, t_offset=0):
