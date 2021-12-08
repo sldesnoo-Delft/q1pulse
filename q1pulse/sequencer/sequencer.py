@@ -15,6 +15,9 @@ from ..lang.flow_statements import (
         RepeatStatement, EndRepeatStatement,
         ArrayLoopStatement, EndArrayLoopStatement,
         )
+from ..lang.register_statements import (
+        RegisterScopeEnter, RegisterScopeExit
+        )
 from ..lang.loops import LinspaceLoop, RangeLoop, ArrayLoop
 
 class SequenceBuilder(BuilderBase):
@@ -144,6 +147,8 @@ class SequenceBuilder(BuilderBase):
         if n == 1:
             yield
         else:
+            # TODO @@@ use context manager @register_scope
+            self._add_statement(RegisterScopeEnter())
             # TODO @@@ incorporate in sequence.compile()
             # --- needed here because it can insert wait instructions
             self._add_statement(SyncTimeStatement(self.current_time))
@@ -166,6 +171,7 @@ class SequenceBuilder(BuilderBase):
             t_loop = self.current_time - t_start
             self._add_statement(LoopDurationStatement(n, t_loop))
             self.set_pulse_end(t_start + n * t_loop)
+            self._add_statement(RegisterScopeExit())
 
 
     def _add_reg_wait(self, reg):

@@ -380,11 +380,17 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         yield
         self.emulate_signed = emulate_signed
 
+    def enter_scope(self):
+        self._registers.enter_scope()
+
+    def exit_scope(self):
+        self._registers.exit_scope()
+
     @contextmanager
     def scope(self):
-        self._registers.enter_scope()
+        self.enter_scope()
         yield
-        self._registers.exit_scope()
+        self.exit_scope()
 
     def get_temp_reg(self):
         ''' Allocates an assembler register for temporary use within scope. '''

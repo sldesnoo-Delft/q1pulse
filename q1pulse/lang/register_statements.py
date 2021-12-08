@@ -25,4 +25,17 @@ class RegisterAssignment(Statement):
             generator.move(self.value_or_expression, self.destination)
 
 
+class RegisterScopeEnter(Statement):
+    def __repr__(self):
+        return 'enter register scope'
 
+    def write_instruction(self, generator):
+        generator.enter_scope()
+
+
+class RegisterScopeExit(Statement):
+    def __repr__(self):
+        return 'exit register scope'
+
+    def write_instruction(self, generator):
+        generator.exit_scope()
