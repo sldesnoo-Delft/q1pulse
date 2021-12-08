@@ -32,12 +32,15 @@ class SequencerRegisters:
             self._print_reg_admin()
             raise Exception(f'Register {name} already allocated')
 
-        reg = self._free_regs.pop()
-        self._allocated_regs[name] = reg
-        self._scope_regs[-1].append(name)
-        if log:
-            self._log(f'R{reg}: {name}')
-        return self.get_asm_reg(name)
+        try:
+            reg = self._free_regs.pop()
+            self._allocated_regs[name] = reg
+            self._scope_regs[-1].append(name)
+            if log:
+                self._log(f'R{reg}: {name}')
+            return self.get_asm_reg(name)
+        except IndexError:
+            raise Exception(f'Cannot allocate register {name}')
 
     def _release_reg(self, name):
         try:
@@ -65,13 +68,16 @@ class SequencerRegisters:
         self.exit_scope()
 
     def get_temp_reg(self, log=True):
-        # forge name for register that will be used
-        nr = self._free_regs[-1]
-        name = f'_R{nr}'
-        asm_reg = self.allocate_reg(name, log=False)
-        if log:
-            self._log(f'temp {asm_reg}')
-        return asm_reg
+        try:
+            # forge name for register that will be used
+            nr = self._free_regs[-1]
+            name = f'_R{nr}'
+            asm_reg = self.allocate_reg(name, log=False)
+            if log:
+                self._log(f'temp {asm_reg}')
+            return asm_reg
+        except IndexError:
+            raise Exception('Cannot allocate temp register')
 
     def _print_reg_admin(self):
         # print(f'Free: {self._free_regs}')
