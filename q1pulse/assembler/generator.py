@@ -335,6 +335,8 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
     def wait_reg(self, time, register):
         elapsed = self._wait_till(time, return_negative=True)
         self._add_wait_reg(register, elapsed)
+        # rt_settings may not be overwritten across wait_reg boundary
+        self._last_rt_settings = {}
 
     def sync(self, time):
         self._schedule_update(time)
