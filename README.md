@@ -1,18 +1,18 @@
-# q1pulse
-Pulse sequence builder and compiler for q1asm.
-q1pulse is a simple library to compile pulse sequence to q1asm, the assembly language of Qblox instruments.
-q1pulse supports loops, variables and expressions that are translated to q1asm.
+# Q1Pulse
+Pulse sequence builder and compiler for Q1ASM.
+Q1Pulse is a simple library to compile pulse sequence to Q1ASM, the assembly language of Qblox instruments.
+Q1Pulse supports loops, variables and expressions that are translated to Q1ASM.
 
-The current status of q1pulse is quite experimental. Code may change without any backwards compatibility.
+The current status of Q1Pulse is quite experimental. Code may change without any backwards compatibility.
 
 This project has several goals:
 - create a driver to use in the backend of [pulse_lib](https://github.com/stephanlphilips/pulse_lib)
 - provide a very simple API to test QCM and QRM
-- explore the possibilities of q1asm and the QCM and QRM
-- have fun with building a compiler for q1asm.
+- explore the possibilities of Q1ASM and the QCM and QRM
+- have fun with building a compiler for Q1ASM.
 
-q1pulse uses a generic language independent of q1asm and the constraints of its instruction set.
-As a consequence the compiler will have to generate multiple q1asm instructions for some q1pulse statements.
+Q1Pulse uses a generic language independent of Q1ASM and the constraints of its instruction set.
+As a consequence the compiler will have to generate multiple Q1ASM instructions for some Q1Pulse statements.
 - Floating point operations are emulated with a fixed point representation.
 - Signed integer comparisons are emulated.
 - Additional (looped) wait instructions are inserted when a wait time is too long for one instruction.
@@ -20,17 +20,17 @@ As a consequence the compiler will have to generate multiple q1asm instructions 
 - NOP instruction are inserted to wait a cycle for a register being updated.
 - Temporary registers are used for immediate values when the instruction does not support immediate operand.
 
-q1pulse is inspired on [pulse_lib](https://github.com/stephanlphilips/pulse_lib).
-The following features of pulse_lib are **not** available in q1pulse:
+Q1Pulse is inspired on [pulse_lib](https://github.com/stephanlphilips/pulse_lib).
+The following features of pulse_lib are **not** available in Q1Pulse:
 - Virtual matrix for compensation of capacitive coupling of device gates.
 - Channel delay compensation.
 - Compensation for attenuators on output.
 - DC compensation to discharge bias-T.
 - Bias-T compensation to compensate for high-pass filter.
-These features will be handled by pulse_lib when q1pulse is used as pulse_lib backend.
+These features will be handled by pulse_lib when Q1Pulse is used as pulse_lib backend.
 
-# q1pulse API
-A q1pulse program is written in Python using the q1pulse API.
+# Q1Pulse API
+A Q1Pulse program is written in Python using the Q1Pulse API.
 A program consists of instructions like pulses, wait statements, loops and acquisitions
 for the QCM and QRM sequencers. An instruction can apply to 1 or more sequencers.
 All instructions are executed in sequential order, unless otherwise specified in
@@ -95,7 +95,7 @@ Sequencers controlling 2 outputs will most likely be used for the generation of 
 Some instructions intended for voltage control, e.g. ramp, will fail on sequencers controlling 2 output
 channels.
 
-## q1pulse instructions
+## Q1Pulse instructions
 
 ### Instruction arguments: floating point and nanoseconds
 The arguments that specify an amplitude, offset, gain or phase are all specified as
@@ -122,7 +122,7 @@ Notes:
 
 ## QCM Sequence instructions
 - add_wave: adds a wave to be used in shaped pulses
-- add_comment: add a comment line in the q1asm
+- add_comment: add a comment line in the Q1ASM
 Basic instructions:
 - set_markers (1)
 - set_offset, set_gain (1)
@@ -152,7 +152,7 @@ Notes:
 1. instruction does not advance time in sequence.
 
 ## Variables and expressions
-Programs can make use of variables that will be translated to q1asm registers.
+Programs can make use of variables that will be translated to Q1ASM registers.
 Variables can be global to the program or local to a sequence.
 Global variables can be created via the R attribute of the program object, `p.R.amplitude = 0.5`.
 Sequence local variables can be created via the Rs attribute of a sequence object, `P1.Rs.t_wait = 200`.
@@ -164,7 +164,7 @@ The type of a variable can be either float or int. It is inferred on the first a
 cannot change within the program.
 Internally the float variables are represented as 32 bit **fixed point** values in the range \[-1.0, 1.0].
 Integers are 32 bit signed int, unless otherwise specified.
-Where needed and as far as possible the compiler inserts additional q1asm instructions to emulate
+Where needed and as far as possible the compiler inserts additional Q1ASM instructions to emulate
 signed int operations.
 
 ### Expressions
@@ -178,7 +178,7 @@ Notes:
   So, 1.0 + 0.5 gives -0.5.
 
 Multiplication and division operators are not implemented, because the emulation with
-q1asm would take too long to be practical. The emulated multiplication of two 32-bit values
+Q1ASM would take too long to be practical. The emulated multiplication of two 32-bit values
 would take more than 1 microsecond.
 
 ### Example
@@ -210,11 +210,11 @@ would take more than 1 microsecond.
 Loops can be created on program level and will be executed on all sequences in parallel to
 ensure synchronized execution of all sequences.
 There are three types of loops.
-- `loop_range` creates a loop in q1asm which is similar to `for i in range(...)`.
+- `loop_range` creates a loop in Q1ASM which is similar to `for i in range(...)`.
 It uses the same  arguments as `range`.
-- `loop_linspace` creates a loop in q1asm with a fixed point variable which is similar to `for x in numpy.linspace(...)`
+- `loop_linspace` creates a loop in Q1ASM with a fixed point variable which is similar to `for x in numpy.linspace(...)`
 It uses the same  arguments as `numpy.linspace`.
-- `loop_array` creates a loop in q1asm iterating the values of the array. The array can contain
+- `loop_array` creates a loop in Q1ASM iterating the values of the array. The array can contain
 either integer or float values.
 The loops should be used with a `with` statement. The statements return a global variable that can
 be used as such.
