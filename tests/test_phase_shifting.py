@@ -3,6 +3,7 @@ import matplotlib.pyplot as pt
 from q1pulse.instrument import Q1Instrument
 
 from init_pulsars import qcm0, qrm1
+from plot_util import plot_output
 
 instrument = Q1Instrument()
 instrument.add_qcm(qcm0)
@@ -23,27 +24,27 @@ R1 = p.R1
 N = 1000
 
 R1.add_acquisition_bins('default', N)
-R1.integration_length_acq = 400
+R1.integration_length_acq = 500
 
 rabi_amplitude = 0.1
-q1.Rs.phase_shift = 0.01
+q1.Rs.phase_shift = 0.001
 p.R.bin=0
 with p.loop_range(N):
 
     with p.parallel():
         q1.block_pulse(600, rabi_amplitude)
-        R1.acquire('default', p.R.bin, t_offset=100)
-        p.wait(1000)
+        R1.acquire('default', p.R.bin, t_offset=120)
         p.R.bin += 1
-    q1.shift_phase(q1.Rs.phase_shift)
+    # for small phase shifts in register use hires_reg=True
+    q1.shift_phase(q1.Rs.phase_shift, hires_reg=True)
+    p.wait(500)
 #    q1.Rs.phase_shift += 0.001
-    p.wait(100)
-
-#p.describe()
 
 p.compile(listing=True)
 
 instrument.run_program(p)
+
+plot_output([qcm0, qrm1])
 
 data = instrument.get_acquisition_bins('R1', 'default')
 

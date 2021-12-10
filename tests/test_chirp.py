@@ -2,6 +2,7 @@ from q1pulse.instrument import Q1Instrument
 from q1pulse.util.shapes import add_chirp
 
 from init_pulsars import qcm0
+from plot_util import plot_output
 
 instrument = Q1Instrument()
 instrument.add_qcm(qcm0)
@@ -20,7 +21,8 @@ for s in 'abcd':
     qs.append(p['q1'+s])
 
 P1.block_pulse(100, 0.5)
-add_chirp(10000, -10e6, 10e6, 0.4, qs)
+p.wait(100)
+add_chirp(10000, -10e6, 10e6, 0.5, qs)
 
 p.describe()
 print()
@@ -28,3 +30,5 @@ print()
 p.compile(verbose=True, listing=True, annotate=True)
 
 instrument.run_program(p)
+
+plot_output([qcm0])

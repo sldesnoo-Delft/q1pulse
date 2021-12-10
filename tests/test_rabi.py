@@ -2,6 +2,7 @@ import numpy as np
 from q1pulse.instrument import Q1Instrument
 
 from init_pulsars import qcm0, qrm1
+from plot_util import plot_output
 
 instrument = Q1Instrument()
 instrument.add_qcm(qcm0)
@@ -60,6 +61,13 @@ p.compile(listing=True)
 
 
 instrument.run_program(p)
+
+plot_output([qcm0, qrm1])
+
+if hasattr(qrm1, 'print_acquisitions'):
+    # get acquisition timing and counts from Q1Simulator
+    qrm1.print_acquisitions()
+
 
 data = instrument.get_acquisition_bins('R1', 'default')
 

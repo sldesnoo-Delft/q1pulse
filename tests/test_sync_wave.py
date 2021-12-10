@@ -2,6 +2,7 @@ import numpy as np
 from q1pulse.instrument import Q1Instrument
 
 from init_pulsars import qcm0, qrm1
+from plot_util import plot_output
 
 instrument = Q1Instrument()
 instrument.add_qcm(qcm0)
@@ -16,7 +17,7 @@ N = 10
 P1 = p.P1
 P2 = p.P2
 
-ramped = True
+ramped = False
 
 if ramped:
     block = np.concatenate([
@@ -36,7 +37,6 @@ P2.add_wave('block', block)
 
 P1.set_gain(1.0)
 P2.set_gain(1.0)
-p.wait(4)
 with p.loop_range(2):
     with p.parallel():
         P1.play('block')
@@ -49,3 +49,5 @@ p.describe()
 p.compile(listing=True)
 
 instrument.run_program(p)
+
+plot_output([qcm0, qrm1])

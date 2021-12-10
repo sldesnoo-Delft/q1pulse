@@ -2,6 +2,7 @@
 from q1pulse.instrument import Q1Instrument
 
 from init_pulsars import qcm0, qrm1
+from plot_util import plot_output
 
 instrument = Q1Instrument()
 instrument.add_qcm(qcm0)
@@ -31,6 +32,8 @@ p.wait(50_000)
 p.describe()
 print()
 
-p.compile(verbose=True, listing=True, annotate=True)
+p.compile(listing=True, annotate=True)
 
 instrument.run_program(p)
+
+plot_output([qcm0, qrm1])

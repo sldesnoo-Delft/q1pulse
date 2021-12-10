@@ -2,6 +2,7 @@
 from q1pulse.instrument import Q1Instrument
 
 from init_pulsars import qcm0, qrm1
+from plot_util import plot_output
 
 instrument = Q1Instrument()
 instrument.add_qcm(qcm0)
@@ -19,7 +20,7 @@ N = 100
 R1.add_acquisition_bins('default', N*N)
 
 gates=[P1, P2] # alternative notation: ['P1', 'P2']
-t_measure = 2_000_00
+t_measure = 10_000
 t_acqdelay = 500
 t_step = t_measure + t_acqdelay
 
@@ -40,3 +41,5 @@ p.describe()
 p.compile(annotate=True, listing=True)
 
 instrument.run_program(p)
+
+plot_output([qcm0, qrm1])

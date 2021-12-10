@@ -4,6 +4,7 @@ import scipy.signal as signal
 from q1pulse.instrument import Q1Instrument
 
 from init_pulsars import qcm0, qrm1
+from plot_util import plot_output
 
 instrument = Q1Instrument()
 instrument.add_qcm(qcm0)
@@ -59,6 +60,8 @@ with p.loop_linspace(-v1_max, v1_max, N) as v1:
 p.compile(listing=True, annotate=True)
 
 instrument.run_program(p)
+
+plot_output([qcm0, qrm1])
 
 # @@@ program should return data.
 data_n = instrument.get_acquisition_bins('R1', 'non-weighed')
