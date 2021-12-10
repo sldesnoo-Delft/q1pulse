@@ -29,15 +29,19 @@ class Loop:
 
 
 class RangeLoop(Loop):
-    def __init__(self, loop_number, start_stop, stop=None, step=None):
+    def __init__(self, loop_number, start_or_n, stop=None, step=None):
         if stop is None:
+            n = start_or_n
             self._start = 0
-            self._stop = start_stop
+            self._stop = n
+            self._step = 1
         else:
-            self._start = start_stop
+            self._start = start_or_n
             self._stop = stop
-        self._step = 1 if step is None else step
-        n = (self._stop - self._start) // self._step
+            self._step = 1 if step is None else step
+            # loop is end exclusive
+            n = (self._stop-1 - self._start) // self._step
+            n = max(0, n+1)
 
         super().__init__(loop_number, n)
         self._reg_name = f'_i{self._loop_number}'
