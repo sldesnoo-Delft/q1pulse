@@ -14,23 +14,17 @@ from ..lang.generator import GeneratorBase
 from ..lang.register import Register
 from ..sequencer.sequencer_data import Wave, AcquisitionBins, AcquisitionWeight
 
-# TODO @@ reset_time() for start of loop / set_time() for continuation after loop. ??
 
 def _int_u32(value):
     if value < 0:
-        value += 1<<32
-    return value
-
-def _int_u16(value):
-#    if value < 0:
-#        value += 1<<16
+        return value + (1<<32)
     return value
 
 def _float_to_f16(value):
     if value < -1.0 or value > 1.0:
         raise Exception(f'Fixed point value out of range: {value}')
     _f2i16 = (1 << 15) - 0.1
-    return _int_u16(math.floor(value * _f2i16))
+    return math.floor(value * _f2i16)
 
 def _float_to_f32(value):
     if value < -1.0 or value > 1.0:
@@ -240,7 +234,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                     self.bits_and(lhs, 0x8000_0000, sign)
                     # actual ASR
                     self._add_instruction('asr', lhs, rhs, destination)
-                    # add sign extension bits if signed
+                    # add sign extension bits if negative (highest bit set)
                     self.jlt(sign, 0x8000_0000, label)
                     sign_extension = 0xFFFF_FFFF << (31-rhs)
                     sign_extension &= 0xFFFF_FFFF
@@ -250,7 +244,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                     # This emulation adds 6 instructions: AND, ASR, NOP, SUB, NOP, OR
                     sign = self.get_temp_reg()
                     sign_extension = self.get_temp_reg()
-                    # get sign of lhs
+                    # get sign of lhs (highest bit)
                     self.bits_and(lhs, 0x8000_0000, sign)
                     # actual ASR
                     self._add_instruction('asr', lhs, rhs, destination)
@@ -527,7 +521,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
     def q1asm_lines(self, skip_comment_lines=False):
         lines = []
         line_nr = 0
-        label = None
+        line_label = None
 
         for i in self._init_section + self._instructions:
             if isinstance(i, str):
@@ -537,11 +531,10 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                 continue
 
             if i.label is not None:
-                # TODO @@@ cleaner implementation
-                if label is not None:
+                if line_label is not None:
                     raise Exception('Compilation error: cannot put two labels on '
-                                    f'one line "{i.label}","{label}"')
-                label = i.label
+                                    f'one line "{i.label}","{line_label}"')
+                line_label = i.label
                 continue
             if i.overwritten:
                 lines+= [self._format_line('# ------',
@@ -549,9 +542,9 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                                            i.comment, None)]
                 continue
             line_nr += 1
-            line = self._format_line(label, i.mnemonic, i.args, i.wait_after,
+            line = self._format_line(line_label, i.mnemonic, i.args, i.wait_after,
                                      i.comment, line_nr)
-            label = None
+            line_label = None
             lines += [line]
         return lines
 

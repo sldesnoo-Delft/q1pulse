@@ -53,7 +53,7 @@ class ReadoutBuilder(ControlBuilder):
         bins = self._translate_bins(bins)
         t1 = self.current_time + t_offset
         self.set_pulse_end(t1)
-        # TODO @@@ keep track of acquisition trigger interval to prevent overruns?
+        # TODO Keep track of acquisition trigger interval to prevent overruns?
         if bin_index == 'increment':
             reg_name = self._get_bin_reg_name(bins)
             bin_reg = self.Rs.init(reg_name)

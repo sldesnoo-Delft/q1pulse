@@ -92,10 +92,6 @@ class Q1Instrument:
             print(f'Status {name} ({module.pulsar.name}:{seq.seq_nr}):')
             print(module.get_sequencer_state(seq.seq_nr, 1))
 
-# TODO @@@
-#            #Wait for the sequencer to stop with a timeout period of one minute.
-#            pulsar.get_acquisition_state(0, 1)
-
         for name,seq in sequencers.items():
             module = self.modules[seq.module_name]
             #Stop sequencer.
