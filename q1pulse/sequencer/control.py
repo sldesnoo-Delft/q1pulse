@@ -73,9 +73,11 @@ class ControlBuilder(SequenceBuilder):
             self.set_offset(0.0, None)
 
     def shaped_pulse(self, wave0, amplitude0, wave1=None, amplitude1=None, t_offset=0):
-        self.add_comment(f'shaped_pulse({wave0}, {amplitude0}, {wave1}, {amplitude1})')
         wave0 = self._translate_wave(wave0)
         wave1 = self._translate_wave(wave1)
+        wave0_name = wave0.name if wave0 is not None else None
+        wave1_name = wave1.name if wave1 is not None else None
+        self.add_comment(f'shaped_pulse({wave0_name}, {amplitude0}, {wave1_name}, {amplitude1})')
 
         duration = max(
                 len(wave0.data) if wave0 is not None else 0,
@@ -178,10 +180,6 @@ class ControlBuilder(SequenceBuilder):
                 raise Exception('Only 1 output path enabled')
 
             return (arg0, None) if path == 0 else (None, arg0)
-
-        # if only one value set, use it for both
-        if arg1 is None:
-            return (arg0, arg0)
 
         # channels could be swapped
         return (args[i] for i in self._enabled_paths)
