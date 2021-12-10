@@ -143,6 +143,7 @@ QRM can execute all QCM instructions.
 QRM specific instructions:
 - add_acquisition: add a (binned) acquisition specification
 - add_acquisition_weights: add specification for weights
+- reset_bin_counter: resets the automatic incrementing bin counter.
 - acquire: acquire data, optionally incrementing the bin counter. (1)
 - acquire_weighed: acquire data using weighed average, optionally incrementing the bin counter. (1)
 - repeated_acquire: N times acquire data, optionally incrementing the bin counter.
