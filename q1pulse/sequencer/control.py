@@ -47,15 +47,39 @@ class ControlBuilder(SequenceBuilder):
         wave1 = self._translate_wave(wave1)
         self._add_statement(PlayWaveStatement(t1, wave0, wave1))
 
-    def shift_phase(self, delta, t_offset=0, hires_regs=False):
-        t1 = self.current_time + t_offset
-        self.set_pulse_end(t1)
-        self._add_statement(ShiftPhaseStatement(t1, delta, hires_regs))
+    def shift_phase(self, delta, t_offset=0, hires_reg=False):
+        '''
+        Args:
+            hires_reg:
+                If then and `phase` is a Register, use 2 registers for
+                conversion of phase, i.e. resolution = 1/(400*400)
 
-    def set_phase(self, phase, t_offset=0, hires_regs=False):
+        NOTE:
+            When `phase` is a Register many instructions are added for the
+            conversion of the `phase` This costs ~150 ns when hires_reg=False.
+            When hires_reg=True this costs ~500 ns.
+
+            When `phase` is a constant in q1asm, then the resolution is 1e-9.
+            No extra time is needed.
+        '''
         t1 = self.current_time + t_offset
         self.set_pulse_end(t1)
-        self._add_statement(SetPhaseStatement(t1, phase, hires_regs))
+        self._add_statement(ShiftPhaseStatement(t1, delta, hires_reg))
+
+    def set_phase(self, phase, t_offset=0, hires_reg=False):
+        '''
+        Args:
+            hires_reg:
+                If then and `phase` is a Register, use 2 registers for
+                conversion of phase, i.e. resolution = 1/(400*400)
+
+        NOTE:
+            hires_reg adds many instructions. Execution costs ~500 ns.
+            When `phase` is a Register the conversion costs ~ 50 ns.
+        '''
+        t1 = self.current_time + t_offset
+        self.set_pulse_end(t1)
+        self._add_statement(SetPhaseStatement(t1, phase, hires_reg))
 
     def block_pulse(self, duration, amplitude0, amplitude1=None, t_offset=0):
         self.add_comment(f'block_pulse({duration}, {amplitude0}, {amplitude1})')
