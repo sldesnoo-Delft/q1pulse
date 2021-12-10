@@ -5,6 +5,12 @@ from functools import wraps
 
 from pulsar_qcm.pulsar_qcm import pulsar_qcm, pulsar_qcm_dummy
 from pulsar_qrm.pulsar_qrm import pulsar_qrm, pulsar_qrm_dummy
+try:
+    from q1simulator import Q1Simulator
+    _q1simulator_found = True
+except:
+    _q1simulator_found = False
+
 
 @dataclass
 class Sequencer:
@@ -111,7 +117,10 @@ class QcmModule(QbloxModule):
 
     def __init__(self, pulsar):
         super().__init__(pulsar)
-        if pulsar is not None and not isinstance(pulsar, (pulsar_qcm, pulsar_qcm_dummy)):
+        ok = (pulsar is None
+              or isinstance(pulsar, (pulsar_qcm, pulsar_qcm_dummy))
+              or (_q1simulator_found and isinstance(pulsar, Q1Simulator)))
+        if not ok:
             raise Exception(f'pulsar must be QCM, not {type(pulsar)}')
 
     def _get_seq_paths(self, channels):
@@ -148,7 +157,10 @@ class QrmModule(QbloxModule):
 
     def __init__(self, pulsar):
         super().__init__(pulsar)
-        if pulsar is not None and not isinstance(pulsar, (pulsar_qrm, pulsar_qrm_dummy)):
+        ok = (pulsar is None
+              or isinstance(pulsar, (pulsar_qrm, pulsar_qrm_dummy))
+              or (_q1simulator_found and isinstance(pulsar, Q1Simulator)))
+        if not ok:
             raise Exception(f'pulsar must be QRM, not {type(pulsar)}')
 
     def _get_seq_paths(self, channels):
@@ -166,7 +178,6 @@ class QrmModule(QbloxModule):
     @requires_connection
     def seq_configure(self, sequencer):
         super().seq_configure(sequencer)
-        seq_nr = sequencer.seq_nr
 
     @requires_connection
     def phase_rotation_acq(self, seq_nr, phase_rotation):

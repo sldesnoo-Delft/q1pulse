@@ -2,19 +2,30 @@ import qcodes as qc
 
 from pulsar_qcm.pulsar_qcm import pulsar_qcm, pulsar_qcm_dummy
 from pulsar_qrm.pulsar_qrm import pulsar_qrm, pulsar_qrm_dummy
+try:
+    from q1simulator import Q1Simulator
+    _q1simulator_found = True
+except:
+    print('package q1simulator not found')
+    _q1simulator_found = False
 
 if not qc.Station.default:
     station = qc.Station()
 else:
     station = qc.Station.default
 
-_use_dummy=True
+_use_simulator = True
+_use_dummy = True
 
 def add_module(module_type, name, ip_addr):
     try:
         pulsar = station[name]
     except:
-        if module_type == 'qrm':
+        if _use_simulator:
+            if not _q1simulator_found:
+                raise Exception('q1simulator not found')
+            pulsar = Q1Simulator(name)
+        elif module_type == 'qrm':
             if _use_dummy:
                 print(f'Starting QRM {name} dummy')
                 pulsar = pulsar_qrm_dummy(name)
