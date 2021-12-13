@@ -19,7 +19,6 @@ with p.loop_linspace(0.2, 1.0, 5) as amplitude:
     P1.block_pulse(20, amplitude)
     P2.block_pulse(100, amplitude - 0.1)
 
-
 #p.describe()
 #print()
 

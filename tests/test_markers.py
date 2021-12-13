@@ -30,7 +30,6 @@ P2.set_markers(0b0000)
 p.wait(50_000)
 
 p.describe()
-print()
 
 p.compile(listing=True, annotate=True)
 

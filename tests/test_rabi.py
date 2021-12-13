@@ -17,7 +17,7 @@ qrm1.in0_gain(0)
 qrm1.in1_gain(0)
 
 p = instrument.new_program('rabi')
-p.repetitions = 1
+p.repetitions = 2
 
 q1 = p.q1
 P1 = p.P1
@@ -35,7 +35,7 @@ v_read = [-0.050, 0.060]
 rabi_amplitude = 0.1
 readout_amplitude = 0.1
 
-p.R.bin=0
+R1.reset_bin_counter('default')
 with p.loop_range(100, 2001, 100) as t_pulse:
     #init
     p.block_pulse(200, gates, v_init)
@@ -49,11 +49,10 @@ with p.loop_range(100, 2001, 100) as t_pulse:
     with p.parallel():
         p.set_offsets(gates, v_read)
         Ro1.block_pulse(600, readout_amplitude)
-#        R1.acquire('default', 'increment', t_offset=100)
-        R1.acquire('default', p.R.bin, t_offset=100)
+        R1.acquire('default', 'increment', t_offset=100)
         p.wait(1000)
-        p.R.bin += 1
     p.wait(1000)
+p.set_offsets(gates, [0.0, 0.0])
 
 #p.describe()
 
