@@ -171,10 +171,12 @@ signed int operations.
 ### Expressions
 The following Python operations are supported: `+`, `-`, `<<`, `>>` and bitwise `&`, `|`, `~`.
 Evaluation order is determined by the Python operator rules.
+The (unsigned) logical shift right is available as function `lsr()`
 
 Notes:
-- The shift right operator does a **signed** shift right, just like Python does.
+- The shift right operator does a **signed** arithmetic shift right, just like Python does.
   The signed shift is emulated.
+- Python has no logical shift right. The function `lsr` is added for this purpose.
 - There is no overflow checking on integer and fixed point operations.
   So, 1.0 + 0.5 gives -0.5.
 
