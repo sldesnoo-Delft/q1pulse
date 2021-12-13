@@ -10,7 +10,7 @@ p = instrument.new_program('registers')
 
 seq = p.P1
 
-# just add some waiting time to prevent error messages
+# just add some waiting time to prevent error messages on real-time executor
 p.wait(1000)
 p.P1.set_offset(0.0)
 
