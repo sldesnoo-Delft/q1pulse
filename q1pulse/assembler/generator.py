@@ -504,6 +504,14 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                     r3 = self.get_zero_reg()
                     return r1.evaluate(self), r2.evaluate(self), r3
 
+    def sim_log(self, msg, register, opt):
+        if isinstance(register, Register):
+            reg = self._translate_reg(register)
+        elif register is None:
+            reg = 'none'
+        else:
+            raise Exception('Only registers and None can be logged')
+        self.add_comment(f'Q1Sim:log "{msg}",{reg},{opt}')
 
     def _format_line(self, label, mnemonic, args, wait_after, comment, line_nr):
         if label is not None:
@@ -537,8 +545,10 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
 
         for i in self._init_section + self._instructions:
             if isinstance(i, str):
+                if i.startswith('Q1Sim:'):
+                    lines += [f'#{i} ']
                 # comment line
-                if self.add_comments and not skip_comment_lines:
+                elif self.add_comments and not skip_comment_lines:
                     lines += [f'# {i} ']
                 continue
 

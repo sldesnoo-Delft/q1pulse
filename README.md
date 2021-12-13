@@ -248,6 +248,24 @@ be used as such.
     p = instrument.new_program('my_q1_program')
 
 
+## Logging with Q1Simulator
+The `log` command can be used in combinator with Q1Simulator. This will output
+log messages on the console and can be useful when debugging the code.
+The log instruction is added in a comment line and will be ignored by the Pulsar.
+
+    with p.loop_array([0.1, -0.2, 0.3, -0.4, 0.5, -0.6, 0.7]) as v:
+        P2.log('amplitude', v, time=True)
+        P2.block_pulse(80, v)
+
+output:
+
+    amplitude:  0.100000 (0CCCCCCC) q1:  -148 rt:   244 ns
+    amplitude: -0.200000 (E6666666) q1:   -56 rt:   324 ns
+    ...
+
+Note: the q1 core has a head start of 200 ns. It starts at t = -200 ns.
+This accounts for the time the real-time executor waits in wait_sync.
+
 ## TODO
 - Refactor code to be separate a driver to use with pulse_lib and a standalone pulse sequence builder.
 

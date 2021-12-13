@@ -4,15 +4,14 @@ from .builderbase import BuilderBase
 from ..lang.sequence import Sequence
 from ..lang.loops import Loop
 from ..lang.registers import Registers
-from ..lang.timed_statements import (
-        WaitRegStatement
-        )
+from ..lang.timed_statements import WaitRegStatement
 from ..lang.flow_statements import (
         LoopDurationStatement,
         LoopStatement, EndLoopStatement,
         ArrayLoopStatement, EndArrayLoopStatement,
         )
 from ..lang.loops import LinspaceLoop, RangeLoop, ArrayLoop
+from ..lang.simulator_statements import LogStatement
 
 class SequenceBuilder(BuilderBase):
     def __init__(self, name):
@@ -50,6 +49,14 @@ class SequenceBuilder(BuilderBase):
 
     def add_comment(self, comment):
         self._add_statement(comment)
+
+    def log(self, msg, var=None, time=False):
+        '''
+        Writes a value to the logging of Q1Simulator.
+        It uses a special comment line in Q1ASM that is ignored by
+        the Pulsar.
+        '''
+        self._add_statement(LogStatement(msg, var, time))
 
     def describe(self):
         init = []

@@ -20,6 +20,8 @@ _start:    upd_param      240        # L0005 t=0
            add            R2,4294967294,R2 # L0008 
 loop_0:    nop                       # L0009  add wait for R2
            add            R2,2,R2    # L0010 
+# log "amplitude",R._var0,TRF 
+#Q1Sim:log "amplitude",R3,TRF 
 # block_pulse(80, R._var0, None) 
 # awg_offset = None, R._var0 t=240 
            asr            R3,16,R4   # L0011 temp R4
