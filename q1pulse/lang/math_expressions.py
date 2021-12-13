@@ -48,6 +48,9 @@ class Operand(ABC):
     def __invert__(self):
         return BitwiseNot(self)
 
+    def asfloat(self):
+        return CastFloat(self)
+
 def get_dtype(value):
     if isinstance(value, (int, np.integer)):
         return int
@@ -173,6 +176,19 @@ class Subtraction(BinaryExpression):
             raise Exception('incompatible data types: {self}')
         return lhs_dtype
 
+class Lsr(BinaryExpression):
+    def __init__(self, lhs, rhs):
+        super().__init__(lhs, 'unsigned >>', rhs)
+
+    def _evaluate(self, generator, destination, lhs, rhs):
+        generator.lsr(lhs, rhs, destination)
+
+    def _get_dtype(self):
+        rhs_dtype = get_dtype(self.rhs)
+        if rhs_dtype != int:
+            raise Exception(f'Shift requires integer number of bits {rhs_dtype.__name__}')
+        return get_dtype(self.lhs)
+
 class Asr(BinaryExpression):
     def __init__(self, lhs, rhs):
         super().__init__(lhs, '>>', rhs)
@@ -245,4 +261,17 @@ class BitwiseNot(UnaryExpression, ABC):
     def _evaluate(self, generator, destination, rhs):
         generator.bits_not(rhs, destination)
 
+class CastFloat(UnaryExpression, ABC):
+    def __init__(self, rhs):
+        super().__init__('float ', rhs)
+
+    def _get_dtype(self):
+        rhs_dtype = get_dtype(self.rhs)
+        if rhs_dtype != int:
+            raise Exception(f'Float cast expects integer value')
+        return float
+
+    def _evaluate(self, generator, destination, rhs):
+        if destination != rhs:
+            generator.move(rhs, destination)
 
