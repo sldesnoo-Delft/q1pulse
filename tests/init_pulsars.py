@@ -40,9 +40,9 @@ def add_module(module_type, name, ip_addr):
                 print(f'Connecting QCM {name} on {ip_addr}...')
                 pulsar = pulsar_qcm(name, ip_addr)
 
-        pulsar.reset()
         station.add_component(pulsar)
 
+    pulsar.reset()
     return pulsar
 
 qcm0 = add_module('qcm', 'qcm0', '192.168.0.2')
