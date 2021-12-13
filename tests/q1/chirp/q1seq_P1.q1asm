@@ -1,0 +1,24 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           wait_sync      4          # L0001 
+           reset_ph                  # L0002 @ 0
+# --START-- (t=0) 
+# block_pulse(100, 0.5, None) 
+# awg_offset = None, 0.5 t=0 
+_start:    set_awg_offs   0,16383    # L0003 @ 0
+           upd_param      100        # L0004 t=0
+# awg_offset = None, 0.0 t=100 
+           set_awg_offs   0,0        # L0005 @ 100
+           upd_param      10100      # L0006 t=100
+# --END-- 
+           stop                      # L0007 
+"""
+

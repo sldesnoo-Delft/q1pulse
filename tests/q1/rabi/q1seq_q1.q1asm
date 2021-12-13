@@ -1,0 +1,44 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           2,R1       # L0001 R1: _repetitions
+           wait_sync      4          # L0002 
+           reset_ph                  # L0003 @ 0
+# --START-- (t=0) 
+_start:    move           100,R2     # L0004 R2: R._var0
+           move           20,R3      # L0005 R3: R._cnt0
+loop_0:    upd_param      220        # L0006 t=0
+# block_pulse(R._var0, 0.1, None) 
+           set_awg_offs   3276,0     # L0007 @ 220
+           upd_param      4          # L0008 t=220
+           sub            R2,4,R4    # L0009 R4: _waittime
+#          --- check for negative wait time 
+#          --- emulate signed wait time 
+           nop                       # L0010  xor wait for R4
+           xor            R4,2147483648,R5 # L0011 temp ['R5']
+           nop                       # L0012  jge wait for R5
+           jge            R5,2147483652,@waitc1 # L0013 
+           illegal                   # L0014 negative value
+waitc1:    jlt            R4,65532,@endwait1 # L0015 
+wait1:     wait           65528      # L0016 
+           sub            R4,65528,R4 # L0017 
+           nop                       # L0018  jge wait for R4
+           jge            R4,65532,@wait1 # L0019 
+endwait1:  wait           R4         # L0020 
+           set_awg_offs   0,0        # L0021 @ 220
+           upd_param      2200       # L0022 t=220
+           add            R2,100,R2  # L0023 
+           loop           R3,@loop_0 # L0024 
+# --END-- 
+           loop           R1,@_start # L0025 
+           upd_param      4          # L0026 t=2420
+           stop                      # L0027 
+"""
+

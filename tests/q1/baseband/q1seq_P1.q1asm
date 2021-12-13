@@ -1,0 +1,102 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           3,R1       # L0001 R1: _repetitions
+           move           0,R0       # L0002 R0: always 0 register
+           wait_sync      4          # L0003 
+           reset_ph                  # L0004 @ 0
+# --START-- (t=0) 
+# R.amplitude:float = 0.125 
+_start:    move           268435455,R2 # L0005 R2: R.amplitude
+# Rs.amplitude:float = -0.125 
+           move           4026531840,R3 # L0006 R3: Rs.amplitude
+# block_pulse(200, R.amplitude, None) 
+# awg_offset = R.amplitude, None t=0 
+           asr            R2,16,R4   # L0007 temp R4
+           nop                       # L0008  set_awg_offs wait for R4
+           set_awg_offs   R4,R0      # L0009 @ 0
+           upd_param      200        # L0010 t=0
+# awg_offset = 0.0, None t=200 
+# ------:  set_awg_offs   0,0        # @ 200 = overwritten =
+# block_pulse(200, Rs.amplitude, None) 
+# awg_offset = Rs.amplitude, None t=200 
+           asr            R3,16,R4   # L0011 temp R4
+# -- Overwrites set_awg_offs at 200 -- 
+           nop                       # L0012  set_awg_offs wait for R4
+           set_awg_offs   R4,R0      # L0013 @ 200
+           upd_param      200        # L0014 t=200
+# awg_offset = 0.0, None t=400 
+# ------:  set_awg_offs   0,0        # @ 400 = overwritten =
+# block_pulse(200, R.amplitude + 0.5, None) 
+# awg_offset = R.amplitude + 0.5, None t=400 
+           add            R2,1073741823,R4 # L0015 temp R4
+           nop                       # L0016  asr wait for R4
+           asr            R4,16,R5   # L0017 temp R5
+# -- Overwrites set_awg_offs at 400 -- 
+           nop                       # L0018  set_awg_offs wait for R5
+           set_awg_offs   R5,R0      # L0019 @ 400
+           upd_param      200        # L0020 t=400
+# awg_offset = 0.0, None t=600 
+           set_awg_offs   0,0        # L0021 @ 600
+           upd_param      1000       # L0022 t=600
+# block_pulse(100, 0.5, None) 
+# awg_offset = 0.5, None t=1600 
+           set_awg_offs   16383,0    # L0023 @ 1600
+           upd_param      100        # L0024 t=1600
+# awg_offset = 0.0, None t=1700 
+           set_awg_offs   0,0        # L0025 @ 1700
+           upd_param      1100       # L0026 t=1700
+# block_pulse(100, 0.25, None) 
+# awg_offset = 0.25, None t=2800 
+           set_awg_offs   8191,0     # L0027 @ 2800
+           upd_param      100        # L0028 t=2800
+# awg_offset = 0.0, None t=2900 
+           set_awg_offs   0,0        # L0029 @ 2900
+           upd_param      65532      # L0030 t=2900
+# --- long wait 
+# block_pulse(500, -1.0, None) 
+# awg_offset = -1.0, None t=102900 
+           set_awg_offs   -32768,0   # L0031 @ 102900
+# wait 99996 (t=102900) 
+           wait           34468      # L0032 
+           upd_param      500        # L0033 t=102900
+# awg_offset = 0.0, None t=103400 
+           set_awg_offs   0,0        # L0034 @ 103400
+           upd_param      65532      # L0035 t=103400
+# --- longer wait 
+# block_pulse(500, 0.5, None) 
+# awg_offset = 0.5, None t=263400 
+           set_awg_offs   16383,0    # L0036 @ 263400
+# wait 159996 (t=263400) 
+           wait           65532      # L0037 
+           wait           28936      # L0038 
+           upd_param      500        # L0039 t=263400
+# awg_offset = 0.0, None t=263900 
+           set_awg_offs   0,0        # L0040 @ 263900
+           upd_param      65532      # L0041 t=263900
+# --- very long wait 
+# block_pulse(1000, 0.75, None) 
+# awg_offset = 0.75, None t=763900 
+           set_awg_offs   24575,0    # L0042 @ 763900
+# wait 499996 (t=763900) 
+           move           6,R4       # L0043 temp ['R4']
+wait1:     wait           65532      # L0044 
+           loop           R4,@wait1  # L0045 
+           wait           41276      # L0046 
+           upd_param      1000       # L0047 t=763900
+# awg_offset = 0.0, None t=764900 
+           set_awg_offs   0,0        # L0048 @ 764900
+           upd_param      1000       # L0049 t=764900
+# --END-- 
+           loop           R1,@_start # L0050 
+           upd_param      4          # L0051 t=765900
+           stop                      # L0052 
+"""
+

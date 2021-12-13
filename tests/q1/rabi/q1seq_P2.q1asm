@@ -1,0 +1,84 @@
+waveforms={
+    '_ramp(100)':{
+        'data':
+            [  0.00000,  0.01000,  0.02000,  0.03000,  0.04000,  0.05000,
+               0.06000,  0.07000,  0.08000,  0.09000,  0.10000,  0.11000,
+               0.12000,  0.13000,  0.14000,  0.15000,  0.16000,  0.17000,
+               0.18000,  0.19000,  0.20000,  0.21000,  0.22000,  0.23000,
+               0.24000,  0.25000,  0.26000,  0.27000,  0.28000,  0.29000,
+               0.30000,  0.31000,  0.32000,  0.33000,  0.34000,  0.35000,
+               0.36000,  0.37000,  0.38000,  0.39000,  0.40000,  0.41000,
+               0.42000,  0.43000,  0.44000,  0.45000,  0.46000,  0.47000,
+               0.48000,  0.49000,  0.50000,  0.51000,  0.52000,  0.53000,
+               0.54000,  0.55000,  0.56000,  0.57000,  0.58000,  0.59000,
+               0.60000,  0.61000,  0.62000,  0.63000,  0.64000,  0.65000,
+               0.66000,  0.67000,  0.68000,  0.69000,  0.70000,  0.71000,
+               0.72000,  0.73000,  0.74000,  0.75000,  0.76000,  0.77000,
+               0.78000,  0.79000,  0.80000,  0.81000,  0.82000,  0.83000,
+               0.84000,  0.85000,  0.86000,  0.87000,  0.88000,  0.89000,
+               0.90000,  0.91000,  0.92000,  0.93000,  0.94000,  0.95000,
+               0.96000,  0.97000,  0.98000,  0.99000],
+        'index':0,
+        },
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           2,R1       # L0001 R1: _repetitions
+           move           0,R0       # L0002 R0: always 0 register
+           wait_sync      4          # L0003 
+           reset_ph                  # L0004 @ 0
+# --START-- (t=0) 
+_start:    move           100,R2     # L0005 R2: R._var0
+           move           20,R3      # L0006 R3: R._cnt0
+# block_pulse(200, 0.04, None) 
+loop_0:    set_awg_offs   0,1310     # L0007 @ 0
+           upd_param      200        # L0008 t=0
+           set_awg_offs   0,0        # L0009 @ 200
+           upd_param      20         # L0010 t=200
+           move           R2,R4      # L0011 R4: _waittime
+#          --- check for negative wait time 
+#          --- emulate signed wait time 
+           nop                       # L0012  xor wait for R4
+           xor            R4,2147483648,R5 # L0013 temp ['R5']
+           nop                       # L0014  jge wait for R5
+           jge            R5,2147483652,@waitc1 # L0015 
+           illegal                   # L0016 negative value
+waitc1:    jlt            R4,65532,@endwait1 # L0017 
+wait1:     wait           65528      # L0018 
+           sub            R4,65528,R4 # L0019 
+           nop                       # L0020  jge wait for R4
+           jge            R4,65532,@wait1 # L0021 
+endwait1:  wait           R4         # L0022 
+# ramp(200, 0.0, 0.06) 
+           move           0,R4       # L0023 R4: Rs._ramp_offset
+           set_awg_gain   0,983      # L0024 @ 220
+           asr            R4,16,R5   # L0025 temp R5
+           nop                       # L0026  set_awg_offs wait for R5
+           set_awg_offs   R0,R5      # L0027 @ 220
+           play           0,0,100    # L0028 t=220
+           add            R4,64424509,R4 # L0029 
+           nop                       # L0030  asr wait for R4
+           asr            R4,16,R5   # L0031 temp R5
+           nop                       # L0032  set_awg_offs wait for R5
+           set_awg_offs   R0,R5      # L0033 @ 320
+           play           0,0,100    # L0034 t=320
+# ------:  set_awg_offs   0,0        # @ 420 = overwritten =
+           set_awg_gain   0,0        # L0035 @ 420
+# -- Overwrites set_awg_offs at 420 -- 
+           set_awg_offs   0,1966     # L0036 @ 420
+           upd_param      2000       # L0037 t=420
+           add            R2,100,R2  # L0038 
+           loop           R3,@loop_0 # L0039 
+           set_awg_offs   0,0        # L0040 @ 2420
+# --END-- 
+           loop           R1,@_start # L0041 
+           upd_param      4          # L0042 t=2420
+           stop                      # L0043 
+"""
+

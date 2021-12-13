@@ -1,0 +1,78 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           10,R1      # L0001 R1: _repetitions
+           move           0,R0       # L0002 R0: always 0 register
+           wait_sync      4          # L0003 
+           reset_ph                  # L0004 @ 0
+# --START-- (t=0) 
+# R.phase1:float = 0.125 
+_start:    move           268435455,R2 # L0005 R2: R.phase1
+# Rs.phase2:float = -0.125 
+           move           4026531840,R3 # L0006 R3: Rs.phase2
+# set_phase 0.5 t=0 
+           set_ph         100,0,0    # L0007 @ 0
+           upd_param      100        # L0008 t=0
+# set_phase R.phase1 t=100 
+#          --- phase register -> 3 phase instruction arguments 
+           asr            R2,6,R8    # L0009 temp R8
+           asr            R2,3,R9    # L0010 temp R9
+           nop                       # L0011  add wait for R9
+           add            R8,R9,R7   # L0012 
+           asr            R2,2,R10   # L0013 temp R10
+           nop                       # L0014  add wait for R10
+           add            R7,R10,R6  # L0015 
+           nop                       # L0016  add wait for R6
+           add            R6,3,R5    # L0017 
+           nop                       # L0018  asr wait for R5
+           asr            R5,22,R4   # L0019 
+           nop                       # L0020  set_ph wait for R4
+           set_ph         R4,R0,R0   # L0021 @ 100
+           upd_param      100        # L0022 t=100
+# phase_delta Rs.phase2 t=200 
+#          --- phase register -> 3 phase instruction arguments 
+           asr            R3,6,R8    # L0023 temp R8
+           asr            R3,3,R9    # L0024 temp R9
+           nop                       # L0025  add wait for R9
+           add            R8,R9,R7   # L0026 
+           asr            R3,2,R10   # L0027 temp R10
+           nop                       # L0028  add wait for R10
+           add            R7,R10,R6  # L0029 
+           nop                       # L0030  add wait for R6
+           add            R6,3,R5    # L0031 
+           nop                       # L0032  asr wait for R5
+           asr            R5,22,R4   # L0033 
+           nop                       # L0034  set_ph_delta wait for R4
+           set_ph_delta   R4,R0,R0   # L0035 @ 200
+           upd_param      100        # L0036 t=200
+# phase_delta Rs.phase2 + 0.1 t=300 
+#          --- phase register -> 3 phase instruction arguments 
+           add            R3,214748364,R4 # L0037 R4: R._phase
+           nop                       # L0038  asr wait for R4
+           asr            R4,6,R9    # L0039 temp R9
+           asr            R4,3,R10   # L0040 temp R10
+           nop                       # L0041  add wait for R10
+           add            R9,R10,R8  # L0042 
+           asr            R4,2,R11   # L0043 temp R11
+           nop                       # L0044  add wait for R11
+           add            R8,R11,R7  # L0045 
+           nop                       # L0046  add wait for R7
+           add            R7,3,R6    # L0047 
+           nop                       # L0048  asr wait for R6
+           asr            R6,22,R5   # L0049 
+           nop                       # L0050  set_ph_delta wait for R5
+           set_ph_delta   R5,R0,R0   # L0051 @ 300
+           upd_param      200        # L0052 t=300
+# --END-- 
+           loop           R1,@_start # L0053 
+           upd_param      4          # L0054 t=500
+           stop                      # L0055 
+"""
+

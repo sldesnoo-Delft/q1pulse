@@ -1,0 +1,36 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           3,R1       # L0001 R1: _repetitions
+           move           0,R0       # L0002 R0: always 0 register
+           wait_sync      4          # L0003 
+           reset_ph                  # L0004 @ 0
+# --START-- (t=0) 
+# loop_linspace(0.2, 1.0, 5):R._var0 t=0 
+_start:    move           429496729,R2 # L0005 R2: R._var0
+           move           5,R3       # L0006 R3: R._cnt0
+# block_pulse(20, R._var0, None) 
+# awg_offset = R._var0, None t=0 
+loop_0:    asr            R2,16,R4   # L0007 temp R4
+           nop                       # L0008  set_awg_offs wait for R4
+           set_awg_offs   R4,R0      # L0009 @ 0
+           upd_param      20         # L0010 t=0
+# awg_offset = 0.0, None t=20 
+           set_awg_offs   0,0        # L0011 @ 20
+           upd_param      140        # L0012 t=20
+# endloop t=160 
+           add            R2,429496729,R2 # L0013 
+           loop           R3,@loop_0 # L0014 
+# --END-- 
+           loop           R1,@_start # L0015 
+           upd_param      4          # L0016 t=160
+           stop                      # L0017 
+"""
+

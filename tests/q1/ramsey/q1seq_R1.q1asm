@@ -1,0 +1,50 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={'q1value': {'index': 0, 'num_bins': 20}}
+
+seq_prog="""
+# --INIT-- 
+           move           2,R1       # L0001 R1: _repetitions
+           wait_sync      4          # L0002 
+           reset_ph                  # L0003 @ 0
+# --START-- (t=0) 
+# Rs._bin_q1value:int = 0 
+_start:    move           0,R2       # L0004 R2: Rs._bin_q1value
+# loop_range(100, 2001, 100):R._var0 t=0 
+           move           100,R3     # L0005 R3: R._var0
+           move           20,R4      # L0006 R4: R._cnt0
+loop_0:    upd_param      300        # L0007 t=0
+# wait(R._var0) t=300 
+           move           R3,R5      # L0008 R5: _waittime
+#          --- check for negative wait time 
+#          --- emulate signed wait time 
+           nop                       # L0009  xor wait for R5
+           xor            R5,2147483648,R6 # L0010 temp ['R6']
+           nop                       # L0011  jge wait for R6
+           jge            R6,2147483652,@waitc1 # L0012 
+           illegal                   # L0013 negative value
+waitc1:    jlt            R5,65532,@endwait1 # L0014 
+wait1:     wait           65528      # L0015 
+           sub            R5,65528,R5 # L0016 
+           nop                       # L0017  jge wait for R5
+           jge            R5,65532,@wait1 # L0018 
+endwait1:  wait           R5         # L0019 
+# acquire(q1value, increment) 
+# acquire(bins=q1value, bin=Rs._bin_q1value) t=580 
+           wait           280        # L0020 
+           acquire        0,R2,900   # L0021 t=580
+# Rs._bin_q1value:int = Rs._bin_q1value + 1 
+           add            R2,1,R2    # L0022 
+# endloop t=1480 
+           add            R3,100,R3  # L0023 
+           loop           R4,@loop_0 # L0024 
+# --END-- 
+           loop           R1,@_start # L0025 
+           upd_param      4          # L0026 t=1480
+           stop                      # L0027 
+"""
+

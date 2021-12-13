@@ -1,0 +1,116 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           2,R1       # L0001 R1: _repetitions
+           wait_sync      4          # L0002 
+           reset_ph                  # L0003 @ 0
+# --START-- (t=0) 
+# block_pulse(100, -0.1, None) 
+# awg_offset = -0.1, None t=0 
+_start:    set_awg_offs   -3277,0    # L0004 @ 0
+           upd_param      100        # L0005 t=0
+# awg_offset = 0.0, None t=100 
+# ------:  set_awg_offs   0,0        # @ 100 = overwritten =
+# block_pulse(40, 0.5, None) 
+# awg_offset = 0.5, None t=100 
+# -- Overwrites set_awg_offs at 100 -- 
+           set_awg_offs   16383,0    # L0006 @ 100
+           upd_param      40         # L0007 t=100
+# awg_offset = 0.0, None t=140 
+           set_awg_offs   0,0        # L0008 @ 140
+           upd_param      100        # L0009 t=140
+# loop_array([0.1, -0.2, 0.3, -0.4, 0.5, -0.6, 0.7]):R._var0 t=240 
+           move           @_table0,R2 # L0010 R2: R._ptr0
+           move           214748364,R3 # L0011 R3: R._var0
+           add            R2,4294967294,R2 # L0012 
+loop_0:    nop                       # L0013  add wait for R2
+           add            R2,2,R2    # L0014 
+           upd_param      80         # L0015 t=240
+# endloop t=320 
+           nop                       # L0016  jmp wait for R2
+           jmp            R2         # L0017 
+_table0:   move           3865470566,R3 # L0018 
+           jmp            @loop_0    # L0019 
+           move           644245094,R3 # L0020 
+           jmp            @loop_0    # L0021 
+           move           3435973836,R3 # L0022 
+           jmp            @loop_0    # L0023 
+           move           1073741823,R3 # L0024 
+           jmp            @loop_0    # L0025 
+           move           3006477107,R3 # L0026 
+           jmp            @loop_0    # L0027 
+           move           1503238553,R3 # L0028 
+           jmp            @loop_0    # L0029 
+           upd_param      100        # L0030 t=320
+# loop_array([12, 80, 48, 56, 64]):R._var1 t=420 
+           move           @_table1,R2 # L0031 R2: R._ptr1
+           move           12,R3      # L0032 R3: R._var1
+           add            R2,4294967294,R2 # L0033 
+loop_1:    nop                       # L0034  add wait for R2
+           add            R2,2,R2    # L0035 
+           upd_param      4          # L0036 t=420
+# wait(R._var1) t=420 
+           sub            R3,4,R4    # L0037 R4: _waittime
+#          --- check for negative wait time 
+#          --- emulate signed wait time 
+           nop                       # L0038  xor wait for R4
+           xor            R4,2147483648,R5 # L0039 temp ['R5']
+           nop                       # L0040  jge wait for R5
+           jge            R5,2147483652,@waitc1 # L0041 
+           illegal                   # L0042 negative value
+waitc1:    jlt            R4,65532,@endwait1 # L0043 
+wait1:     wait           65528      # L0044 
+           sub            R4,65528,R4 # L0045 
+           nop                       # L0046  jge wait for R4
+           jge            R4,65532,@wait1 # L0047 
+endwait1:  wait           R4         # L0048 
+# block_pulse(20, 0.25, None) 
+# awg_offset = 0.25, None t=420 
+           set_awg_offs   8191,0     # L0049 @ 420
+           upd_param      20         # L0050 t=420
+# awg_offset = 0.0, None t=440 
+           set_awg_offs   0,0        # L0051 @ 440
+           upd_param      104        # L0052 t=440
+# wait(100 - R._var1) t=440 
+           move           100,R5     # L0053 temp ['R5']
+           nop                       # L0054  sub wait for R5
+           sub            R5,R3,R4   # L0055 
+           nop                       # L0056  sub wait for R4
+           sub            R4,4,R5    # L0057 R5: _waittime
+#          --- check for negative wait time 
+#          --- emulate signed wait time 
+           nop                       # L0058  xor wait for R5
+           xor            R5,2147483648,R6 # L0059 temp ['R6']
+           nop                       # L0060  jge wait for R6
+           jge            R6,2147483652,@waitc2 # L0061 
+           illegal                   # L0062 negative value
+waitc2:    jlt            R5,65532,@endwait2 # L0063 
+wait2:     wait           65528      # L0064 
+           sub            R5,65528,R5 # L0065 
+           nop                       # L0066  jge wait for R5
+           jge            R5,65532,@wait2 # L0067 
+endwait2:  wait           R5         # L0068 
+# endloop t=540 
+           jmp            R2         # L0069 
+_table1:   move           80,R3      # L0070 
+           jmp            @loop_1    # L0071 
+           move           48,R3      # L0072 
+           jmp            @loop_1    # L0073 
+           move           56,R3      # L0074 
+           jmp            @loop_1    # L0075 
+           move           64,R3      # L0076 
+           jmp            @loop_1    # L0077 
+           upd_param      100        # L0078 t=540
+# --END-- 
+           loop           R1,@_start # L0079 
+           upd_param      4          # L0080 t=640
+           stop                      # L0081 
+"""
+
