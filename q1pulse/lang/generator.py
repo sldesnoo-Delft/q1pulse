@@ -17,7 +17,7 @@ class GeneratorBase(ABC):
         pass
 
     @abstractmethod
-    def finalize(self):
+    def end_main(self, time):
         pass
 
     @abstractmethod
@@ -36,7 +36,11 @@ class GeneratorBase(ABC):
         pass
 
     @abstractmethod
-    def sync(self, time):
+    def block_start(self):
+        pass
+
+    @abstractmethod
+    def block_end(self):
         pass
 
     @abstractmethod

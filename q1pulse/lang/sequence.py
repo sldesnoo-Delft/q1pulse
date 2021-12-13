@@ -5,11 +5,6 @@ class Sequence:
     def __init__(self, timeline):
         self.timeline = timeline
         self._statements = []
-        self.exit_statement = None
-
-    def close(self):
-        if self.exit_statement is not None:
-            self.add(self.exit_statement)
 
     def add(self, statement):
         self._statements.append(statement)
@@ -46,13 +41,15 @@ class Sequence:
                     generator.add_comment(statement)
                 continue
             try:
-                statement.write_instruction(generator)
+                if not isinstance(statement, BranchStatement):
+                    statement.write_instruction(generator)
+                else:
+                    with generator.scope():
+                        generator.block_end()
+                        statement.write_instruction(generator)
+                        generator.block_start()
+                        statement.sequence.compile(generator, annotate)
+                        generator.block_end()
+                        generator.block_start()
             except Exception as ex:
                 raise Exception(f'Compilation error on statement {statement}') from ex
-            if isinstance(statement, BranchStatement):
-                with generator.scope():
-                    statement.sequence.compile(generator, annotate)
-
-# TODO: @@@ Replace with contextmanager and add end statement to BranchStatement.
-#                    with statement.branch() as sequence: # @@@ Use contextmanager
-#                        sequence.compile(generator, annotate)

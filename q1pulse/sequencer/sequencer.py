@@ -5,18 +5,12 @@ from ..lang.sequence import Sequence
 from ..lang.loops import Loop
 from ..lang.registers import Registers
 from ..lang.timed_statements import (
-        SyncTimeStatement,
-        LoopDurationStatement,
         WaitRegStatement
         )
 from ..lang.flow_statements import (
-        LoopRangeStatement, EndLoopRangeStatement,
-        LinspaceLoopStatement, EndLinspaceLoopStatement,
-        RepeatStatement, EndRepeatStatement,
+        LoopDurationStatement,
+        LoopStatement, EndLoopStatement,
         ArrayLoopStatement, EndArrayLoopStatement,
-        )
-from ..lang.register_statements import (
-        RegisterScopeEnter, RegisterScopeExit
         )
 from ..lang.loops import LinspaceLoop, RangeLoop, ArrayLoop
 
@@ -70,11 +64,11 @@ class SequenceBuilder(BuilderBase):
     def compile(self, generator, annotate=False):
         try:
             if not self._compiled:
-                self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time))
                 self._compiled = True
             self._init_sequence.compile(generator, annotate)
             generator.start_main()
             self._sequence_stack[0].compile(generator, annotate)
+            generator.end_main(self.end_time)
         except:
             print(f'Exception in {self.name} while compiling:')
             lines = generator.q1asm_lines()
@@ -109,35 +103,26 @@ class SequenceBuilder(BuilderBase):
     def end_time(self):
         return self.sequence.timeline.end_time
 
-    def enter_loop(self, label, loop):
-        # TODO @@@ incorporate in Sequence() and sequence.compile()
-        # --- align loop start with other sequencers, needed here because it can insert wait instructions
-        self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time))
+    def enter_loop(self, loop):
         loop_sequence = Sequence(self._timeline)
-        if isinstance(loop, RangeLoop):
-            loop_statement = LoopRangeStatement(loop_sequence, label, loop)
-            loop_sequence.exit_statement = EndLoopRangeStatement(label, loop)
-        elif isinstance(loop, LinspaceLoop):
-            loop_statement = LinspaceLoopStatement(loop_sequence, label, loop)
-            loop_sequence.exit_statement = EndLinspaceLoopStatement(label, loop)
+        if isinstance(loop, (RangeLoop, LinspaceLoop)):
+            loop_statement = LoopStatement(self.end_time, loop_sequence, loop)
         elif isinstance(loop, ArrayLoop):
-            loop_statement = ArrayLoopStatement(loop_sequence, label, loop)
-            loop_sequence.exit_statement = EndArrayLoopStatement(label, loop)
+            loop_statement = ArrayLoopStatement(self.end_time, loop_sequence, loop)
         else:
             raise Exception('Unknown loop')
         self._add_statement(loop_statement)
         self._sequence_stack.append(loop_sequence)
-        # --- needed here because it moves the last upd_param for current time to the start of the loop
-        self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time))
 
-    def exit_loop(self):
-        # TODO @@@ incorporate in sequence.compile()
-        # --- needed here because it adds required wait time at end of loop
-        self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time))
-        self.sequence.close()
+    def exit_loop(self, loop):
+        if isinstance(loop, (RangeLoop, LinspaceLoop)):
+            loop_end_statement = EndLoopStatement(self.end_time, loop)
+        elif isinstance(loop, ArrayLoop):
+            loop_end_statement = EndArrayLoopStatement(self.end_time, loop)
+        else:
+            raise Exception('Unknown loop')
+        self._add_statement(loop_end_statement)
         self._sequence_stack.pop()
-        # --- needed here because it moves the last upd_param out of the loop
-        self._add_statement(SyncTimeStatement(self.sequence.timeline.end_time))
 
     @contextmanager
     def _seq_repeat(self, n):
@@ -147,31 +132,22 @@ class SequenceBuilder(BuilderBase):
         if n == 1:
             yield
         else:
-            # TODO @@@ use context manager @register_scope
-            self._add_statement(RegisterScopeEnter())
-            # TODO @@@ incorporate in sequence.compile()
-            # --- needed here because it can insert wait instructions
-            self._add_statement(SyncTimeStatement(self.current_time))
             t_start = self.current_time
-            label = f'local_{self._local_loop_cnt}'
             loop = Loop(self._local_loop_cnt, n, local=True)
             self._local_loop_cnt += 1
             loop_sequence = Sequence(self._timeline)
-            loop_statement = RepeatStatement(loop_sequence, label, loop)
-            loop_sequence.exit_statement = EndRepeatStatement(label, loop)
+            loop_statement = LoopStatement(self.current_time, loop_sequence, loop)
             self._add_statement(loop_statement)
             self._sequence_stack.append(loop_sequence)
-            # --- needed here because it moves the last upd_param for current time to the start of the loop
-            self._add_statement(SyncTimeStatement(self.current_time))
 
             yield
 
-            self.sequence.close()
-            self._sequence_stack.pop()
+            loop_end_statement = EndLoopStatement(self.current_time, loop)
+            self._add_statement(loop_end_statement)
             t_loop = self.current_time - t_start
             self._add_statement(LoopDurationStatement(n, t_loop))
+            self._sequence_stack.pop()
             self.set_pulse_end(t_start + n * t_loop)
-            self._add_statement(RegisterScopeExit())
 
 
     def _add_reg_wait(self, reg):

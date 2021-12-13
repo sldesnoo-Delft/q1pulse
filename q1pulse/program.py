@@ -46,7 +46,6 @@ class Program:
             g = Q1asmGenerator(add_comments=add_comments)
             g.repetitions = self.repetitions
             builder.compile(g, annotate=annotate)
-            g.finalize()
 
             if verbose:
                 print(f'seq_{builder.name}="""')
@@ -77,16 +76,14 @@ class Program:
 
     @contextmanager
     def __loop(self, loop):
-        label = f'loop_{self._loop_cnt}'
         self._loop_cnt += 1
         for s in self.sequence_builders.values():
-            s.enter_loop(label, loop)
+            s.enter_loop(loop)
 
         yield loop.loopvar
 
         for s in self.sequence_builders.values():
-            s.exit_loop()
-
+            s.exit_loop(loop)
 
     @contextmanager
     def parallel(self):

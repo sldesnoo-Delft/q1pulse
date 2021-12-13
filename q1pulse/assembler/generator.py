@@ -131,25 +131,43 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
 
     def start_main(self):
         self._add_rt_command('wait_sync', time=0)
-        self.reset_phase(4)
         self._reset_time()
+        self.reset_phase(0)
         self.add_comment('--START-- (t=0)')
         self.set_label('_start')
+        self.block_start()
 
         if self._repetitions > 1:
             self.repetitions_reg = self.allocate_reg('_repetitions')
             self.move(self._repetitions, self.repetitions_reg,
                       init_section=True)
 
-    def finalize(self):
+    def end_main(self, time):
         if self._finalized:
             return
+        self._wait_till(time)
+        self.block_end()
         self.add_comment('--END--')
-        self._flush_pending_update()
         if self._repetitions > 1:
             self.loop(self.repetitions_reg, '_start')
+            # Last start/stop to ensure that pending update is set at end of program
+            self.block_start()
+            self.block_end()
+        self._flush_pending_update()
         self._add_instruction('stop')
         self._finalized = True
+
+    def block_start(self):
+        # Pending updates of the previous block must be updated now.
+        # So, updates scheduled at the end of the loop will be updated
+        # at the start of the loop or immediately after the loop.
+        self._schedule_update(self._rt_time)
+        # rt_settings may not be overwritten across block boundary
+        self._last_rt_settings = {}
+
+    def block_end(self):
+        # NOTE pending update will move to next block start.
+        self._last_rt_settings = {}
 
     def jmp(self, label):
         label = self._translate_label(label)
@@ -327,14 +345,10 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
 
     @register_args
     def wait_reg(self, time, register):
-        elapsed = self._wait_till(time, return_negative=True)
+        # Note: wait_reg also effectively contains a block_end and block_start.
+        elapsed = self._wait_till(time, pending_update='flush', return_negative=True)
         self._add_wait_reg(register, elapsed)
         # rt_settings may not be overwritten across wait_reg boundary
-        self._last_rt_settings = {}
-
-    def sync(self, time):
-        self._schedule_update(time)
-        # rt_settings may not be overwritten across sync boundary
         self._last_rt_settings = {}
 
     def play(self, time, wave0, wave1):
@@ -403,28 +417,26 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             self._reg_comment = comment
 
     def _all_reg_or_imm(self, *operands):
-        t = None
-        result = []
+        dtype = None
         for o in operands:
-            result.append(o)
-            if isinstance(o, int):
-                if t == 'reg':
-                    raise Exception(f'Illegal arguments {operands}')
-                t = 'imm'
+            if dtype is None and isinstance(o, int):
+                dtype = 'imm'
             if isinstance(o, str):
-                if t == 'imm':
-                    raise Exception(f'Illegal arguments {operands}')
-                t = 'reg'
-
-        if t is None:
+                dtype = 'reg'
+        if dtype is None:
             raise Exception(f'Illegal arguments {operands}')
 
-        for i,o in enumerate(result):
+        result = list(operands)
+        for i,o in enumerate(operands):
             if o is None:
-                if t == 'imm':
+                if dtype == 'imm':
                     result[i] = 0
                 else:
                     result[i] = self.get_zero_reg()
+            elif dtype == 'reg' and isinstance(o, Number):
+                temp = self._registers.get_temp_reg()
+                self.move(o, temp)
+                result[i] = temp
 
         return result
 

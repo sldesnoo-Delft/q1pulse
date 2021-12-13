@@ -140,8 +140,8 @@ class ControlBuilder(SequenceBuilder):
                     self.Rs._ramp_step >>= shift
                 w_ramp = self._waves.get_ramp(wave_duration)
                 self.Rs._ramp_offset = v_start
+                self.set_gain(self.Rs._ramp_step)
                 with self._seq_repeat(1 << shift):
-                    self.set_gain(self.Rs._ramp_step) # @@@ this could be outside loop
                     self.set_offset(self.Rs._ramp_offset)
                     self.play(w_ramp)
                     self.Rs._ramp_offset += self.Rs._ramp_step
@@ -157,8 +157,8 @@ class ControlBuilder(SequenceBuilder):
                     w_ramp = self._waves.get_ramp(100)
                     self.Rs._ramp_offset = v_start
 
+                    self.set_gain(step)
                     with self._seq_repeat(n):
-                        self.set_gain(step) # @@@ this could be outside loop
                         self.set_offset(self.Rs._ramp_offset)
                         self.play(w_ramp)
                         self.Rs._ramp_offset += step

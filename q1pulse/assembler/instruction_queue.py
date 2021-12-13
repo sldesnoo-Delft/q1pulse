@@ -78,7 +78,7 @@ class InstructionQueue:
 
     def _add_rt_command(self, mnemonic, *args, time=None, comment=None,
                         index=None):
-        self._wait_till(time, merge_update=True)
+        self._wait_till(time, pending_update='merge')
         wait_after = RT_RESOLUTION
         instruction = Instruction(mnemonic, args, comment=comment, wait_after=wait_after)
         if index is None:
@@ -99,25 +99,25 @@ class InstructionQueue:
         self._last_rt_command = None
 
     def _schedule_update(self, time):
-        if self._pending_update is not None and time == self._pending_update.time:
-            # put update immediately after rt_setting
-            index_update = len(self._instructions)
-            # move pending update after last instruction.
-            self._pending_update.index = index_update
-            return
         self._wait_till(time)
-        # put update immediately after rt_setting (but get index after previous pending has been added)
+        # put new update immediately after rt_setting (but get index after previous pending has been added)
         index_update = len(self._instructions)
         self._pending_update = PendingUpdate(index_update, time)
 
-    def _wait_till(self, time, merge_update=False, return_negative=False):
-        if (merge_update
-            and self._pending_update is not None
+    def _wait_till(self, time, pending_update='keep', return_negative=False):
+        if (self._pending_update is not None
             and time == self._pending_update.time):
-            # merge pending update with RT command that follows
-            self._pending_update = None
-        else:
-            self._flush_pending_update()
+            if pending_update == 'keep':
+                return
+            elif pending_update == 'merge':
+                # merge pending update with RT command that follows
+                self._pending_update = None
+                self._last_rt_command = None
+                self._rt_time = time
+                return
+            elif pending_update != 'flush':
+                Exception(f'Unknown {pending_update}')
+        self._flush_pending_update()
         wait_time = time - self._rt_time
         if wait_time < 0:
             if return_negative:
