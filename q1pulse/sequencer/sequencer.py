@@ -121,7 +121,6 @@ class SequenceBuilder(BuilderBase):
 
     def compile(self, generator, annotate=False):
         q1exception = None
-        seq_exc = None
         try:
             if not self._compiled:
                 self._compiled = True
@@ -143,11 +142,10 @@ class SequenceBuilder(BuilderBase):
             self._dump_compile_state(generator, q1_tb, ex)
         except Exception as ex:
             self._dump_compile_state(generator, None, ex)
+        # Raise exception after handler
+        # This avoids exposure of / confusion by q1pulse internals.
         if q1exception:
-            if seq_exc:
-                raise q1exception from seq_exc
-            else:
-                raise q1exception
+            raise q1exception
 
     def _dump_compile_state(self, generator, q1_tb, exc):
         filename = os.path.join(os.getcwd(), '_q1pulse_dump.txt')
