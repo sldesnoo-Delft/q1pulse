@@ -117,11 +117,10 @@ class QcmModule(QbloxModule):
 
     def __init__(self, pulsar):
         super().__init__(pulsar)
-        ok = (pulsar is None
-              or isinstance(pulsar, (pulsar_qcm, pulsar_qcm_dummy))
-              or (_q1simulator_found and isinstance(pulsar, Q1Simulator)))
-        if not ok:
-            raise Exception(f'pulsar must be QCM, not {type(pulsar)}')
+        if pulsar is not None:
+            type_name = type(pulsar).__name__
+            if type_name not in ['pulsar_qcm', 'pulsar_qcm_dummy', 'Q1Simulator']:
+                raise Exception(f'pulsar must be QCM, not {type_name}')
 
     def _get_seq_paths(self, channels):
         if len(channels) == 0:
@@ -157,11 +156,10 @@ class QrmModule(QbloxModule):
 
     def __init__(self, pulsar):
         super().__init__(pulsar)
-        ok = (pulsar is None
-              or isinstance(pulsar, (pulsar_qrm, pulsar_qrm_dummy))
-              or (_q1simulator_found and isinstance(pulsar, Q1Simulator)))
-        if not ok:
-            raise Exception(f'pulsar must be QRM, not {type(pulsar)}')
+        if pulsar is not None:
+            type_name = type(pulsar).__name__
+            if type_name not in ['pulsar_qrm', 'pulsar_qrm_dummy', 'Q1Simulator']:
+                raise Exception(f'pulsar must be QRM, not {type_name}')
 
     def _get_seq_paths(self, channels):
         if len(channels) == 1:
