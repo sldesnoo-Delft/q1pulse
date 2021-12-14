@@ -55,6 +55,7 @@ class Sequence:
             except Q1SequenceError:
                 raise
             except Q1Exception as ex:
-                raise Q1SequenceError(f'on statement\n    [Q1Pulse]   {statement}', statement.tb) from ex
+                tb = getattr(statement, 'tb', [])
+                raise Q1SequenceError(f'on statement\n    [Q1Pulse]   {statement}', tb) from ex
             except Exception as ex:
                 raise Exception(f'Error on statement {statement}') from ex
