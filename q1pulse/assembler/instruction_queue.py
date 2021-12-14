@@ -1,6 +1,12 @@
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
+from ..lang.exceptions import (
+        Q1StateError,
+        Q1InternalError,
+        Q1TimingError
+        )
+
 @dataclass
 class Instruction:
     mnemonic: str
@@ -37,7 +43,7 @@ class InstructionQueue:
 
     def add_comment(self, line, init_section=False):
         if self._finalized:
-            raise Exception('Sequence already finalized')
+            raise Q1StateError('Sequence already finalized')
         if init_section:
             self._init_section.append(line)
         else:
@@ -54,13 +60,13 @@ class InstructionQueue:
 
     def __append_instruction(self, instruction):
         if self._finalized:
-            raise Exception('Sequence already finalized')
+            raise Q1StateError('Sequence already finalized')
         self._wait_register_updates(instruction.mnemonic, instruction.args)
         self._instructions.append(instruction)
 
     def _add_instruction(self, mnemonic, *args, comment=None, init_section=False):
         if self._finalized:
-            raise Exception('Sequence already finalized')
+            raise Q1StateError('Sequence already finalized')
         if self._reg_comment:
             comment = self._reg_comment if not comment else comment + ' ' + self._reg_comment
             self._reg_comment = None
@@ -116,7 +122,7 @@ class InstructionQueue:
                 self._rt_time = time
                 return
             elif pending_update != 'flush':
-                Exception(f'Unknown {pending_update}')
+                Q1InternalError(f'Unknown {pending_update}')
         self._flush_pending_update()
         wait_time = time - self._rt_time
         if wait_time < 0:
@@ -124,7 +130,7 @@ class InstructionQueue:
                 # time will be compensated in register
                 self._rt_time = time
                 return -wait_time
-            raise Exception(f'Too short wait time of {wait_time} ns at {time}')
+            raise Q1TimingError(f'Too short wait time of {wait_time} ns at t={self._rt_time}')
         if wait_time > 0:
             if wait_time > 50000:
                 self.add_comment(f'wait {wait_time} (t={time})')
@@ -153,7 +159,7 @@ class InstructionQueue:
 
     def __add_wait_instruction(self, time):
         if time < 0:
-            raise Exception(f'Illegal wait time {time}')
+            raise Q1InternalError(f'Illegal wait time {time}')
         n_max,rem_wait = divmod(time, MAX_WAIT)
         if n_max == 1:
             self._add_instruction('wait', MAX_WAIT)
@@ -194,7 +200,7 @@ class InstructionQueue:
                     self._add_instruction('jge', temp_reg, 0x8000_0000 + RT_RESOLUTION, '@'+continue_label)
             else:
                 self._add_instruction('jge', wait_reg, RT_RESOLUTION, '@'+continue_label)
-            self._add_instruction('illegal', comment='negative value')
+            self._add_instruction('illegal', comment='negative wait time')
             if less_then_65us:
                 self._add_instruction('jlt', wait_reg, MAX_WAIT, '@'+continue_label)
                 self._add_instruction('illegal', comment='larger than 65 us')

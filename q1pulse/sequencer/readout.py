@@ -1,4 +1,5 @@
 from .control import ControlBuilder
+from ..lang.exceptions import Q1ValueError, Q1TypeError
 from ..lang.timed_statements import AcquireStatement, AcquireWeighedStatement
 from .sequencer_data import (
         AcquisitionWeight, WeightCollection,
@@ -84,8 +85,8 @@ class ReadoutBuilder(ControlBuilder):
     def repeated_acquire(self, n, period, bins, bin_index, t_offset=0):
         self.add_comment(f'repeated_acquire({n}, {period}, {bins}, {bin_index})')
         if period < ReadoutBuilder.MIN_ACQUISITION_INTERVAL:
-            raise Exception(f'Acquisition period ({period} ns) too small. '
-                            f'Minimum is {ReadoutBuilder.MIN_ACQUISITION_INTERVAL} ns')
+            raise Q1ValueError(f'Acquisition period ({period} ns) too small. '
+                               f'Minimum is {ReadoutBuilder.MIN_ACQUISITION_INTERVAL} ns')
         with self._local_timeline(t_offset=t_offset, duration=(n-1)*period):
             # Repeat only n-1 times to avoid wait after last acquire.
             # A wait after the last acquire could create unwanted waits in the
@@ -99,8 +100,8 @@ class ReadoutBuilder(ControlBuilder):
                                  weight0, weight1=None, t_offset=0):
         self.add_comment(f'repeated_acquire_weighed({n}, {period}, {bins}, {bin_index})')
         if period < ReadoutBuilder.MIN_ACQUISITION_INTERVAL:
-            raise Exception(f'Acquisition period ({period} ns) too small. '
-                            f'Minimum is {ReadoutBuilder.MIN_ACQUISITION_INTERVAL} ns')
+            raise Q1ValueError(f'Acquisition period ({period} ns) too small. '
+                               f'Minimum is {ReadoutBuilder.MIN_ACQUISITION_INTERVAL} ns')
         with self._local_timeline(t_offset=t_offset, duration=(n-1)*period):
             # Repeat only n-1 times to avoid wait after last acquire.
             # A wait after the last acquire could create unwanted waits in the
@@ -126,7 +127,7 @@ class ReadoutBuilder(ControlBuilder):
             return self._acquisitions[bins]
         if isinstance(bins, AcquisitionBins):
             return bins
-        raise Exception(f'Illegal type {bins}')
+        raise Q1TypeError(f'Illegal type {bins}')
 
     def _translate_weight(self, weight):
         if weight is None:
@@ -135,5 +136,5 @@ class ReadoutBuilder(ControlBuilder):
             return self._weights[weight]
         if isinstance(weight, AcquisitionWeight):
             return weight
-        raise Exception(f'Illegal type {weight}')
+        raise Q1TypeError(f'Illegal type {weight}')
 

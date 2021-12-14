@@ -1,5 +1,6 @@
 from .sequencer import SequenceBuilder
 from .sequencer_data import Wave, WaveCollection
+from ..lang.exceptions import Q1ValueError, Q1TypeError
 from ..lang.math_expressions import Expression
 from ..lang.register import Register
 from ..lang.timed_statements import (
@@ -91,7 +92,7 @@ class ControlBuilder(SequenceBuilder):
         else:
             # TODO: try to make this cleaner and more flexible.
             if not self._timeline.is_running:
-                raise Exception('Variable pulse length not possible in parallel section')
+                raise Q1ValueError('Variable pulse length not possible in parallel section')
             self.set_offset(amplitude0, amplitude1)
             self._program.wait(duration)
             self.set_offset(0.0, None)
@@ -115,8 +116,8 @@ class ControlBuilder(SequenceBuilder):
 
     def ramp(self, duration, v_start, v_end, v_after=0.0, t_offset=0):
         if isinstance(duration, (Register, Expression)):
-            raise Exception('Ramp duration cannot be a variable or expression; '
-                            'Unroll loop using Python for-loop.')
+            raise Q1TypeError('Ramp duration cannot be a variable or expression; '
+                              'Unroll loop using Python for-loop.')
 
         self.add_comment(f'ramp({duration}, {v_start}, {v_end})')
         with self._local_timeline(t_offset=t_offset, duration=duration):
@@ -195,13 +196,13 @@ class ControlBuilder(SequenceBuilder):
 
     def _apply_paths(self, arg0, arg1):
         if len(self._enabled_paths) == 0:
-            raise Exception('No output paths enabled')
+            raise Q1ValueError('No output paths enabled')
 
         args = (arg0, arg1)
         if len(self._enabled_paths) == 1:
             path = self._enabled_paths[0]
             if arg1 is not None:
-                raise Exception('Only 1 output path enabled')
+                raise Q1ValueError('Only 1 output path enabled')
 
             return (arg0, None) if path == 0 else (None, arg0)
 
@@ -215,5 +216,5 @@ class ControlBuilder(SequenceBuilder):
             return self._waves[wave]
         if isinstance(wave, Wave):
             return wave
-        raise Exception(f'Illegal type {wave}')
+        raise Q1TypeError(f'Illegal type {wave}')
 

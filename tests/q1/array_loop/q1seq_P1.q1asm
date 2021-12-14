@@ -66,7 +66,7 @@ loop_1:    nop                       # L0034  add wait for R2
            xor            R4,2147483648,R5 # L0039 temp ['R5']
            nop                       # L0040  jge wait for R5
            jge            R5,2147483652,@waitc1 # L0041 
-           illegal                   # L0042 negative value
+           illegal                   # L0042 negative wait time
 waitc1:    jlt            R4,65532,@endwait1 # L0043 
 wait1:     wait           65528      # L0044 
            sub            R4,65528,R4 # L0045 
@@ -94,7 +94,7 @@ endwait1:  wait           R4         # L0048
            xor            R5,2147483648,R6 # L0059 temp ['R6']
            nop                       # L0060  jge wait for R6
            jge            R6,2147483652,@waitc2 # L0061 
-           illegal                   # L0062 negative value
+           illegal                   # L0062 negative wait time
 waitc2:    jlt            R5,65532,@endwait2 # L0063 
 wait2:     wait           65528      # L0064 
            sub            R5,65528,R5 # L0065 

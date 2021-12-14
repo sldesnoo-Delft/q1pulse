@@ -25,7 +25,7 @@ loop_0:    upd_param      20         # L0007 t=200
            xor            R4,2147483648,R5 # L0010 temp ['R5']
            nop                       # L0011  jge wait for R5
            jge            R5,2147483652,@waitc1 # L0012 
-           illegal                   # L0013 negative value
+           illegal                   # L0013 negative wait time
 waitc1:    jlt            R4,65532,@endwait1 # L0014 
 wait1:     wait           65528      # L0015 
            sub            R4,65528,R4 # L0016 
@@ -64,7 +64,7 @@ loop_2:    upd_param      20         # L0034 t=660
            xor            R5,2147483648,R6 # L0039 temp ['R6']
            nop                       # L0040  jge wait for R6
            jge            R6,2147483652,@waitc2 # L0041 
-           illegal                   # L0042 negative value
+           illegal                   # L0042 negative wait time
 waitc2:    jlt            R5,65532,@endwait2 # L0043 
 wait2:     wait           65528      # L0044 
            sub            R5,65528,R5 # L0045 

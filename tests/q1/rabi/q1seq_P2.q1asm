@@ -48,7 +48,7 @@ loop_0:    set_awg_offs   0,1310     # L0007 @ 0
            xor            R4,2147483648,R5 # L0013 temp ['R5']
            nop                       # L0014  jge wait for R5
            jge            R5,2147483652,@waitc1 # L0015 
-           illegal                   # L0016 negative value
+           illegal                   # L0016 negative wait time
 waitc1:    jlt            R4,65532,@endwait1 # L0017 
 wait1:     wait           65528      # L0018 
            sub            R4,65528,R4 # L0019 

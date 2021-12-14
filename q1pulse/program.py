@@ -9,7 +9,7 @@ from .lang.register import Register
 from .lang.register_statements import RegisterAssignment
 from .lang.loops import RangeLoop, LinspaceLoop, ArrayLoop
 from .assembler.generator import Q1asmGenerator
-
+from .lang.exceptions import Q1InternalError, Q1ValueError
 
 class Program:
     def __init__(self, path=None):
@@ -58,7 +58,7 @@ class Program:
 
     def _add_statement(self, statement, init_section=False):
         if not isinstance(statement, RegisterAssignment):
-            raise Exception(f'Illegal statement for program {statement}')
+            raise Q1InternalError(f'Illegal statement for program {statement}')
         for builder in self.sequence_builders.values():
             builder._add_statement(statement, init_section=init_section)
 
@@ -112,7 +112,7 @@ class Program:
             self._timeline.enable_update()
         else:
             if not self._timeline.is_running:
-                raise Exception('Variable pulse length not possible in parallel section')
+                raise Q1ValueError('Variable pulse length not possible in parallel section')
             self.set_offsets(sequencers, amplitudes, t_offset=t_offset)
             self.wait(duration)
             self.set_offsets(sequencers, [0.0]*len(sequencers), t_offset=0)

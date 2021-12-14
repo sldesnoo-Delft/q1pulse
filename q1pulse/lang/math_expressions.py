@@ -2,6 +2,8 @@ from abc import abstractmethod, ABC
 
 import numpy as np
 
+from .exceptions import Q1TypeError
+
 class Operand(ABC):
 
     @property
@@ -159,7 +161,8 @@ class Addition(BinaryExpression):
         lhs_dtype = get_dtype(self.lhs)
         rhs_dtype = get_dtype(self.rhs)
         if lhs_dtype != rhs_dtype:
-            raise Exception(f'incompatible data types: {self}, {lhs_dtype.__name__} <> {rhs_dtype.__name__}')
+            raise Q1TypeError(f'incompatible data types: {self}, '
+                              f'{lhs_dtype.__name__} <> {rhs_dtype.__name__}')
         return lhs_dtype
 
 class Subtraction(BinaryExpression):
@@ -173,7 +176,8 @@ class Subtraction(BinaryExpression):
         lhs_dtype = get_dtype(self.lhs)
         rhs_dtype = get_dtype(self.rhs)
         if lhs_dtype != rhs_dtype:
-            raise Exception('incompatible data types: {self}')
+            raise Q1TypeError(f'incompatible data types: {self}, '
+                              f'{lhs_dtype.__name__} <> {rhs_dtype.__name__}')
         return lhs_dtype
 
 class Lsr(BinaryExpression):
@@ -186,7 +190,7 @@ class Lsr(BinaryExpression):
     def _get_dtype(self):
         rhs_dtype = get_dtype(self.rhs)
         if rhs_dtype != int:
-            raise Exception(f'Shift requires integer number of bits {rhs_dtype.__name__}')
+            raise Q1TypeError(f'Shift requires integer number of bits {rhs_dtype.__name__}')
         return get_dtype(self.lhs)
 
 class Asr(BinaryExpression):
@@ -199,7 +203,7 @@ class Asr(BinaryExpression):
     def _get_dtype(self):
         rhs_dtype = get_dtype(self.rhs)
         if rhs_dtype != int:
-            raise Exception(f'Shift requires integer number of bits {rhs_dtype.__name__}')
+            raise Q1TypeError(f'Shift requires integer number of bits {self}')
         return get_dtype(self.lhs)
 
 class Asl(BinaryExpression):
@@ -212,7 +216,7 @@ class Asl(BinaryExpression):
     def _get_dtype(self):
         rhs_dtype = get_dtype(self.rhs)
         if rhs_dtype != int:
-            raise Exception(f'Shift requires integer number of bits {rhs_dtype.__name__}')
+            raise Q1TypeError(f'Shift requires integer number of bits {self}')
         return get_dtype(self.lhs)
 
 
@@ -224,7 +228,7 @@ class Bitwise(BinaryExpression, ABC):
         lhs_dtype = get_dtype(self.lhs)
         rhs_dtype = get_dtype(self.rhs)
         if rhs_dtype != int or lhs_dtype != int:
-            raise Exception(f'Bitwise operation requires integer values')
+            raise Q1TypeError(f'Bitwise operation requires integer values {self}')
         return int
 
 class BitwiseAnd(Bitwise):
@@ -255,7 +259,7 @@ class BitwiseNot(UnaryExpression, ABC):
     def _get_dtype(self):
         rhs_dtype = get_dtype(self.rhs)
         if rhs_dtype != int:
-            raise Exception(f'Bitwise operation requires integer values')
+            raise Q1TypeError(f'Bitwise operation requires integer values {self}')
         return int
 
     def _evaluate(self, generator, destination, rhs):
@@ -268,7 +272,7 @@ class CastFloat(UnaryExpression, ABC):
     def _get_dtype(self):
         rhs_dtype = get_dtype(self.rhs)
         if rhs_dtype != int:
-            raise Exception(f'Float cast expects integer value')
+            raise Q1TypeError(f'Float cast requires integer value')
         return float
 
     def _evaluate(self, generator, destination, rhs):

@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 import numpy as np
 
+from ..lang.exceptions import Q1NameError
+
 @dataclass
 class Wave:
     name: str
@@ -15,12 +17,12 @@ class WaveCollection:
 
     def get_wave(self, name):
         if name not in self._waves:
-            raise Exception(f'Wave {name} not defined')
+            raise Q1NameError(f'Wave {name} not defined')
         return self._waves[name]
 
     def add_wave(self, name, data):
         if name in self._waves:
-            raise Exception(f'Wave {name} already defined')
+            raise Q1NameError(f'Wave {name} already defined')
         wave = Wave(name, data)
         self._waves[name] = wave
         return wave
@@ -53,7 +55,7 @@ class AcquisitionBinsCollection:
 
     def _get_bins(self, name):
         if name not in self._bins:
-            raise Exception(f"Acquisition bins '{name}' not defined")
+            raise Q1NameError(f"Acquisition bins '{name}' not defined")
         return self._bins[name]
 
     def define_bins(self, name, num_bins):
@@ -79,12 +81,12 @@ class WeightCollection:
 
     def get_weight(self, name):
         if name not in self._weights:
-            raise Exception(f'Weight {name} not defined')
+            raise Q1NameError(f'Weight {name} not defined')
         return self._weights[name]
 
     def add_weight(self, name, data):
         if name in self._weights:
-            raise Exception(f'Weight {name} already defined')
+            raise Q1NameError(f'Weight {name} already defined')
         weight = AcquisitionWeight(name, data)
         self._weights[name] = weight
         return weight

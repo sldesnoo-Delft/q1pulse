@@ -2,6 +2,7 @@ from numbers import Number
 
 from .math_expressions import get_dtype
 from .register import Register
+from .exceptions import Q1ValueError, Q1TypeError
 
 class LoopVar(Register):
     def __init__(self, name, loop, **kwargs):
@@ -66,7 +67,7 @@ class LinspaceLoop(Loop):
     def __init__(self, loop_number, start, stop, n, endpoint=True):
         super().__init__(loop_number, n, var_type=float)
         if max(start,stop) > 1.0 or min(start,stop) < -1.0:
-            raise Exception('value out of range [-1.0, 1.0]')
+            raise Q1ValueError('value out of range [-1.0, 1.0]')
         self._start = start
         self._stop = stop
         self._endpoint = endpoint
@@ -93,11 +94,11 @@ class ArrayLoop(Loop):
         self.values = values
         for value in values[1:]:
             if get_dtype(values[0]) != dtype:
-                raise Exception('Array values must all be same type')
+                raise Q1TypeError('Array values must all be same type')
         if dtype == float:
             literal_values = [value for value in values if isinstance(value, Number)]
             if max(literal_values) > 1.0 or min(literal_values) < -1.0:
-                raise Exception('value out of range [-1.0, 1.0]')
+                raise Q1ValueError('value out of range [-1.0, 1.0]')
 
         self._table_label = f'_table{self._loop_number}'
         self._data_ptr = Register(f'_ptr{self._loop_number}')

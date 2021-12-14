@@ -1,6 +1,6 @@
 
 from ..sequencer.sequencer_data import Wave, AcquisitionBins, AcquisitionWeight
-
+from ..lang.exceptions import Q1TypeError
 
 class GeneratorData:
     def __init__(self):
@@ -18,7 +18,7 @@ class GeneratorData:
 
     def _translate_wave(self, wave):
         if not isinstance(wave, Wave):
-            raise Exception(f'Unsupported type for wave: {wave}')
+            raise Q1TypeError(f'Unsupported type for wave: {wave}')
 
         if wave.name not in self.waveforms:
             self.waveforms[wave.name] = {
@@ -32,7 +32,7 @@ class GeneratorData:
         if acquisition is None:
             return None
         if not isinstance(acquisition, AcquisitionBins):
-            raise Exception(f'Unsupported type for acquisition: {acquisition}')
+            raise Q1TypeError(f'Unsupported type for acquisition: {acquisition}')
 
         if acquisition.name not in self.acquisitions:
             self.acquisitions[acquisition.name] = {
@@ -46,7 +46,7 @@ class GeneratorData:
         if weight is None:
             return None
         if not isinstance(weight, AcquisitionWeight):
-            raise Exception(f'Unsupported type for weight: {weight}')
+            raise Q1TypeError(f'Unsupported type for weight: {weight}')
 
         if weight.name not in self.weights:
             self.weights[weight.name] = {

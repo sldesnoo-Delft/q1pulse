@@ -12,6 +12,10 @@ from .registers import SequencerRegisters
 from ..lang.math_expressions import get_dtype, Expression
 from ..lang.generator import GeneratorBase
 from ..lang.register import Register
+from ..lang.exceptions import (
+        Q1ValueError, Q1TypeError,
+        Q1Exception, Q1CompileError
+        )
 from ..sequencer.sequencer_data import Wave, AcquisitionBins, AcquisitionWeight
 
 
@@ -22,13 +26,13 @@ def _int_u32(value):
 
 def _float_to_f16(value):
     if value < -1.0 or value > 1.0:
-        raise Exception(f'Fixed point value out of range: {value}')
+        raise Q1ValueError(f'Fixed point value out of range: {value}')
     _f2i16 = (1 << 15) - 0.1
     return math.floor(value * _f2i16)
 
 def _float_to_f32(value):
     if value < -1.0 or value > 1.0:
-        raise Exception(f'Fixed point value out of range: {value}')
+        raise Q1ValueError(f'Fixed point value out of range: {value}')
     _f2i30 = (1 << 31) - 0.1
     return _int_u32(math.floor(value * _f2i30))
 
@@ -53,7 +57,7 @@ def register_args(_func=None, *, allow_float=[], require_float=[]):
                             floats.append(index)
                     else:
                         if index in require_float and arg is not None:
-                            raise Exception(f'Float argument required for arg {index} ({arg})')
+                            raise Q1TypeError(f'Float argument required for arg {index} ({arg})')
 
                     if isinstance(arg, (str, type(None),
                                         Wave, AcquisitionBins, AcquisitionWeight)):
@@ -66,7 +70,7 @@ def register_args(_func=None, *, allow_float=[], require_float=[]):
                         elif index in require_float:
                             args[i] = _float_to_f16(arg)
                         else:
-                            raise Exception(f'Float argument not allowed for arg {index} ({args[i]})')
+                            raise Q1TypeError(f'Float argument not allowed for arg {index} ({args[i]})')
                         comments += [f'{arg} -> {args[i]}']
                     else:
                         if isinstance(arg, Register):
@@ -75,8 +79,8 @@ def register_args(_func=None, *, allow_float=[], require_float=[]):
                             expression = arg
                             asm_reg = expression.evaluate(self)
                         else:
-                            raise Exception(f'Illegal argument type for arg {index}: '
-                                            f'{arg},{type(arg)} ({args})')
+                            raise Q1TypeError(f'Illegal argument type for arg {index}: '
+                                              f'{arg},{type(arg)} ({args})')
                         if index in require_float:
                             asm_reg = self._reg_to_f16(asm_reg)
                         comments += [f'{asm_reg}:{dtype.__name__}={arg}']
@@ -85,16 +89,16 @@ def register_args(_func=None, *, allow_float=[], require_float=[]):
                 if len(floats) > 0:
                     for f in floats:
                         if f not in allow_float:
-                            raise Exception(f'Float argument mismatch for argument {f}')
+                            raise Q1TypeError(f'Float argument mismatch for argument {f}')
 
                 if len(comments) > 0 and self._show_arg_conversions:
                     self.add_comment(' -- args: ' + ', '.join(comments))
                 res = func(self, *args, **kwargs)
                 self._registers.exit_scope()
                 return res
-            except:
-                print(f'Error calling: {func.__name__} {args} {kwargs}')
-                raise
+            except Q1Exception as ex:
+                msg = f'in call\n    {func.__name__}({",".join(str(arg) for arg in args)})'
+                raise Q1CompileError(msg) from ex
 
         return func_wrapper
 
@@ -424,7 +428,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             if isinstance(o, str):
                 dtype = 'reg'
         if dtype is None:
-            raise Exception(f'Illegal arguments {operands}')
+            raise Q1TypeError(f'Illegal arguments {operands}')
 
         result = list(operands)
         for i,o in enumerate(operands):
@@ -510,7 +514,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         elif register is None:
             reg = 'none'
         else:
-            raise Exception('Only registers and None can be logged')
+            raise Q1TypeError('Only registers and None can be logged')
         self.add_comment(f'Q1Sim:log "{msg}",{reg},{opt}')
 
     def _format_line(self, label, mnemonic, args, wait_after, comment, line_nr):
@@ -554,8 +558,8 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
 
             if i.label is not None:
                 if line_label is not None:
-                    raise Exception('Compilation error: cannot put two labels on '
-                                    f'one line "{i.label}","{line_label}"')
+                    raise Q1CompileError('Cannot put two labels on one line '
+                                         f'"{i.label}","{line_label}"')
                 line_label = i.label
                 continue
             if i.overwritten:

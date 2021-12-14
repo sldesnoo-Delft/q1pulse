@@ -1,4 +1,5 @@
 from .register import Register
+from .exceptions import Q1NameError
 
 class Registers:
     def __init__(self, builder, local):
@@ -18,7 +19,7 @@ class Registers:
 
     def __getattr__(self, name):
         r = 'Rs' if self._local else 'R'
-        raise Exception(f'Register {r}.{name} not initialized')
+        raise Q1NameError(f'Register {r}.{name} not initialized')
 
     def _set_reg(self, name, value, init_section=False):
         if name not in self._registers:

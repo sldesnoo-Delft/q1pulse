@@ -1,3 +1,4 @@
+from .exceptions import Q1InternalError
 
 class Timeline:
     def __init__(self):
@@ -10,7 +11,7 @@ class Timeline:
 
     def enable_update(self):
         if not self._disabled:
-            raise Exception('Cannot enable updates if not disabled')
+            raise Q1InternalError('Cannot enable updates if not disabled')
         self._disabled -= 1
         if not self._disabled:
             self._current_time = self._end_time

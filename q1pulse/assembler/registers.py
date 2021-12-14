@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from ..lang.exceptions import Q1NameError, Q1MemoryError
 
 class SequencerRegisters:
     def __init__(self, log_func):
@@ -16,7 +17,7 @@ class SequencerRegisters:
         try:
             reg_nr = self._allocated_regs[name]
         except:
-            raise Exception(f'Register {name} not defined')
+            raise Q1NameError(f'Register {name} not defined')
         return f'R{reg_nr}'
 
     def get_zero_reg(self):
@@ -30,7 +31,7 @@ class SequencerRegisters:
     def allocate_reg(self, name, log=True):
         if name in self._allocated_regs:
             self._print_reg_admin()
-            raise Exception(f'Register {name} already allocated')
+            raise Q1NameError(f'Register {name} already allocated')
 
         try:
             reg = self._free_regs.pop()
@@ -40,14 +41,14 @@ class SequencerRegisters:
                 self._log(f'R{reg}: {name}')
             return self.get_asm_reg(name)
         except IndexError:
-            raise Exception(f'Cannot allocate register {name}')
+            raise Q1MemoryError(f'Cannot allocate register {name}')
 
     def _release_reg(self, name):
         try:
             reg = self._allocated_regs[name]
         except:
             self._print_reg_admin()
-            raise Exception(f'Error in register administration')
+            raise Q1NameError(f'Error in register administration')
         del self._allocated_regs[name]
         self._free_regs.append(reg)
 
@@ -77,7 +78,7 @@ class SequencerRegisters:
                 self._log(f'temp {asm_reg}')
             return asm_reg
         except IndexError:
-            raise Exception('Cannot allocate temp register')
+            raise Q1MemoryError('Cannot allocate temp register')
 
     def _print_reg_admin(self):
         # print(f'Free: {self._free_regs}')

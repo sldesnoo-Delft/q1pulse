@@ -1,5 +1,6 @@
 from .timed_statements import TimedStatement
 from .flow_statements import BranchStatement
+from .exceptions import Q1Exception, Q1SequenceError
 
 class Sequence:
     def __init__(self, timeline):
@@ -51,5 +52,9 @@ class Sequence:
                         statement.sequence.compile(generator, annotate)
                         generator.block_end()
                         generator.block_start()
+            except Q1SequenceError:
+                raise
+            except Q1Exception as ex:
+                raise Q1SequenceError(f'on statement\n    [Q1Pulse]   {statement}', statement.tb) from ex
             except Exception as ex:
-                raise Exception(f'Compilation error on statement {statement}') from ex
+                raise Exception(f'Error on statement {statement}') from ex

@@ -1,6 +1,8 @@
 from contextlib import contextmanager
+import traceback
 
 from .builderbase import BuilderBase
+from ..lang.exceptions import Q1StateError, Q1Exception, Q1InternalError, Q1SequenceError
 from ..lang.sequence import Sequence
 from ..lang.loops import Loop
 from ..lang.registers import Registers
@@ -37,12 +39,39 @@ class SequenceBuilder(BuilderBase):
         return self._sequence_stack[-1]
 
     def _add_statement(self, statement, init_section=False):
+        if not isinstance(statement, str):
+            self._add_traceback(statement)
         if self._compiled:
-            raise Exception('Program cannot be changed after compilation')
+            raise Q1StateError('Program cannot be changed after compilation')
         if init_section:
             self._init_sequence.add(statement)
         else:
             self.sequence.add(statement)
+
+    def _add_traceback(self, statement):
+        max_depth=10
+        # add 2 levels: _add_statement and _add_traceback.
+        # these 2 levels are not added to statement.tb.
+        stack = traceback.extract_stack(limit=max_depth+2)
+        tb = []
+        tb.append('\nTraceback to Q1Pulse:\n')
+        i = 0
+        start = 0
+        for entry in stack:
+            i += 1
+            # '<module>' is the root script (at least when running in Spyder)
+            if entry.name == '<module>':
+                start = i
+        i = 0
+        for entry in stack:
+            i += 1
+            if i < start:
+                continue
+            if i > max_depth:
+                break
+            tb.append(f'  File "{entry.filename}", line {entry.lineno}')
+            tb.append(f'    {entry.line}\n')
+        statement.tb = tb
 
     def wait(self, t):
         self.set_pulse_end(self.current_time + t)
@@ -69,6 +98,8 @@ class SequenceBuilder(BuilderBase):
         print()
 
     def compile(self, generator, annotate=False):
+        q1exception = None
+        seq_exc = None
         try:
             if not self._compiled:
                 self._compiled = True
@@ -76,12 +107,36 @@ class SequenceBuilder(BuilderBase):
             generator.start_main()
             self._sequence_stack[0].compile(generator, annotate)
             generator.end_main(self.end_time)
+        except Q1Exception as ex:
+            print(f'**** Exception in {self.name} while compiling ****')
+            self.describe()
+# TODO @@@ output compile state to text file
+#            print(f'Q1ASM:')
+#            lines = generator.q1asm_lines()
+#            for line in lines:
+#                print(line)
+            msgs = [f'Error compiling {self.name}. See lines below and listing above.']
+            tb = []
+            e = ex
+            while e is not None:
+                if isinstance(e, Q1SequenceError):
+                    tb = e.traceback
+                msgs.append(f'{type(e).__name__}: {e.args[0]}')
+                e = e.__cause__
+            q1exception = Q1Exception('\n'.join(tb+msgs))
         except:
-            print(f'Exception in {self.name} while compiling:')
+            print(f'**** Exception in {self.name} while compiling ****')
+            self.describe()
+            print(f'Q1ASM:')
             lines = generator.q1asm_lines()
             for line in lines:
                 print(line)
             raise
+        if q1exception:
+            if seq_exc:
+                raise q1exception from seq_exc
+            else:
+                raise q1exception
 
     @property
     def current_time(self):
@@ -117,7 +172,7 @@ class SequenceBuilder(BuilderBase):
         elif isinstance(loop, ArrayLoop):
             loop_statement = ArrayLoopStatement(self.end_time, loop_sequence, loop)
         else:
-            raise Exception('Unknown loop')
+            raise Q1InternalError('Unknown loop')
         self._add_statement(loop_statement)
         self._sequence_stack.append(loop_sequence)
 
@@ -127,7 +182,7 @@ class SequenceBuilder(BuilderBase):
         elif isinstance(loop, ArrayLoop):
             loop_end_statement = EndArrayLoopStatement(self.end_time, loop)
         else:
-            raise Exception('Unknown loop')
+            raise Q1InternalError('Unknown loop')
         self._add_statement(loop_end_statement)
         self._sequence_stack.pop()
 
