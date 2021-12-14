@@ -97,6 +97,8 @@ class Program:
 
     def wait(self, t):
         if isinstance(t, Number):
+            if t < 0:
+                raise Q1ValueError('Wait time must be positive')
             self._timeline.set_pulse_end(self._timeline.current_time + t)
         else:
             for s in self.sequence_builders.values():
