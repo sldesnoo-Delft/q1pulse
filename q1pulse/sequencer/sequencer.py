@@ -4,11 +4,15 @@ from contextlib import contextmanager
 import traceback
 
 from .builderbase import BuilderBase
-from ..lang.exceptions import Q1StateError, Q1Exception, Q1InternalError, Q1SequenceError
+from ..lang.exceptions import (
+        Q1StateError, Q1Exception,
+        Q1InternalError, Q1SequenceError,
+        Q1TimingError
+        )
 from ..lang.sequence import Sequence
 from ..lang.loops import Loop
 from ..lang.registers import Registers
-from ..lang.timed_statements import WaitRegStatement
+from ..lang.timed_statements import WaitRegStatement, TimedStatement
 from ..lang.flow_statements import (
         LoopDurationStatement,
         LoopStatement, EndLoopStatement,
@@ -27,6 +31,7 @@ class SequenceBuilder(BuilderBase):
         self._local_time_active = False
         self._compiled = False
         self._init_sequence = Sequence(None)
+        self._last_timed_statement = None
 
     def start_sequence(self, program, timeline):
         self._program = program
@@ -41,6 +46,7 @@ class SequenceBuilder(BuilderBase):
         return self._sequence_stack[-1]
 
     def _add_statement(self, statement, init_section=False):
+        self._check_time(statement)
         if not isinstance(statement, str):
             self._add_traceback(statement)
         if self._compiled:
@@ -49,6 +55,20 @@ class SequenceBuilder(BuilderBase):
             self._init_sequence.add(statement)
         else:
             self.sequence.add(statement)
+
+    def _check_time(self, statement):
+        if not isinstance(statement, TimedStatement):
+            return
+        t = statement.time
+        if int(t) % 4:
+            raise Q1TimingError(f'Time must be multiple of 4 ns:\n'
+                                f'Adding:  t={statement.time}  {statement}')
+        last = self._last_timed_statement
+        if last and t < last.time:
+            raise Q1TimingError(f'Statement time cannot be before {last.time}\n'
+                                f'Previous: t={last.time}  {last}\n'
+                                f'Adding:   t={statement.time}  {statement}')
+        self._last_timed_statement = statement
 
     def _add_traceback(self, statement):
         max_depth=10
