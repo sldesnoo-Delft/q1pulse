@@ -198,7 +198,6 @@ class ControlBuilder(SequenceBuilder):
         if len(self._enabled_paths) == 0:
             raise Q1ValueError('No output paths enabled')
 
-        args = (arg0, arg1)
         if len(self._enabled_paths) == 1:
             path = self._enabled_paths[0]
             if arg1 is not None:
@@ -207,6 +206,7 @@ class ControlBuilder(SequenceBuilder):
             return (arg0, None) if path == 0 else (None, arg0)
 
         # channels could be swapped
+        args = (arg0, arg1)
         return (args[i] for i in self._enabled_paths)
 
     def _translate_wave(self, wave):
