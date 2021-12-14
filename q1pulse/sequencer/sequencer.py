@@ -1,3 +1,5 @@
+import sys
+import os
 from contextlib import contextmanager
 import traceback
 
@@ -51,7 +53,7 @@ class SequenceBuilder(BuilderBase):
     def _add_traceback(self, statement):
         max_depth=10
         # add 2 levels: _add_statement and _add_traceback.
-        # these 2 levels are not added to statement.tb.
+        # these 2 levels are not added to statement.tb
         stack = traceback.extract_stack(limit=max_depth+2)
         tb = []
         tb.append('\nTraceback to Q1Pulse:\n')
@@ -87,15 +89,15 @@ class SequenceBuilder(BuilderBase):
         '''
         self._add_statement(LogStatement(msg, var, time))
 
-    def describe(self):
+    def describe(self, fp=sys.stdout):
         init = []
         lines = []
         self._init_sequence.describe(init, init_section=True)
         self._sequence_stack[0].describe(lines)
-        print(f'Sequence:{self.name}')
+        fp.write(f'Sequence:{self.name}\n')
         for line in init + lines:
-            print(line)
-        print()
+            fp.write(line+'\n')
+        fp.write('\n')
 
     def compile(self, generator, annotate=False):
         q1exception = None
@@ -108,14 +110,7 @@ class SequenceBuilder(BuilderBase):
             self._sequence_stack[0].compile(generator, annotate)
             generator.end_main(self.end_time)
         except Q1Exception as ex:
-            print(f'**** Exception in {self.name} while compiling ****')
-            self.describe()
-# TODO @@@ output compile state to text file
-#            print(f'Q1ASM:')
-#            lines = generator.q1asm_lines()
-#            for line in lines:
-#                print(line)
-            msgs = [f'Error compiling {self.name}. See lines below and listing above.']
+            msgs = [f'Error compiling {self.name}.']
             tb = []
             e = ex
             while e is not None:
@@ -123,20 +118,34 @@ class SequenceBuilder(BuilderBase):
                     tb = e.traceback
                 msgs.append(f'{type(e).__name__}: {e.args[0]}')
                 e = e.__cause__
-            q1exception = Q1Exception('\n'.join(tb+msgs))
-        except:
-            print(f'**** Exception in {self.name} while compiling ****')
-            self.describe()
-            print(f'Q1ASM:')
-            lines = generator.q1asm_lines()
-            for line in lines:
-                print(line)
-            raise
+            q1_tb = '\n'.join(tb+msgs)
+            q1exception = Q1Exception(q1_tb)
+            self._dump_compile_state(generator, q1_tb, ex)
+        except Exception as ex:
+            self._dump_compile_state(generator, None, ex)
         if q1exception:
             if seq_exc:
                 raise q1exception from seq_exc
             else:
                 raise q1exception
+
+    def _dump_compile_state(self, generator, q1_tb, exc):
+        filename = os.path.join(os.getcwd(), '_q1pulse_dump.txt')
+        print(f'**** Exception in {self.name} while compiling. ****')
+        print(f'**** For details see: {filename} ****')
+        with open(filename, 'w') as fp:
+            fp.write(f'**** Exception in {self.name} while compiling. ****\n')
+            if q1_tb:
+                fp.write(q1_tb)
+            fp.write(f'\n\n=== Q1Pulse Sequence ===\n')
+            self.describe(fp)
+            fp.write(f'\n=== Q1ASM till error ===\n')
+            lines = generator.q1asm_lines()
+            for line in lines:
+                fp.write(line+'\n')
+            fp.write('/-'*40 + '\n')
+            fp.write(f'\n\n=== Full Exception ===\n\n')
+            traceback.print_exception(exc, exc, None, file=fp)
 
     @property
     def current_time(self):
