@@ -8,15 +8,7 @@ class GeneratorData:
         self.weights = {}
         self.acquisitions = {}
 
-    def translate_waves(self, wave0, wave1):
-        if wave0 is None:
-            wave0 = wave1
-        elif wave1 is None:
-            wave1 = wave0
-        return (self._translate_wave(wave0),
-                self._translate_wave(wave1))
-
-    def _translate_wave(self, wave):
+    def translate_wave(self, wave):
         if not isinstance(wave, Wave):
             raise Q1TypeError(f'Unsupported type for wave: {wave}')
 
@@ -29,8 +21,6 @@ class GeneratorData:
         return self.waveforms[wave.name]['index']
 
     def translate_acquisition(self, acquisition):
-        if acquisition is None:
-            return None
         if not isinstance(acquisition, AcquisitionBins):
             raise Q1TypeError(f'Unsupported type for acquisition: {acquisition}')
 
@@ -43,8 +33,6 @@ class GeneratorData:
         return self.acquisitions[acquisition.name]['index']
 
     def translate_weight(self, weight):
-        if weight is None:
-            return None
         if not isinstance(weight, AcquisitionWeight):
             raise Q1TypeError(f'Unsupported type for weight: {weight}')
 

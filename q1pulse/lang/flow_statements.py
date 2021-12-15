@@ -66,7 +66,7 @@ class EndLoopStatement(TimedStatement):
             # increment loop value
             _increment_reg(generator, l.loopvar, l.step)
         # loop, register
-        generator.loop(l._loop_reg, self._label)
+        generator.loop(l._loop_reg, '@'+self._label)
 
 
 class ArrayLoopStatement(BranchStatement):
@@ -82,7 +82,7 @@ class ArrayLoopStatement(BranchStatement):
         l = self._loop
 
         # set data address register to data_label
-        _assign_reg(generator, l._data_ptr, '@' + l._table_label)
+        _assign_reg(generator, l._data_ptr, '@'+l._table_label)
         # set first value
         _assign_reg(generator, l.loopvar, l.values[0])
         # decrement data pointer with 2, because first value already loaded
@@ -112,5 +112,5 @@ class EndArrayLoopStatement(TimedStatement):
             # set next value
             _assign_reg(generator, l.loopvar, value, allocate=False)
             # jump to loop start
-            generator.jmp(self._label)
+            generator.jmp('@'+self._label)
         # NOTE: last jump will end here at the end of loop.
