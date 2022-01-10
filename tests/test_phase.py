@@ -3,7 +3,7 @@ from q1pulse.instrument import Q1Instrument
 
 from init_pulsars import qcm0
 
-instrument = Q1Instrument()
+instrument = Q1Instrument('q1')
 instrument.add_qcm(qcm0)
 instrument.add_control('P1', qcm0.name, [2])
 

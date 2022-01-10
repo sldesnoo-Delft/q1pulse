@@ -4,7 +4,7 @@ from q1pulse.instrument import Q1Instrument
 from init_pulsars import qcm0, qrm1
 from plot_util import plot_output
 
-instrument = Q1Instrument()
+instrument = Q1Instrument('q1')
 instrument.add_qcm(qcm0)
 instrument.add_qrm(qrm1)
 instrument.add_control('P1', qcm0.name, [2])
@@ -35,10 +35,12 @@ with p.loop_linspace(-0.5, 0.5, N) as v2:
 P1.set_offset(0.0)
 P2.set_offset(0.0)
 
-p.describe()
-
 p.compile(annotate=True, listing=True)
 
 instrument.run_program(p)
 
 plot_output([qcm0, qrm1])
+
+if hasattr(qrm1, 'print_acquisitions'):
+    # get acquisition timing and counts from Q1Simulator
+    qrm1.print_acquisitions()

@@ -4,7 +4,7 @@ from q1pulse import Q1Instrument
 from init_pulsars import qcm0
 from plot_util import plot_output
 
-instrument = Q1Instrument()
+instrument = Q1Instrument('q1')
 instrument.add_qcm(qcm0)
 instrument.add_control('P1', qcm0.name, [2])
 instrument.add_control('P2', qcm0.name, [3])

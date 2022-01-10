@@ -1,5 +1,7 @@
 import os
 import time
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from .program import Program
 from .sequencer.control import ControlBuilder
@@ -8,8 +10,14 @@ from .modules.modules import QcmModule, QrmModule
 
 class Q1Instrument:
     def __init__(self, path=None, dummy=False):
-        self.path = path if path is not None else 'q1'
-        os.makedirs(self.path, exist_ok=True)
+        if path:
+            self.path = path
+        else:
+            q1dir = Path.home() / '.q1'
+            q1dir.mkdir(exist_ok=True)
+            self.temp_dir = TemporaryDirectory(dir=q1dir)
+            self.path = self.temp_dir.name
+            print('Instrument upload temp dir: ' + self.path)
         self.modules = {}
         self.controllers = {}
         self.readouts = {}

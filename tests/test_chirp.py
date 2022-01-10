@@ -4,7 +4,7 @@ from q1pulse.util.shapes import add_chirp
 from init_pulsars import qcm0
 from plot_util import plot_output
 
-instrument = Q1Instrument()
+instrument = Q1Instrument('q1')
 instrument.add_qcm(qcm0)
 
 # use 4 max sequencers for chirp
