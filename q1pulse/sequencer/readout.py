@@ -49,7 +49,7 @@ class ReadoutBuilder(ControlBuilder):
     def add_weight(self, name, data):
         return self._weights.add_weight(name, data)
 
-    def acquire(self, bins, bin_index, t_offset=0):
+    def acquire(self, bins, bin_index='increment', t_offset=0):
         self.add_comment(f'acquire({bins}, {bin_index})')
         bins = self._translate_bins(bins)
         t1 = self.current_time + t_offset
@@ -82,7 +82,7 @@ class ReadoutBuilder(ControlBuilder):
             st = AcquireWeighedStatement(t1, bins, bin_index, weight0, weight1)
             self._add_statement(st)
 
-    def repeated_acquire(self, n, period, bins, bin_index, t_offset=0):
+    def repeated_acquire(self, n, period, bins, bin_index='increment', t_offset=0):
         self.add_comment(f'repeated_acquire({n}, {period}, {bins}, {bin_index})')
         if period < ReadoutBuilder.MIN_ACQUISITION_INTERVAL:
             raise Q1ValueError(f'Acquisition period ({period} ns) too small. '

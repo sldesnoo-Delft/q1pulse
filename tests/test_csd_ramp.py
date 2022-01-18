@@ -4,7 +4,7 @@ from q1pulse.instrument import Q1Instrument
 from init_pulsars import qcm0, qrm1
 from plot_util import plot_output
 
-instrument = Q1Instrument()
+instrument = Q1Instrument('q1')
 instrument.add_qcm(qcm0)
 instrument.add_qrm(qrm1)
 instrument.add_control('P1', qcm0.name, [2])
@@ -26,17 +26,13 @@ t_step = t_measure + t_acqdelay
 
 with p.loop_linspace(-0.5, 0.5, N) as v2:
     with p.parallel():
-        p.wait(t_step*N)
-        P2.set_offset(v2)
+        P2.block_pulse(t_step*N, v2)
         P1.ramp(t_step*N, -0.5, 0.5)
         R1.repeated_acquire(N, t_step,
                             'default', 'increment',
                             t_offset=t_acqdelay)
 
-P1.set_offset(0.0)
-P2.set_offset(0.0)
-
-p.describe()
+#p.describe()
 
 p.compile(annotate=True, listing=True)
 

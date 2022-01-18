@@ -67,10 +67,8 @@ local_0:   asr            R3,16,R5   # L0009 temp R5
 # endloop t=1050000 
            add            R1,21691754,R1 # L0021 
            loop           R2,@loop_0 # L0022 
-# awg_offset = 0.0, None t=1050000 
-           set_awg_offs   0,0        # L0023 @ 1050000
-           upd_param      4          # L0024 t=1050000
+           upd_param      4          # L0023 t=1050000
 # --END-- 
-           stop                      # L0025 
+           stop                      # L0024 
 """
 
