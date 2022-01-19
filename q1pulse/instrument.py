@@ -1,5 +1,6 @@
 import os
 import time
+import logging
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -17,7 +18,7 @@ class Q1Instrument:
             q1dir.mkdir(exist_ok=True)
             self.temp_dir = TemporaryDirectory(dir=q1dir)
             self.path = self.temp_dir.name
-            print('Instrument upload temp dir: ' + self.path)
+            logging.info('Instrument upload temp dir: ' + self.path)
         self.modules = {}
         self.controllers = {}
         self.readouts = {}
@@ -68,7 +69,7 @@ class Q1Instrument:
             filename = program.seq_filename(name)
             module.upload(seq.seq_nr, filename)
             t = (time.perf_counter() - t_start) * 1000
-            print(f'Sequencer {name} loaded {filename} ({t:5.3f} ms)')
+            logging.info(f'Sequencer {name} loaded {filename} ({t:5.3f} ms)')
             module.seq_configure(seq)
 
         for name,seq in self.readouts.items():
@@ -81,24 +82,33 @@ class Q1Instrument:
         for name,seq in sequencers.items():
             module = self.modules[seq.module_name]
             module.arm_sequencer(seq.seq_nr)
-#            t = (time.perf_counter() - t_start) * 1000
-#            print(f'ARM Status {name} ({module.pulsar.name}:{seq.seq_nr}):')
-#            print(module.get_sequencer_state(seq.seq_nr, 0), f' ({t:5.3f}ms)')
+            t = (time.perf_counter() - t_start) * 1000
+            state = module.get_sequencer_state(seq.seq_nr, 0)
+#            logging.debug(f'ARM Status {name} ({module.pulsar.name}:{seq.seq_nr}):'
+#                          f'{state} ({t:5.3f}ms)')
 
         for module in self.modules.values():
             # Print an overview of the instrument parameters.
             # print(f'Snapshot {name} ({module.pulsar.name}-{seq.seq_nr}):')
             # module.pulsar.print_readable_snapshot(update=True)
-
             module.pulsar.start_sequencer()
 
         t = (time.perf_counter() - t_start) * 1000
-        print(f'Duration upload/start: ({t:5.3f}ms)')
+        logging.info(f'Duration upload/start: ({t:5.3f}ms)')
         # Wait for completion
+        errors = {}
         for name,seq in sequencers.items():
             module = self.modules[seq.module_name]
-            print(f'Status {name} ({module.pulsar.name}:{seq.seq_nr}):')
-            print(module.get_sequencer_state(seq.seq_nr, 1))
+            state = module.get_sequencer_state(seq.seq_nr, 1)
+            logging.info(f'Status {name} ({module.pulsar.name}:{seq.seq_nr}):'
+                         f'{state}')
+            if state['status'] != 'STOPPED' or state['flags'] != []:
+                errors[seq.module_name] = state
+        if len(errors):
+            logging.error('*** Program errors ***')
+            for name,state in errors.items():
+                logging.error(f'  {name}: {state}')
+            raise Exception(f'Q1 failures (see logging):\n {errors}')
 
         for name,seq in sequencers.items():
             module = self.modules[seq.module_name]
@@ -113,7 +123,8 @@ class Q1Instrument:
     def get_acquisition_bins(self, sequencer_name, bins):
         seq = self.readouts[sequencer_name]
         module = self.modules[seq.module_name]
-        print(f'Acquisition status {sequencer_name} ({module.pulsar.name}:{seq.seq_nr}):')
-        print(module.pulsar.get_acquisition_state(seq.seq_nr, 1))
+        state = module.pulsar.get_acquisition_state(seq.seq_nr, 1)
+        logging.info(f'Acquisition status {sequencer_name} ({module.pulsar.name}:'
+                     f'{seq.seq_nr}): {state}')
         return module.pulsar.get_acquisitions(seq.seq_nr)[bins]['acquisition']['bins']
 

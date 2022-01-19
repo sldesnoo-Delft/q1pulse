@@ -1,15 +1,8 @@
+import logging
 from dataclasses import dataclass
 from typing import List, Optional
 from abc import abstractmethod
 from functools import wraps
-
-from pulsar_qcm.pulsar_qcm import pulsar_qcm, pulsar_qcm_dummy
-from pulsar_qrm.pulsar_qrm import pulsar_qrm, pulsar_qrm_dummy
-try:
-    from q1simulator import Q1Simulator
-    _q1simulator_found = True
-except:
-    _q1simulator_found = False
 
 
 @dataclass
@@ -33,12 +26,15 @@ def requires_connection(func):
 
 
 class QbloxModule:
+    verbose = False
     n_sequencers = 6
 
     def __init__(self, pulsar):
         self.name = pulsar.name
         self.pulsar = pulsar
         self._allocated_seq = 0
+        self._cache = {}
+        self._dont_cache = ['waveforms_and_program']
 
         if pulsar:
             print(f'Status {pulsar.name}:', pulsar.get_system_status())
@@ -69,12 +65,12 @@ class QbloxModule:
         for seq_nr in range(0, self.n_sequencers):
             for out in range(0, self.n_channels):
                 path = out % 2
-                self.__sset(seq_nr, f'channel_map_path{path}_out{out}_en', False)
+                self._sset(seq_nr, f'channel_map_path{path}_out{out}_en', False)
 
     @requires_connection
     def upload(self, seq_nr, filename):
-        print(f'Loading {filename} to sequencer {self.pulsar.name}:{seq_nr}')
-        self.__sset(seq_nr, 'waveforms_and_program', filename)
+#        print(f'Loading {filename} to sequencer {self.pulsar.name}:{seq_nr}')
+        self._sset(seq_nr, 'waveforms_and_program', filename)
 
     @requires_connection
     def arm_sequencer(self, seq_nr):
@@ -86,18 +82,18 @@ class QbloxModule:
 
     @requires_connection
     def enable_sync(self, seq_nr, enable):
-        self.__sset(seq_nr, 'sync_en', enable)
+        self._sset(seq_nr, 'sync_en', enable)
 
     @requires_connection
     def enable_out(self, seq_nr, channel):
         path = channel % 2
-        self.__sset(seq_nr, f'channel_map_path{path}_out{channel}_en', True)
+        self._sset(seq_nr, f'channel_map_path{path}_out{channel}_en', True)
 
     @requires_connection
     def set_nco(self, seq_nr, nco_frequency):
-        self.__sset(seq_nr, 'mod_en_awg', nco_frequency is not None)
+        self._sset(seq_nr, 'mod_en_awg', nco_frequency is not None)
         if nco_frequency is not None:
-            self.__sset(seq_nr, 'nco_freq', nco_frequency)
+            self._sset(seq_nr, 'nco_freq', nco_frequency)
 
     @requires_connection
     def seq_configure(self, sequencer):
@@ -107,8 +103,17 @@ class QbloxModule:
         for ch in sequencer.channels:
             self.enable_out(seq_nr, ch)
 
-    def __sset(self, seq_nr, name, value):
-        return self.pulsar.set(f'sequencer{seq_nr}_{name}', value)
+    def _sset(self, seq_nr, name, value):
+        current = self._cache.setdefault(name, None)
+        if current == value and name not in self._dont_cache:
+            if QbloxModule.verbose:
+                logging.debug(f'# sequencer{seq_nr}_{name}={value} -- cached')
+            return
+        result = self.pulsar.set(f'sequencer{seq_nr}_{name}', value)
+        self._cache[name] = value
+        if QbloxModule.verbose:
+            logging.info(f'sequencer{seq_nr}_{name}={value}')
+        return result
 
 
 class QcmModule(QbloxModule):
@@ -179,21 +184,18 @@ class QrmModule(QbloxModule):
 
     @requires_connection
     def phase_rotation_acq(self, seq_nr, phase_rotation):
-        self.__sset(seq_nr, 'phase_rotation_acq', phase_rotation)
+        self._sset(seq_nr, 'phase_rotation_acq', phase_rotation)
 
     @requires_connection
     def discretization_threshold_acq(self, seq_nr, threshold):
-        self.__sset(seq_nr, 'discretization_threshold_acq', threshold)
+        self._sset(seq_nr, 'discretization_threshold_acq', threshold)
 
     @requires_connection
     def integration_length_acq(self, seq_nr, length):
-        self.__sset(seq_nr, 'integration_length_acq', length)
+        self._sset(seq_nr, 'integration_length_acq', length)
 
     @requires_connection
     def set_nco(self, seq_nr, nco_frequency):
         super().set_nco(seq_nr, nco_frequency)
-        self.__sset(seq_nr, 'demod_en_acq', nco_frequency is not None)
-
-    def __sset(self, seq_nr, name, value):
-        return self.pulsar.set(f'sequencer{seq_nr}_{name}', value)
+        self._sset(seq_nr, 'demod_en_acq', nco_frequency is not None)
 
