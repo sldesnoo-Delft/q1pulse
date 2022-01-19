@@ -142,6 +142,7 @@ class SequenceBuilder(BuilderBase):
             self._dump_compile_state(generator, q1_tb, ex)
         except Exception as ex:
             self._dump_compile_state(generator, None, ex)
+            raise
         # Raise exception after handler
         # This avoids exposure of / confusion by q1pulse internals.
         if q1exception:
