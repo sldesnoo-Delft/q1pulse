@@ -128,3 +128,18 @@ class Q1Instrument:
                      f'{seq.seq_nr}): {state}')
         return module.pulsar.get_acquisitions(seq.seq_nr)[bins]['acquisition']['bins']
 
+    def get_input_ranges(self, sequencer_name):
+        ''' Returns input range for both channels of sequencer.
+        Value is in Vpp.
+        '''
+        seq = self.readouts[sequencer_name]
+        module = self.modules[seq.module_name]
+#        in0_gain = module.pulsar.in0_gain.cache()
+#        in1_gain = module.pulsar.in1_gain.cache()
+        in0_gain = module.pulsar.in0_gain()
+        in1_gain = module.pulsar.in1_gain()
+        in_range = tuple(
+                1.0 * 10**(-dB/20)
+                for dB in [in0_gain, in1_gain])
+        return in_range
+
