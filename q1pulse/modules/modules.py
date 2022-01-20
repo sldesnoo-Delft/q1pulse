@@ -104,15 +104,16 @@ class QbloxModule:
             self.enable_out(seq_nr, ch)
 
     def _sset(self, seq_nr, name, value):
-        current = self._cache.setdefault(name, None)
+        full_name = f'sequencer{seq_nr}_{name}'
+        current = self._cache.get(full_name, None)
         if current == value and name not in self._dont_cache:
             if QbloxModule.verbose:
-                logging.debug(f'# sequencer{seq_nr}_{name}={value} -- cached')
+                logging.debug(f'# {full_name}={value} -- cached')
             return
-        result = self.pulsar.set(f'sequencer{seq_nr}_{name}', value)
-        self._cache[name] = value
+        result = self.pulsar.set(full_name, value)
+        self._cache[full_name] = value
         if QbloxModule.verbose:
-            logging.info(f'sequencer{seq_nr}_{name}={value}')
+            logging.info(f'{full_name}={value}')
         return result
 
 
