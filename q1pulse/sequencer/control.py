@@ -112,7 +112,7 @@ class ControlBuilder(SequenceBuilder):
             self.set_gain(amplitude0, amplitude1)
             self.play(wave0, wave1)
             self.wait(duration)
-            self.set_gain(0.0, None)
+#            self.set_gain(0.0, None) ## not required to set gain to 0.0
 
     def ramp(self, duration, v_start, v_end, v_after=0.0, t_offset=0):
         if isinstance(duration, (Register, Expression)):
