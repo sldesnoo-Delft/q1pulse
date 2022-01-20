@@ -77,7 +77,7 @@ class Q1Instrument:
             module = self.modules[seq.module_name]
             module.phase_rotation_acq(seq.seq_nr, readout.phase_rotation_acq)
             module.discretization_threshold_acq(seq.seq_nr, readout.discretization_threshold_acq)
-            module.integration_length_acq(seq.seq_nr, readout.integration_length_acq)
+            module.integration_length_acq(seq.seq_nr, int(readout.integration_length_acq))
 
         for name,seq in sequencers.items():
             module = self.modules[seq.module_name]
@@ -102,7 +102,9 @@ class Q1Instrument:
             state = module.get_sequencer_state(seq.seq_nr, 1)
             logging.info(f'Status {name} ({module.pulsar.name}:{seq.seq_nr}):'
                          f'{state}')
-            if state['status'] != 'STOPPED' or state['flags'] != []:
+            if (state['status'] != 'STOPPED'
+                or (state['flags'] != []
+                    and state['flags'] != ['ACQ BINNING DONE'])):
                 errors[seq.module_name] = state
         if len(errors):
             logging.error('*** Program errors ***')
