@@ -41,7 +41,7 @@ class ReadoutBuilder(ControlBuilder):
 
     @integration_length_acq.setter
     def integration_length_acq(self, length):
-        self._integration_length_acq = length
+        self._integration_length_acq = int(length)
 
     def add_acquisition_bins(self, name, num_bins):
         return self._acquisitions.define_bins(name, num_bins)
