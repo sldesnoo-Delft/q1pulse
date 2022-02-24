@@ -4,6 +4,7 @@ from typing import List, Optional
 from abc import abstractmethod
 from functools import wraps
 
+from .sequencer_states import translate_seq_state
 
 @dataclass
 class Sequencer:
@@ -78,7 +79,8 @@ class QbloxModule:
 
     @requires_connection
     def get_sequencer_state(self, seq_nr, timeout=0):
-        return self.pulsar.get_sequencer_state(seq_nr, timeout)
+        state_dict = self.pulsar.get_sequencer_state(seq_nr, timeout)
+        return translate_seq_state(state_dict)
 
     @requires_connection
     def enable_sync(self, seq_nr, enable):

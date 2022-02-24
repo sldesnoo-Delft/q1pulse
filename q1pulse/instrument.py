@@ -82,8 +82,8 @@ class Q1Instrument:
         for name,seq in sequencers.items():
             module = self.modules[seq.module_name]
             module.arm_sequencer(seq.seq_nr)
-            t = (time.perf_counter() - t_start) * 1000
-            state = module.get_sequencer_state(seq.seq_nr, 0)
+#            t = (time.perf_counter() - t_start) * 1000
+#            state = module.get_sequencer_state(seq.seq_nr, 0)
 #            logging.debug(f'ARM Status {name} ({module.pulsar.name}:{seq.seq_nr}):'
 #                          f'{state} ({t:5.3f}ms)')
 
@@ -97,30 +97,28 @@ class Q1Instrument:
         logging.info(f'Duration upload/start: ({t:5.3f}ms)')
         # Wait for completion
         errors = {}
+        msg_level = 0
         for name,seq in sequencers.items():
             module = self.modules[seq.module_name]
             state = module.get_sequencer_state(seq.seq_nr, 1)
-            logging.info(f'Status {name} ({module.pulsar.name}:{seq.seq_nr}):'
+            logging.log(state.level,
+                        f'Status {name} ({module.pulsar.name}:{seq.seq_nr}):'
                          f'{state}')
-            if (state['status'] != 'STOPPED'
-                or (state['flags'] != []
-                    and state['flags'] != ['ACQ BINNING DONE'])):
-                errors[seq.module_name] = state
-        if len(errors):
+            msg_level = max(msg_level, state.level)
+            if state.status != 'STOPPED' or state.level >= logging.WARNING:
+                errors[name] = str(state)
+        if msg_level == logging.ERROR:
             logging.error('*** Program errors ***')
             for name,state in errors.items():
                 logging.error(f'  {name}: {state}')
             raise Exception(f'Q1 failures (see logging):\n {errors}')
+
 
         for name,seq in sequencers.items():
             module = self.modules[seq.module_name]
             #Stop sequencer.
             module.pulsar.stop_sequencer()
 
-# TODO @@@
-#    def close(self):
-#        #Close the instrument connection.
-#        pulsar.close()
 
     def get_acquisition_bins(self, sequencer_name, bins):
         seq = self.readouts[sequencer_name]
