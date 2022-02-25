@@ -38,7 +38,10 @@ class QbloxModule:
         self._dont_cache = ['waveforms_and_program']
 
         if pulsar:
-            print(f'Status {pulsar.name}:', pulsar.get_system_status())
+            sys_status = pulsar.get_system_status()
+            print(f'Status {pulsar.name}:', sys_status)
+            if sys_status['status'] != 'OKAY':
+                raise Exception(f'Module {self.name} status not OKAY: {sys_status}')
             self.disable_all_out()
             # disable all sequencers
             for seq_nr in range(0, self.n_sequencers):
