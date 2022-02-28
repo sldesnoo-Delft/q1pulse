@@ -3,7 +3,8 @@ All notable changes to Q1Pulse will be documented in this file.
 
 ## \[0.2.0] - 2022-@@-@@
 ### Added
-- Automatically reconnect to database server when connection was lost/closed.
+- check system state upon initialization and before every program run.
+-
 
 ### Removed
 

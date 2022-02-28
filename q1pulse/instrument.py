@@ -61,7 +61,7 @@ class Q1Instrument:
     def run_program(self, program):
         t_start = time.perf_counter()
 
-        # @@@ program sequence builders
+        # @@@ replace by program sequence builders, i.s.o. all available..
         sequencers = { **self.controllers, **self.readouts }
         for name,seq in sequencers.items():
             module = self.modules[seq.module_name]
@@ -70,7 +70,9 @@ class Q1Instrument:
             module.upload(seq.seq_nr, filename)
             t = (time.perf_counter() - t_start) * 1000
             logging.info(f'Sequencer {name} loaded {filename} ({t:5.3f} ms)')
-            module.seq_configure(seq)
+            module.enable_seq(seq)
+            prog_seq = program[name]
+            module.set_nco(seq.seq_nr, prog_seq.nco_frequency)
 
         for name,seq in self.readouts.items():
             readout = program[name]
@@ -88,6 +90,7 @@ class Q1Instrument:
 #                          f'{state} ({t:5.3f}ms)')
 
         for module in self.modules.values():
+            module.check_sys_status()
             # Print an overview of the instrument parameters.
             # print(f'Snapshot {name} ({module.pulsar.name}-{seq.seq_nr}):')
             # module.pulsar.print_readable_snapshot(update=True)

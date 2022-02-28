@@ -38,14 +38,19 @@ class QbloxModule:
         self._dont_cache = ['waveforms_and_program']
 
         if pulsar:
-            sys_status = pulsar.get_system_status()
-            print(f'Status {pulsar.name}:', sys_status)
-            if sys_status['status'] != 'OKAY':
-                raise Exception(f'Module {self.name} status not OKAY: {sys_status}')
+            self.check_sys_status(True)
             self.disable_all_out()
             # disable all sequencers
             for seq_nr in range(0, self.n_sequencers):
                 self.enable_sync(seq_nr, False)
+
+    @requires_connection
+    def check_sys_status(self, print_status=False):
+        sys_status = self.pulsar.get_system_status()
+        if print_status:
+            print(f'Status {self.name}:', sys_status)
+        if sys_status['status'] != 'OKAY':
+            raise Exception(f'Module {self.name} status not OKAY: {sys_status}')
 
     def get_sequencer(self, channels):
         seq_nr = self._allocate_seq_number()
@@ -101,10 +106,9 @@ class QbloxModule:
             self._sset(seq_nr, 'nco_freq', nco_frequency)
 
     @requires_connection
-    def seq_configure(self, sequencer):
+    def enable_seq(self, sequencer):
         seq_nr = sequencer.seq_nr
         self.enable_sync(seq_nr, True)
-        self.set_nco(seq_nr, sequencer.nco_frequency)
         for ch in sequencer.channels:
             self.enable_out(seq_nr, ch)
 

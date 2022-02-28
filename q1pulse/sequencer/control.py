@@ -20,6 +20,14 @@ class ControlBuilder(SequenceBuilder):
         self._nco_frequency = nco_frequency
         self._waves = WaveCollection()
 
+    @property
+    def nco_frequency(self):
+        return self._nco_frequency
+
+    @nco_frequency.setter
+    def nco_frequency(self, value):
+        self._nco_frequency = value
+
     def add_wave(self, name, data):
         return self._waves.add_wave(name, data)
 
