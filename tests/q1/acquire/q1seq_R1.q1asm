@@ -25,8 +25,8 @@ weights={
         },
     }
 
-acquisitions={'non-weighed': {'index': 0, 'num_bins': 49},
- 'weighed': {'index': 1, 'num_bins': 49}}
+acquisitions={'non-weighed': {'index': 0, 'num_bins': 25},
+ 'weighed': {'index': 1, 'num_bins': 25}}
 
 seq_prog="""
 # --INIT-- 
@@ -37,12 +37,12 @@ seq_prog="""
            wait_sync      4          # L0003 
            reset_ph                  # L0004 @ 0
 # --START-- (t=0) 
-# loop_linspace(-0.18000000000000002, 0.18000000000000002, 7):R._var0 t=0 
+# loop_linspace(-0.18000000000000002, 0.18000000000000002, 5):R._var0 t=0 
 _start:    move           3908420239,R3 # L0005 R3: R._var0
-           move           7,R4       # L0006 R4: R._cnt0
-# loop_linspace(-0.9, 0.9, 7):R._var1 t=0 
+           move           5,R4       # L0006 R4: R._cnt0
+# loop_linspace(-0.9, 0.9, 5):R._var1 t=0 
 loop_0:    move           2362232012,R5 # L0007 R5: R._var1
-           move           7,R6       # L0008 R6: R._cnt1
+           move           5,R6       # L0008 R6: R._cnt1
 loop_1:    upd_param      112        # L0009 t=0
 # acquire(non-weighed, increment) 
 # acquire(bins=non-weighed, bin=Rs._bin_non-weighed) t=112 
@@ -58,10 +58,10 @@ loop_1:    upd_param      112        # L0009 t=0
 # Rs._bin_weighed:int = Rs._bin_weighed + 1 
            add            R2,1,R2    # L0016 
 # endloop t=2100 
-           add            R5,644245094,R5 # L0017 
+           add            R5,966367641,R5 # L0017 
            loop           R6,@loop_1 # L0018 
 # endloop t=2100 
-           add            R3,128849018,R3 # L0019 
+           add            R3,193273528,R3 # L0019 
            loop           R4,@loop_0 # L0020 
            upd_param      4          # L0021 t=2100
 # --END-- 
