@@ -50,7 +50,11 @@ class QbloxModule:
         if print_status:
             print(f'Status {self.name}:', sys_status)
         if sys_status['status'] != 'OKAY':
-            raise Exception(f'Module {self.name} status not OKAY: {sys_status}')
+            # @@@ hack for firmware glitch
+            if sys_status['flags'] == ['FPGA PLL UNLOCKED']:
+                print('   Ignoring PLL UNLOCKED. This is probably a glitch in the firmware.')
+            else:
+                raise Exception(f'Module {self.name} status not OKAY: {sys_status}')
 
     def get_sequencer(self, channels):
         seq_nr = self._allocate_seq_number()
