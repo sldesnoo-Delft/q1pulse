@@ -629,10 +629,7 @@ _start:    upd_param      8392       # L0003 t=0
            set_awg_gain   16383,16383 # L0004 @ 8392
 # play chirp_I1 chirp_Q1 t=8392 
            play           0,1,1808   # L0005 t=8392
-# awg_gain = 0.0, None t=10200 
-           set_awg_gain   0,0        # L0006 @ 10200
-           upd_param      4          # L0007 t=10200
 # --END-- 
-           stop                      # L0008 
+           stop                      # L0006 
 """
 
