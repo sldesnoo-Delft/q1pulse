@@ -22,6 +22,13 @@ from ..lang.loops import LinspaceLoop, RangeLoop, ArrayLoop
 from ..lang.simulator_statements import LogStatement
 
 class SequenceBuilder(BuilderBase):
+    add_traceback_to_instructions = True
+    '''
+    Adding traceback is convenient to find a problem in your script.
+    However, it makes the compiler pretty slow.
+    Q1Instrument can suppress the traceback.
+    '''
+
     def __init__(self, name):
         self.name = name
         self._local_loop_cnt = 0
@@ -47,7 +54,7 @@ class SequenceBuilder(BuilderBase):
 
     def _add_statement(self, statement, init_section=False):
         self._check_time(statement)
-        if not isinstance(statement, str):
+        if SequenceBuilder.add_traceback_to_instructions and not isinstance(statement, str):
             self._add_traceback(statement)
         if self._compiled:
             raise Q1StateError('Program cannot be changed after compilation')
@@ -120,7 +127,6 @@ class SequenceBuilder(BuilderBase):
         fp.write('\n')
 
     def compile(self, generator, annotate=False):
-        q1exception = None
         try:
             if not self._compiled:
                 self._compiled = True
@@ -138,15 +144,13 @@ class SequenceBuilder(BuilderBase):
                 msgs.append(f'{type(e).__name__}: {e.args[0]}')
                 e = e.__cause__
             q1_tb = '\n'.join(tb+msgs)
-            q1exception = Q1Exception(q1_tb)
             self._dump_compile_state(generator, q1_tb, ex)
+            # Use 'from None' to suppress original context
+            # This avoids exposure of and confusion by q1pulse internals.
+            raise Q1Exception(q1_tb) from None
         except Exception as ex:
             self._dump_compile_state(generator, None, ex)
             raise
-        # Raise exception after handler
-        # This avoids exposure of / confusion by q1pulse internals.
-        if q1exception:
-            raise q1exception
 
     def _dump_compile_state(self, generator, q1_tb, exc):
         filename = os.path.join(os.getcwd(), '_q1pulse_dump.txt')

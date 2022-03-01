@@ -5,12 +5,13 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from .program import Program
+from .sequencer.sequencer import SequenceBuilder
 from .sequencer.control import ControlBuilder
 from .sequencer.readout import ReadoutBuilder
 from .modules.modules import QcmModule, QrmModule
 
 class Q1Instrument:
-    def __init__(self, path=None, dummy=False):
+    def __init__(self, path=None, add_traceback=True):
         if path:
             self.path = path
         else:
@@ -22,6 +23,7 @@ class Q1Instrument:
         self.modules = {}
         self.controllers = {}
         self.readouts = {}
+        SequenceBuilder.add_traceback_to_instructions = add_traceback
 
     def add_qcm(self, pulsar):
         self.modules[pulsar.name] = QcmModule(pulsar)
