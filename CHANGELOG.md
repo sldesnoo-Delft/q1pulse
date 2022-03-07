@@ -1,12 +1,11 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
-## \[0.2.0] - 2022-@@-@@
+## \[0.2.0] - 2022-03-07
 ### Added
 - check system state upon initialization and before every program run.
--
-
-### Removed
+- made traceback of q1pulse instructions configurable
+- set nco frequency on sequencer in program
 
 ### Fixed
 - Proper handling of all QCM/QRM state flags
