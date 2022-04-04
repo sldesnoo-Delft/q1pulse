@@ -49,7 +49,8 @@ class QbloxModule:
         sys_status = self.pulsar.get_system_status()
         if print_status:
             print(f'Status {self.name}:', sys_status)
-        if sys_status['status'] != 'OKAY':
+        # note: dummy driver returns '0' i.s.o. OKAY
+        if sys_status['status'] not in ['OKAY', '0']:
             # @@@ hack for firmware glitch
             if sys_status['flags'] == ['FPGA PLL UNLOCKED']:
                 print('   Ignoring PLL UNLOCKED. This is probably a glitch in the firmware.')
