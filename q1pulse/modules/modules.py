@@ -4,7 +4,7 @@ from typing import List, Optional
 from abc import abstractmethod
 from functools import wraps
 
-from .sequencer_states import translate_seq_state
+from .sequencer_states import translate_seq_state, translate_seq_state_old
 
 @dataclass
 class Sequencer:
@@ -33,29 +33,37 @@ class QbloxModule:
     def __init__(self, pulsar):
         self.name = pulsar.name
         self.pulsar = pulsar
+        # backward compatibility with qblox_instruments < v0.6.0
+        self._old_type = not hasattr(pulsar, 'sequencer0')
         self._allocated_seq = 0
         self._cache = {}
         self._dont_cache = ['waveforms_and_program']
-
-        if pulsar:
-            self.check_sys_status(True)
-            self.disable_all_out()
-            # disable all sequencers
-            for seq_nr in range(0, self.n_sequencers):
-                self.enable_sync(seq_nr, False)
+        self.check_sys_status(True)
+        self.disable_all_out()
+        # disable all sequencers
+        for seq_nr in range(0, self.n_sequencers):
+            self.enable_sync(seq_nr, False)
 
     @requires_connection
     def check_sys_status(self, print_status=False):
-        sys_status = self.pulsar.get_system_status()
-        if print_status:
-            print(f'Status {self.name}:', sys_status)
-        # note: dummy driver returns '0' i.s.o. OKAY
-        if sys_status['status'] not in ['OKAY', '0']:
-            # @@@ hack for firmware glitch
-            if sys_status['flags'] == ['FPGA PLL UNLOCKED']:
-                print('   Ignoring PLL UNLOCKED. This is probably a glitch in the firmware.')
-            else:
-                raise Exception(f'Module {self.name} status not OKAY: {sys_status}')
+        if self._old_type:
+            sys_status = self.pulsar.get_system_status()
+            if print_status:
+                print(f'Status {self.name}:', sys_status)
+            # note: dummy driver returns '0' i.s.o. OKAY
+            if sys_status['status'] not in ['OKAY', '0']:
+                # @@@ hack for firmware glitch
+                if sys_status['flags'] == ['FPGA PLL UNLOCKED']:
+                    print('   Ignoring PLL UNLOCKED. This is probably a glitch in the firmware.')
+                else:
+                    raise Exception(f'Module {self.name} status not OKAY: {sys_status}')
+        else:
+            sys_state = self.pulsar.get_system_state()
+            if sys_state.status != 'OKAY':
+                if getattr(self.pulsar, 'is_dummy', False):
+                    print(f'Status (Dummy) {self.name}:', sys_state)
+                else:
+                    raise Exception(f'Module {self.name} status not OKAY: {sys_state}')
 
     def get_sequencer(self, channels):
         seq_nr = self._allocate_seq_number()
@@ -84,7 +92,10 @@ class QbloxModule:
     @requires_connection
     def upload(self, seq_nr, filename):
 #        print(f'Loading {filename} to sequencer {self.pulsar.name}:{seq_nr}')
-        self._sset(seq_nr, 'waveforms_and_program', filename)
+        if self._old_type:
+            self._sset(seq_nr, 'waveforms_and_program', filename)
+        else:
+            self._sset(seq_nr, 'sequence', filename)
 
     @requires_connection
     def arm_sequencer(self, seq_nr):
@@ -92,8 +103,11 @@ class QbloxModule:
 
     @requires_connection
     def get_sequencer_state(self, seq_nr, timeout=0):
-        state_dict = self.pulsar.get_sequencer_state(seq_nr, timeout)
-        return translate_seq_state(state_dict)
+        state = self.pulsar.get_sequencer_state(seq_nr, timeout)
+        if self._old_type:
+            return translate_seq_state_old(state)
+        else:
+            return translate_seq_state(state)
 
     @requires_connection
     def enable_sync(self, seq_nr, enable):
@@ -124,7 +138,11 @@ class QbloxModule:
             if QbloxModule.verbose:
                 logging.debug(f'# {full_name}={value} -- cached')
             return
-        result = self.pulsar.set(full_name, value)
+        if self._old_type:
+            result = self.pulsar.set(full_name, value)
+        else:
+            seq = getattr(self.pulsar, f'sequencer{seq_nr}')
+            result = seq.set(name, value)
         self._cache[full_name] = value
         if QbloxModule.verbose:
             logging.info(f'{full_name}={value}')
@@ -137,10 +155,6 @@ class QcmModule(QbloxModule):
 
     def __init__(self, pulsar):
         super().__init__(pulsar)
-        if pulsar is not None:
-            type_name = type(pulsar).__name__
-            if type_name not in ['pulsar_qcm', 'pulsar_qcm_dummy', 'Q1Simulator']:
-                raise Exception(f'pulsar must be QCM, not {type_name}')
 
     def _get_seq_paths(self, channels):
         if len(channels) == 0:
@@ -176,10 +190,6 @@ class QrmModule(QbloxModule):
 
     def __init__(self, pulsar):
         super().__init__(pulsar)
-        if pulsar is not None:
-            type_name = type(pulsar).__name__
-            if type_name not in ['pulsar_qrm', 'pulsar_qrm_dummy', 'Q1Simulator']:
-                raise Exception(f'pulsar must be QRM, not {type_name}')
 
     def _get_seq_paths(self, channels):
         if len(channels) == 1:

@@ -56,18 +56,25 @@ class SequencerState:
 
     def add_flags(self, flags):
         for flag in flags:
-            if flag not in _flag_map:
-                logging.error(f'Unknown flag {flag} in sequencer state')
-                self.errors.append(flag)
+            flag_str = str(flag).replace('_', ' ')
+            if flag_str not in _flag_map:
+                logging.error(f'Unknown flag {flag_str} in sequencer state')
+                self.errors.append(flag_str)
                 self.level = ERROR
             else:
-                level = _flag_map[flag]
+                level = _flag_map[flag_str]
                 self.level = max(level, self.level)
-                self.msg_list[level].append(flag)
+                self.msg_list[level].append(flag_str)
 
 
-def translate_seq_state(state_dict):
+def translate_seq_state_old(state_dict):
     state = SequencerState(state_dict['status'])
     state.add_flags(state_dict['flags'])
+
+    return state
+
+def translate_seq_state(seq_state):
+    state = SequencerState(seq_state.status)
+    state.add_flags(seq_state.flags)
 
     return state

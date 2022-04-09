@@ -10,6 +10,11 @@ from .sequencer.control import ControlBuilder
 from .sequencer.readout import ReadoutBuilder
 from .modules.modules import QcmModule, QrmModule
 
+try:
+    from qblox_instruments import InstrumentType
+except:
+    print('Q1Pulse assumes qblox_instruments < v0.6')
+
 class Q1Instrument:
     def __init__(self, path=None, add_traceback=True):
         if path:
@@ -24,6 +29,14 @@ class Q1Instrument:
         self.controllers = {}
         self.readouts = {}
         SequenceBuilder.add_traceback_to_instructions = add_traceback
+
+    def add_pulsar(self, pulsar):
+        if pulsar.instrument_type == InstrumentType.QCM:
+            self.modules[pulsar.name] = QcmModule(pulsar)
+        elif pulsar.instrument_type == InstrumentType.QRM:
+            self.modules[pulsar.name] = QrmModule(pulsar)
+        else:
+            raise Exception(f'Unknown instrument type: {pulsar.instrument_type}')
 
     def add_qcm(self, pulsar):
         self.modules[pulsar.name] = QcmModule(pulsar)
