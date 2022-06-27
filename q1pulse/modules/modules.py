@@ -37,33 +37,11 @@ class QbloxModule:
         self._old_type = not hasattr(pulsar, 'sequencer0')
         self._allocated_seq = 0
         self._cache = {}
-        self._dont_cache = ['waveforms_and_program']
-        self.check_sys_status(True)
+        self._dont_cache = []
         self.disable_all_out()
         # disable all sequencers
         for seq_nr in range(0, self.n_sequencers):
             self.enable_sync(seq_nr, False)
-
-    @requires_connection
-    def check_sys_status(self, print_status=False):
-        if self._old_type:
-            sys_status = self.pulsar.get_system_status()
-            if print_status:
-                print(f'Status {self.name}:', sys_status)
-            # note: dummy driver returns '0' i.s.o. OKAY
-            if sys_status['status'] not in ['OKAY', '0']:
-                # @@@ hack for firmware glitch
-                if sys_status['flags'] == ['FPGA PLL UNLOCKED']:
-                    print('   Ignoring PLL UNLOCKED. This is probably a glitch in the firmware.')
-                else:
-                    raise Exception(f'Module {self.name} status not OKAY: {sys_status}')
-        else:
-            sys_state = self.pulsar.get_system_state()
-            if sys_state.status != 'OKAY':
-                if getattr(self.pulsar, 'is_dummy', False):
-                    print(f'Status (Dummy) {self.name}:', sys_state)
-                else:
-                    raise Exception(f'Module {self.name} status not OKAY: {sys_state}')
 
     def get_sequencer(self, channels):
         seq_nr = self._allocate_seq_number()

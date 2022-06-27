@@ -25,6 +25,7 @@ class Q1Instrument:
             self.temp_dir = TemporaryDirectory(dir=q1dir)
             self.path = self.temp_dir.name
             logging.info('Instrument upload temp dir: ' + self.path)
+        self.root_instruments = set()
         self.modules = {}
         self.controllers = {}
         self.readouts = {}
@@ -32,17 +33,19 @@ class Q1Instrument:
 
     def add_pulsar(self, pulsar):
         if pulsar.instrument_type == InstrumentType.QCM:
-            self.modules[pulsar.name] = QcmModule(pulsar)
+            self.add_qcm(pulsar)
         elif pulsar.instrument_type == InstrumentType.QRM:
-            self.modules[pulsar.name] = QrmModule(pulsar)
+            self.add_qrm(pulsar)
         else:
             raise Exception(f'Unknown instrument type: {pulsar.instrument_type}')
 
     def add_qcm(self, pulsar):
         self.modules[pulsar.name] = QcmModule(pulsar)
+        self.root_instruments.add(pulsar.root_instrument)
 
     def add_qrm(self, pulsar):
         self.modules[pulsar.name] = QrmModule(pulsar)
+        self.root_instruments.add(pulsar.root_instrument)
 
     def add_control(self, name, module_name, channels, nco_frequency=None):
         sequencer = self.modules[module_name].get_sequencer(channels)
@@ -76,6 +79,9 @@ class Q1Instrument:
     def run_program(self, program):
         t_start = time.perf_counter()
 
+        for instrument in self.root_instruments:
+            check_instrument_status(instrument)
+
         # @@@ replace by program sequence builders, i.s.o. all available..
         sequencers = { **self.controllers, **self.readouts }
         for name,seq in sequencers.items():
@@ -105,10 +111,6 @@ class Q1Instrument:
 #                          f'{state} ({t:5.3f}ms)')
 
         for module in self.modules.values():
-            module.check_sys_status()
-            # Print an overview of the instrument parameters.
-            # print(f'Snapshot {name} ({module.pulsar.name}-{seq.seq_nr}):')
-            # module.pulsar.print_readable_snapshot(update=True)
             module.pulsar.start_sequencer()
 
         t = (time.perf_counter() - t_start) * 1000
@@ -159,3 +161,10 @@ class Q1Instrument:
                 for dB in [in0_gain, in1_gain])
         return in_range
 
+def check_instrument_status(instrument, print_status=False):
+    sys_state = instrument.get_system_state()
+    if sys_state.status != 'OKAY':
+        if getattr(instrument, 'is_dummy', False):
+            print(f'Status (Dummy) {instrument.name}:', sys_state)
+        else:
+            raise Exception(f'Module {instrument.name} status not OKAY: {sys_state}')
