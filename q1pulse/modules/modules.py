@@ -4,7 +4,7 @@ from typing import List, Optional
 from abc import abstractmethod
 from functools import wraps
 
-from .sequencer_states import translate_seq_state, translate_seq_state_old
+from .sequencer_states import translate_seq_state
 
 @dataclass
 class Sequencer:
@@ -33,8 +33,6 @@ class QbloxModule:
     def __init__(self, pulsar):
         self.name = pulsar.name
         self.pulsar = pulsar
-        # backward compatibility with qblox_instruments < v0.6.0
-        self._old_type = not hasattr(pulsar, 'sequencer0')
         self._allocated_seq = 0
         self._cache = {}
         self._dont_cache = []
@@ -70,10 +68,7 @@ class QbloxModule:
     @requires_connection
     def upload(self, seq_nr, filename):
 #        print(f'Loading {filename} to sequencer {self.pulsar.name}:{seq_nr}')
-        if self._old_type:
-            self._sset(seq_nr, 'waveforms_and_program', filename)
-        else:
-            self._sset(seq_nr, 'sequence', filename)
+        self._sset(seq_nr, 'sequence', filename)
 
     @requires_connection
     def arm_sequencer(self, seq_nr):
@@ -82,10 +77,7 @@ class QbloxModule:
     @requires_connection
     def get_sequencer_state(self, seq_nr, timeout=0):
         state = self.pulsar.get_sequencer_state(seq_nr, timeout)
-        if self._old_type:
-            return translate_seq_state_old(state)
-        else:
-            return translate_seq_state(state)
+        return translate_seq_state(state)
 
     @requires_connection
     def enable_sync(self, seq_nr, enable):
@@ -116,11 +108,8 @@ class QbloxModule:
             if QbloxModule.verbose:
                 logging.debug(f'# {full_name}={value} -- cached')
             return
-        if self._old_type:
-            result = self.pulsar.set(full_name, value)
-        else:
-            seq = getattr(self.pulsar, f'sequencer{seq_nr}')
-            result = seq.set(name, value)
+        seq = getattr(self.pulsar, f'sequencer{seq_nr}')
+        result = seq.set(name, value)
         self._cache[full_name] = value
         if QbloxModule.verbose:
             logging.info(f'{full_name}={value}')

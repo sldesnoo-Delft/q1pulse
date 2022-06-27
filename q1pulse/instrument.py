@@ -10,10 +10,7 @@ from .sequencer.control import ControlBuilder
 from .sequencer.readout import ReadoutBuilder
 from .modules.modules import QcmModule, QrmModule
 
-try:
-    from qblox_instruments import InstrumentType
-except:
-    print('Q1Pulse assumes qblox_instruments < v0.6')
+from qblox_instruments import InstrumentType
 
 class Q1Instrument:
     def __init__(self, path=None, add_traceback=True):

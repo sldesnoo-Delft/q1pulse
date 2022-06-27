@@ -66,13 +66,6 @@ class SequencerState:
                 self.level = max(level, self.level)
                 self.msg_list[level].append(flag_str)
 
-
-def translate_seq_state_old(state_dict):
-    state = SequencerState(state_dict['status'])
-    state.add_flags(state_dict['flags'])
-
-    return state
-
 def translate_seq_state(seq_state):
     state = SequencerState(seq_state.status)
     state.add_flags(seq_state.flags)
