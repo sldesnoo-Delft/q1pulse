@@ -35,14 +35,13 @@ R1.add_weight('gaus100', signal.gaussian(100, 12))
 #R1.add_weight('gaus100', np.ones(100))
 R1.integration_length_acq = 100
 
-amplitude = 0.125
 
 # output range QCM (P1): +/- 2.5 V
 # output range QRM (P1): +/- 0.5 V
 # input range QRM (R1): +/- 0.5 V (gain = 0 dB)
 
-v1_max = 0.5/2.5*0.9
-v2_max = 0.5/0.5*0.9
+v1_max = 0.4/2.5
+v2_max = 0.4/0.5
 
 with p.loop_linspace(-v1_max, v1_max, N) as v1:
     with p.loop_linspace(-v2_max, v2_max, N) as v2:
@@ -51,13 +50,13 @@ with p.loop_linspace(-v1_max, v1_max, N) as v1:
             P2.block_pulse(500, v2)
             P2c.block_pulse(500, v1)
             # delay from output to input is ~108 ns
-            R1.acquire('non-weighed', 'increment', t_offset=112)
+            R1.acquire('non-weighed', 'increment', t_offset=160)
 
         with p.parallel():
             P1.block_pulse(500, v1)
             P2c.block_pulse(500, v1)
             P2.block_pulse(500, v2)
-            R1.acquire_weighed('weighed', 'increment', 'gaus100', t_offset=120)
+            R1.acquire_weighed('weighed', 'increment', 'gaus100', t_offset=160)
 
         p.wait(1100)
 
