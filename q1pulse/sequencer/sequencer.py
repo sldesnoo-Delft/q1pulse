@@ -222,7 +222,7 @@ class SequenceBuilder(BuilderBase):
     def _seq_repeat(self, n):
         ''' repeat loop not synchronizing with other sequencers. Internal use only ''' # @@@ looks like it can be used normally
         if n == 0:
-            return
+            raise ValueError('n must be > 0')
         if n == 1:
             yield
         else:
