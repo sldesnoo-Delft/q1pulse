@@ -105,7 +105,11 @@ class ControlBuilder(SequenceBuilder):
             self._program.wait(duration)
             self.set_offset(0.0, None)
 
-    def shaped_pulse(self, wave0, amplitude0, wave1=None, amplitude1=None, t_offset=0):
+    def shaped_pulse(self, wave0, amplitude0=None, wave1=None, amplitude1=None, t_offset=0):
+        '''
+        When amplitude is None, it is assumed that the gain has already been set to
+        the right value.
+        '''
         wave0 = self._translate_wave(wave0)
         wave1 = self._translate_wave(wave1)
         wave0_name = wave0.name if wave0 is not None else None
@@ -117,10 +121,10 @@ class ControlBuilder(SequenceBuilder):
                 len(wave1.data) if wave1 is not None else 0
                 )
         with self._local_timeline(t_offset=t_offset, duration=duration):
-            self.set_gain(amplitude0, amplitude1)
+            if amplitude0 is not None:
+                self.set_gain(amplitude0, amplitude1)
             self.play(wave0, wave1)
             self.wait(duration)
-#            self.set_gain(0.0, None) ## not required to set gain to 0.0
 
     def ramp(self, duration, v_start, v_end, v_after=0.0, t_offset=0):
         if isinstance(duration, (Register, Expression)):
