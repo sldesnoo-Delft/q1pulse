@@ -13,20 +13,11 @@ seq_prog="""
 # --START-- (t=0) 
 _start:    move           0,R1       # L0003 R1: R._var0
            move           10000,R2   # L0004 R2: R._cnt0
-# block_pulse(100, 0.1, None) 
-loop_0:    set_awg_offs   3276,0     # L0005 @ 0
-           upd_param      100        # L0006 t=0
-           set_awg_offs   0,0        # L0007 @ 100
-           upd_param      100        # L0008 t=100
-# block_pulse(600, 0.1, None) 
-           set_awg_offs   3276,0     # L0009 @ 200
-           upd_param      600        # L0010 t=200
-           set_awg_offs   0,0        # L0011 @ 800
-           upd_param      48780      # L0012 t=800
-           add            R1,1,R1    # L0013 
-           loop           R2,@loop_0 # L0014 
-           upd_param      4          # L0015 t=49580
+loop_0:    upd_param      49380      # L0005 t=0
+           add            R1,1,R1    # L0006 
+           loop           R2,@loop_0 # L0007 
+           upd_param      4          # L0008 t=49380
 # --END-- 
-           stop                      # L0016 
+           stop                      # L0009 
 """
 
