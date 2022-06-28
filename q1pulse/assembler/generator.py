@@ -560,7 +560,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             raise Q1TypeError('Only registers and None can be logged')
         self.add_comment(f'Q1Sim:log "{msg}",{reg},{opt}')
 
-    def _format_line(self, label, mnemonic, args, wait_after, comment, line_nr):
+    def _format_line(self, label, mnemonic, args, wait_after, comment, line_nr, compact):
         if label is not None:
             label = label+':'
         else:
@@ -572,6 +572,9 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         if wait_after is not None:
             arg_list += [str(wait_after)]
         arg_str = ','.join(arg_list)
+
+        if compact:
+            return f'{label} {mnemonic} {arg_str}'
 
         c = ''
         if not self.add_comments or (comment is None and not self._line_numbers):
@@ -585,7 +588,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
 
         return f'{label:10} {mnemonic:14} {arg_str:10}{c}'
 
-    def q1asm_lines(self, skip_comment_lines=False):
+    def q1asm_lines(self, skip_comment_lines=False, compact=False):
         lines = []
         line_nr = 0
         line_label = None
@@ -606,23 +609,24 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                 line_label = i.label
                 continue
             if i.overwritten:
-                lines+= [self._format_line('# ------',
-                                           i.mnemonic, i.args, i.wait_after,
-                                           i.comment, None)]
+                if not compact:
+                    lines+= [self._format_line('# ------',
+                                               i.mnemonic, i.args, i.wait_after,
+                                               i.comment, None)]
                 continue
             line_nr += 1
             line = self._format_line(line_label, i.mnemonic, i.args, i.wait_after,
-                                     i.comment, line_nr)
+                                     i.comment, line_nr, compact)
             line_label = None
             lines += [line]
         return lines
 
-    def q1asm_prog(self, skip_comment_lines=False):
-        return '\n'.join(self.q1asm_lines(skip_comment_lines))
+    def q1asm_prog(self, skip_comment_lines=False, compact=False):
+        return '\n'.join(self.q1asm_lines(skip_comment_lines, compact))
 
     def save_prog_and_data_json(self, filename):
         d = self._data.get_data_dict()
-        d['program'] = self.q1asm_prog(skip_comment_lines=True)
+        d['program'] = self.q1asm_prog(skip_comment_lines=True, compact=True)
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(d, f, indent=None)
 
