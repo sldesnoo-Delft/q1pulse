@@ -560,7 +560,8 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             raise Q1TypeError('Only registers and None can be logged')
         self.add_comment(f'Q1Sim:log "{msg}",{reg},{opt}')
 
-    def _format_line(self, label, mnemonic, args, wait_after, comment, line_nr, compact):
+    def _format_line(self, label, mnemonic, args, wait_after, comment, line_nr,
+                     compact=False):
         if label is not None:
             label = label+':'
         else:
