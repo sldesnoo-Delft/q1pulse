@@ -139,6 +139,7 @@ class QrmModule(QbloxModule):
 
     def __init__(self, pulsar):
         super().__init__(pulsar)
+        self._dont_cache += ['sequence']
 
     def _get_seq_paths(self, channels):
         if len(channels) == 1:
