@@ -97,13 +97,29 @@ class QbloxModule:
             logging.info(f'{full_name}={value}')
         return result
 
+    def set_out_offset(self, channel, offset_mV):
+        if self.pulsar.is_rf_type:
+            name = f'out{channel//2}_offset_path{channel%2}'
+            value = offset_mV
+        else:
+            name = f'out{channel}_offset'
+            value = offset_mV/1000
+
+        current = self._cache.get(name, None)
+        if current == value:
+            if QbloxModule.verbose:
+                logging.debug(f'# {name}={value} -- cached')
+            return
+
+        setattr(self.pulsar, name, value)
+        self._cache[name] = value
 
 class QcmModule(QbloxModule):
     n_channels = 4
-    max_output_voltage = 2.5
 
     def __init__(self, pulsar):
         super().__init__(pulsar)
+        self.max_output_voltage = 2.5 if not pulsar.is_rf_type else 3.3
 
     def _get_seq_paths(self, channels):
         if len(channels) == 0:
@@ -135,10 +151,10 @@ class QcmModule(QbloxModule):
 
 class QrmModule(QbloxModule):
     n_channels = 2
-    max_output_voltage = 0.5
 
     def __init__(self, pulsar):
         super().__init__(pulsar)
+        self.max_output_voltage = 0.5 if not pulsar.is_rf_type else 3.3
 
     def _get_seq_paths(self, channels):
         if len(channels) == 1:
