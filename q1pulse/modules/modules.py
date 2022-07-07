@@ -155,6 +155,7 @@ class QrmModule(QbloxModule):
     def __init__(self, pulsar):
         super().__init__(pulsar)
         self.max_output_voltage = 0.5 if not pulsar.is_rf_type else 3.3
+        self._dont_cache += ['sequence']
 
     def _get_seq_paths(self, channels):
         if len(channels) == 1:
