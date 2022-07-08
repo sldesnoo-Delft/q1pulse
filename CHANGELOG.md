@@ -1,6 +1,22 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.4.0] - 2022-07-08
+
+### Added
+- Support Qblox Cluster
+- Support RF modules
+- Added set_out_offset with mV value for RF and non-RF modules.
+
+### Fixed
+- Always write QRM sequences before running. Otherwise the acquisition data is not cleared.
+
+### Changed
+- More compact sequence/json output to avoid buffer overrun of qblox compiler.
+
+### Deleted
+- Removed support for qblox_instruments < v0.6.0
+
 ## \[0.3.0] - 2022-04-13
 ### Changed
 - Update for API changes of qblox_instruments v0.6
