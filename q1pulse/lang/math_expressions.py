@@ -56,7 +56,7 @@ class Operand(ABC):
 def get_dtype(value):
     if isinstance(value, (int, np.integer)):
         return int
-    if isinstance(value, (float, np.float)):
+    if isinstance(value, (float, np.floating)):
         return float
     if isinstance(value, Operand):
         return value.dtype
