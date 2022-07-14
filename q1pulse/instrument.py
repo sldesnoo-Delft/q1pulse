@@ -91,6 +91,10 @@ class Q1Instrument:
             module.enable_seq(seq)
             prog_seq = program[name]
             module.set_nco(seq.seq_nr, prog_seq.nco_frequency)
+            if prog_seq.mixer_gain_ratio is not None:
+                module.set_mixer_gain_ratio(seq.seq_nr, prog_seq.mixer_gain_ratio)
+            if prog_seq.mixer_phase_offset_degree is not None:
+                module.set_mixer_phase_offset_degree(seq.seq_nr, prog_seq.mixer_phase_offset_degree)
 
         for name,seq in self.readouts.items():
             readout = program[name]

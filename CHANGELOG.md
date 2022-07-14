@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.4.1] - 2022-07-14
+
+### Added
+- Added mixer_gain_ratio and mixer_phase_offset_degree properties to sequencer.
+
 ## \[0.4.0] - 2022-07-08
 
 ### Added

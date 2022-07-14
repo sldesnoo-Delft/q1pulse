@@ -77,6 +77,12 @@ class QbloxModule:
         if nco_frequency is not None:
             self._sset(seq_nr, 'nco_freq', nco_frequency)
 
+    def set_mixer_gain_ratio(self, seq_nr, value):
+        self._sset(seq_nr, 'mixer_corr_gain_ratio', value)
+
+    def set_mixer_phase_offset_degree(self, seq_nr, value):
+        self._sset(seq_nr, 'mixer_corr_phase_offset_degree', value)
+
     def enable_seq(self, sequencer):
         seq_nr = sequencer.seq_nr
         self.enable_sync(seq_nr, True)
@@ -84,7 +90,7 @@ class QbloxModule:
             self.enable_out(seq_nr, ch)
 
     def _sset(self, seq_nr, name, value):
-        full_name = f'sequencer{seq_nr}_{name}'
+        full_name = f'sequencer{seq_nr}.{name}'
         current = self._cache.get(full_name, None)
         if current == value and name not in self._dont_cache:
             if QbloxModule.verbose:

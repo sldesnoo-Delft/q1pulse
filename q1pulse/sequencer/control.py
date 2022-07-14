@@ -19,6 +19,8 @@ class ControlBuilder(SequenceBuilder):
         self.max_output_voltage = max_output_voltage
         self._nco_frequency = nco_frequency
         self._waves = WaveCollection()
+        self._mixer_gain_ratio = None
+        self._mixer_phase_offset_degree = None
 
     @property
     def nco_frequency(self):
@@ -27,6 +29,22 @@ class ControlBuilder(SequenceBuilder):
     @nco_frequency.setter
     def nco_frequency(self, value):
         self._nco_frequency = value
+
+    @property
+    def mixer_gain_ratio(self):
+        return self._mixer_gain_ratio
+
+    @mixer_gain_ratio.setter
+    def mixer_gain_ratio(self, value):
+        self._mixer_gain_ratio = value
+
+    @property
+    def mixer_phase_offset_degree(self):
+        return self._mixer_phase_offset_degree
+
+    @mixer_phase_offset_degree.setter
+    def mixer_phase_offset_degree(self, value):
+        self._mixer_phase_offset_degree = value
 
     def add_wave(self, name, data):
         return self._waves.add_wave(name, data)
