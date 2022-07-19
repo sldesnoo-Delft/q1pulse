@@ -3,7 +3,6 @@ Pulse sequence builder and compiler for Q1ASM.
 Q1Pulse is a simple library to compile pulse sequence to Q1ASM, the assembly language of Qblox instruments.
 Q1Pulse supports loops, variables and expressions that are translated to Q1ASM.
 
-The current status of Q1Pulse is quite experimental. Code may change without any backwards compatibility.
 
 This project has several goals:
 - create a driver to use in the backend of [pulse_lib](https://github.com/stephanlphilips/pulse_lib)
@@ -28,6 +27,9 @@ The following features of pulse_lib are **not** available in Q1Pulse:
 - DC compensation to discharge bias-T.
 - Bias-T compensation to compensate for high-pass filter.
 These features will be handled by pulse_lib when Q1Pulse is used as pulse_lib backend.
+
+The functionality of Q1Pulse can be tested and explored with
+[Q1Simulator](https://github.com/sldesnoo-Delft/q1simulator), a simulator of Q1ASM.
 
 # Q1Pulse API
 A Q1Pulse program is written in Python using the Q1Pulse API.
@@ -251,8 +253,8 @@ be used as such.
 
 
 ## Logging with Q1Simulator
-The `log` command can be used in combinator with Q1Simulator. This will output
-log messages on the console and can be useful when debugging the code.
+The `log` command can be used in combinator with [Q1Simulator](https://github.com/sldesnoo-Delft/q1simulator).
+This will output log messages on the console and can be useful when debugging the code.
 The log instruction is added in a comment line and will be ignored by the Pulsar.
 
     with p.loop_array([0.1, -0.2, 0.3, -0.4, 0.5, -0.6, 0.7]) as v:
