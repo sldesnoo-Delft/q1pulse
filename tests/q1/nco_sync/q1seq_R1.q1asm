@@ -14,9 +14,9 @@ seq_prog="""
 # --START-- (t=0) 
 _start:    move           0,R2       # L0004 R2: R._var0
            move           10000,R3   # L0005 R3: R._cnt0
-loop_0:    upd_param      120        # L0006 t=0
+loop_0:    upd_param      160        # L0006 t=0
 # acquire(default, increment) 
-           acquire        0,R1,49260 # L0007 t=120
+           acquire        0,R1,49220 # L0007 t=160
            add            R1,1,R1    # L0008 
            add            R2,1,R2    # L0009 
            loop           R3,@loop_0 # L0010 

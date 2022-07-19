@@ -1,0 +1,67 @@
+waveforms={
+    'block80':{
+        'data':
+            [  1.00000,  1.00000,  1.00000,  1.00000,  1.00000,  1.00000,
+               1.00000,  1.00000,  1.00000,  1.00000,  1.00000,  1.00000,
+               1.00000,  1.00000,  1.00000,  1.00000,  1.00000,  1.00000,
+               1.00000,  1.00000,  1.00000,  1.00000,  1.00000,  1.00000,
+               1.00000,  1.00000,  1.00000,  1.00000,  1.00000,  1.00000,
+               1.00000,  1.00000,  1.00000,  1.00000,  1.00000,  1.00000,
+               1.00000,  1.00000,  1.00000,  1.00000,  1.00000,  1.00000,
+               1.00000,  1.00000,  1.00000,  1.00000,  1.00000,  1.00000,
+               1.00000,  1.00000,  1.00000,  1.00000,  1.00000,  1.00000,
+               1.00000,  1.00000,  1.00000,  1.00000,  1.00000,  1.00000,
+               1.00000,  1.00000,  1.00000,  1.00000,  1.00000,  1.00000,
+               1.00000,  1.00000,  1.00000,  1.00000,  1.00000,  1.00000,
+               1.00000,  1.00000,  1.00000,  1.00000,  1.00000,  1.00000,
+               1.00000,  1.00000],
+        'index':0,
+        },
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           2,R1       # L0001 R1: _repetitions
+           wait_sync      4          # L0002 
+           reset_ph                  # L0003 @ 0
+# --START-- (t=0) 
+# R.wait:int = 20 
+_start:    move           20,R2      # L0004 R2: R.wait
+# loop_range(0, 4, 1):R._var0 t=0 
+           move           0,R3       # L0005 R3: R._var0
+           move           4,R4       # L0006 R4: R._cnt0
+loop_0:    upd_param      80         # L0007 t=0
+# shaped_pulse(block80, 0.1, None, None) 
+# awg_gain = 0.1, None t=80 
+           set_awg_gain   3276,0     # L0008 @ 80
+# play block80 None t=80 
+           play           0,0,100    # L0009 t=80
+# wait(R.wait) t=180 
+           move           R2,R5      # L0010 R5: _waittime
+#          --- check for negative wait time 
+#          --- emulate signed wait time 
+           nop                       # L0011  xor wait for R5
+           xor            R5,2147483648,R6 # L0012 temp ['R6']
+           nop                       # L0013  jge wait for R6
+           jge            R6,2147483652,@waitc1 # L0014 
+           illegal                   # L0015 negative wait time
+waitc1:    jlt            R5,65532,@endwait1 # L0016 
+wait1:     wait           65528      # L0017 
+           sub            R5,65528,R5 # L0018 
+           nop                       # L0019  jge wait for R5
+           jge            R5,65532,@wait1 # L0020 
+endwait1:  wait           R5         # L0021 
+# endloop t=180 
+           add            R3,1,R3    # L0022 
+           loop           R4,@loop_0 # L0023 
+# --END-- 
+           loop           R1,@_start # L0024 
+           upd_param      4          # L0025 t=180
+           stop                      # L0026 
+"""
+

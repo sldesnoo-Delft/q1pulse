@@ -1,0 +1,49 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           0,R0       # L0001 R0: always 0 register
+           wait_sync      4          # L0002 
+           reset_ph                  # L0003 @ 0
+# --START-- (t=0) 
+# loop_linspace(-0.16, 0.16, 5):R._var0 t=0 
+_start:    move           3951369912,R1 # L0004 R1: R._var0
+           move           5,R2       # L0005 R2: R._cnt0
+# loop_linspace(-0.8, 0.8, 5):R._var1 t=0 
+loop_0:    move           2576980377,R3 # L0006 R3: R._var1
+           move           5,R4       # L0007 R4: R._cnt1
+# block_pulse(500, R._var0, None) 
+# awg_offset = R._var0, None t=0 
+loop_1:    asr            R1,16,R5   # L0008 temp R5
+           nop                       # L0009  set_awg_offs wait for R5
+           set_awg_offs   R5,R0      # L0010 @ 0
+           upd_param      500        # L0011 t=0
+# awg_offset = 0.0, None t=500 
+# ------:  set_awg_offs   0,0        # @ 500 = overwritten =
+# block_pulse(500, R._var0, None) 
+# awg_offset = R._var0, None t=500 
+           asr            R1,16,R5   # L0012 temp R5
+# -- Overwrites set_awg_offs at 500 -- 
+           nop                       # L0013  set_awg_offs wait for R5
+           set_awg_offs   R5,R0      # L0014 @ 500
+           upd_param      500        # L0015 t=500
+# awg_offset = 0.0, None t=1000 
+           set_awg_offs   0,0        # L0016 @ 1000
+           upd_param      1100       # L0017 t=1000
+# endloop t=2100 
+           add            R3,858993459,R3 # L0018 
+           loop           R4,@loop_1 # L0019 
+# endloop t=2100 
+           add            R1,171798691,R1 # L0020 
+           loop           R2,@loop_0 # L0021 
+           upd_param      4          # L0022 t=2100
+# --END-- 
+           stop                      # L0023 
+"""
+
