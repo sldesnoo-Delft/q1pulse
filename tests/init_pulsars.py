@@ -43,9 +43,10 @@ _use_simulator = True
 _use_dummy = False
 _use_cluster = False
 
-with PlugAndPlay() as p:
-    p.print_devices()
-#    pprint(p.list_devices())
+if not _use_simulator and not _use_dummy:
+    with PlugAndPlay() as p:
+        p.print_devices()
+    #    pprint(p.list_devices())
 
 if _use_cluster:
     try:
