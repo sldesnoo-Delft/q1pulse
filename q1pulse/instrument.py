@@ -26,6 +26,7 @@ class Q1Instrument:
         self.modules = {}
         self.controllers = {}
         self.readouts = {}
+        self._loaded_q1asm = {}
         SequenceBuilder.add_traceback_to_instructions = add_traceback
 
     def add_pulsar(self, pulsar):
@@ -87,12 +88,13 @@ class Q1Instrument:
         for name,seq in sequencers.items():
             module = self.modules[seq.module_name]
 
-            prog_dict = program.q1asm(name)
-            if prog_dict is None:
+            q1asm = program.q1asm(name)
+            self._loaded_q1asm[name] = q1asm
+            if q1asm is None:
                 module.disable_seq(seq)
                 logging.info(f'Sequencer {name} no sequence')
                 continue
-            module.upload(seq.seq_nr, prog_dict)
+            module.upload(seq.seq_nr, q1asm)
             t = (time.perf_counter() - t_start) * 1000
             logging.info(f'Sequencer {name} loaded ({t:5.3f} ms)')
 
@@ -148,8 +150,12 @@ class Q1Instrument:
 
     def get_acquisition_bins(self, sequencer_name, bins):
         seq = self.readouts[sequencer_name]
+        q1asm = self._loaded_q1asm[sequencer_name]
+        if q1asm is None or len(q1asm['acquisitions']) == 0:
+            logging.warning(f'No acquisitions for {sequencer_name}')
+            return None
         module = self.modules[seq.module_name]
-        state = module.pulsar.get_acquisition_state(seq.seq_nr, 1) # TOOD @@@ check if any bins...; handle timeout
+        state = module.pulsar.get_acquisition_state(seq.seq_nr, 1)
         logging.info(f'Acquisition status {sequencer_name} ({module.pulsar.name}:'
                      f'{seq.seq_nr}): {state}')
         return module.pulsar.get_acquisitions(seq.seq_nr)[bins]['acquisition']['bins']
