@@ -25,7 +25,6 @@ class QbloxModule:
         self.pulsar = pulsar
         self._allocated_seq = 0
         self._cache = {}
-        self._dont_cache = []
         self.disable_all_out()
         # disable all sequencers
         for seq_nr in range(0, self.n_sequencers):
@@ -54,9 +53,14 @@ class QbloxModule:
                 path = out % 2
                 self._sset(seq_nr, f'channel_map_path{path}_out{out}_en', False)
 
-    def upload(self, seq_nr, filename):
-#        print(f'Loading {filename} to sequencer {self.pulsar.name}:{seq_nr}')
-        self._sset(seq_nr, 'sequence', filename)
+    def upload(self, seq_nr, sequence):
+        if isinstance(sequence, str):
+            # don't cache sequence. The contents of the file might have changed.
+            filename = sequence
+            # print(f'Loading {filename} to sequencer {self.pulsar.name}:{seq_nr}')
+            self._sset(seq_nr, 'sequence', filename, cache=False)
+        else:
+            self._sset(seq_nr, 'sequence', sequence)
 
     def arm_sequencer(self, seq_nr):
         self.pulsar.arm_sequencer(seq_nr)
@@ -89,10 +93,10 @@ class QbloxModule:
         for ch in sequencer.channels:
             self.enable_out(seq_nr, ch)
 
-    def _sset(self, seq_nr, name, value):
+    def _sset(self, seq_nr, name, value, cache=True):
         full_name = f'sequencer{seq_nr}.{name}'
         current = self._cache.get(full_name, None)
-        if current == value and name not in self._dont_cache:
+        if cache and current == value:
             if QbloxModule.verbose:
                 logging.debug(f'# {full_name}={value} -- cached')
             return
@@ -161,7 +165,6 @@ class QrmModule(QbloxModule):
     def __init__(self, pulsar):
         super().__init__(pulsar)
         self.max_output_voltage = 0.5 if not pulsar.is_rf_type else 3.3
-        self._dont_cache += ['sequence']
 
     def _get_seq_paths(self, channels):
         if len(channels) == 1:
@@ -174,9 +177,6 @@ class QrmModule(QbloxModule):
                 raise Exception(f'illegal channel combination {channels}')
 
         return channels
-
-    def seq_configure(self, sequencer):
-        super().seq_configure(sequencer)
 
     def phase_rotation_acq(self, seq_nr, phase_rotation):
         self._sset(seq_nr, 'phase_rotation_acq', phase_rotation)
@@ -191,3 +191,6 @@ class QrmModule(QbloxModule):
         super().set_nco(seq_nr, nco_frequency)
         self._sset(seq_nr, 'demod_en_acq', nco_frequency is not None)
 
+    def upload(self, seq_nr, sequence):
+        # Don't cache upload or QRM. Upload is required to clear acquisition memory
+        self._sset(seq_nr, 'sequence', sequence, cache=False)

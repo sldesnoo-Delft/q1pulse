@@ -127,12 +127,17 @@ def register_args(signature):
 
 class Q1asmGenerator(InstructionQueue, GeneratorBase):
     def __init__(self, add_comments=False, list_registers=True,
-                 line_numbers=True, comment_arg_conversions=False):
+                 line_numbers=True, comment_arg_conversions=False,
+                 listing=False, json_output=False, filename=None):
         super().__init__()
         self.add_comments = add_comments
         self._list_registers = list_registers
         self._line_numbers = line_numbers
         self._show_arg_conversions = comment_arg_conversions
+        self._listing = listing
+        self._json_output = json_output
+        self._filename = filename
+        self.q1asm = None
         self._repetitions = 1
         self._last_rt_settings = {}
         self._data = GeneratorData()
@@ -622,14 +627,22 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             lines += [line]
         return lines
 
-    def q1asm_prog(self, skip_comment_lines=False, compact=False):
+    def assemble(self):
+        d = self._data.get_data_dict()
+        d['program'] = self._q1asm_prog(skip_comment_lines=True, compact=True)
+        self.q1asm = d
+        if self._listing:
+            self._save_prog_and_data_txt(self._filename.replace('.json','.q1asm'))
+        if self._json_output:
+            self._save_prog_and_data_json(self._filename)
+
+
+    def _q1asm_prog(self, skip_comment_lines=False, compact=False):
         return '\n'.join(self.q1asm_lines(skip_comment_lines, compact))
 
-    def save_prog_and_data_json(self, filename):
-        d = self._data.get_data_dict()
-        d['program'] = self.q1asm_prog(skip_comment_lines=True, compact=True)
+    def _save_prog_and_data_json(self, filename):
         with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(d, f, indent=None)
+            json.dump(self.q1asm, f, indent=None, separators=(',', ':'))
 
     def _pprint_data(self, data_dict, f):
         prefix = ' '*12
@@ -649,7 +662,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             f.write(f'        }},\n')
         f.write('    }\n\n')
 
-    def save_prog_and_data_txt(self, filename):
+    def _save_prog_and_data_txt(self, filename):
         d = self._data.get_data_dict()
         with open(filename, 'w', encoding='utf-8') as f:
             f.write('waveforms=')
@@ -660,7 +673,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             pprint(d['acquisitions'], f)
             f.write('\n')
             f.write(f'seq_prog="""\n')
-            f.write(self.q1asm_prog())
+            f.write(self._q1asm_prog())
             f.write('\n"""\n\n')
 
     def _format_waveforms(self, waveforms):

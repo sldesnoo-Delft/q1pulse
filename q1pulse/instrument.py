@@ -84,10 +84,14 @@ class Q1Instrument:
         for name,seq in sequencers.items():
             module = self.modules[seq.module_name]
 
-            filename = program.seq_filename(name)
-            module.upload(seq.seq_nr, filename)
+#            filename = program.seq_filename(name)
+#            module.upload(seq.seq_nr, filename)
+#            t = (time.perf_counter() - t_start) * 1000
+#            logging.info(f'Sequencer {name} loaded {filename} ({t:5.3f} ms)')
+            prog_dict = program.q1asm(name)
+            module.upload(seq.seq_nr, prog_dict)
             t = (time.perf_counter() - t_start) * 1000
-            logging.info(f'Sequencer {name} loaded {filename} ({t:5.3f} ms)')
+            logging.info(f'Sequencer {name} loaded ({t:5.3f} ms)')
             module.enable_seq(seq)
             prog_seq = program[name]
             module.set_nco(seq.seq_nr, prog_seq.nco_frequency)

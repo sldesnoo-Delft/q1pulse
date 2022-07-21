@@ -18,6 +18,7 @@ class Program:
         os.makedirs(self.path, exist_ok=True)
         self.R = Registers(self, local=False)
         self.repetitions = 1
+        self._q1asm = {}
         self._loop_cnt = 0
         # shared timeline for all sequencers
         self._timeline = Timeline()
@@ -40,21 +41,24 @@ class Program:
     def seq_filename(self, name):
         return os.path.join(self.path, f'q1seq_{name}.json')
 
-    def compile(self, verbose=False, annotate=False, add_comments=True, listing=False):
+    def compile(self, annotate=False, add_comments=True,
+                listing=False, json=True):
+        # store compiled sequences
+        self._q1asm = {}
+
         for builder in self.sequence_builders.values():
             filename = self.seq_filename(builder.name)
-            g = Q1asmGenerator(add_comments=add_comments)
+            g = Q1asmGenerator(add_comments=add_comments,
+                               listing=listing,
+                               json_output=json,
+                               filename=filename)
             g.repetitions = self.repetitions
             builder.compile(g, annotate=annotate)
+            g.assemble()
+            self._q1asm[builder.name] = g.q1asm
 
-            if verbose:
-                print(f'seq_{builder.name}="""')
-                print(g.q1asm_prog())
-                print('"""')
-                print()
-            if listing:
-                g.save_prog_and_data_txt(filename.replace('.json','.q1asm'))
-            g.save_prog_and_data_json(filename)
+    def q1asm(self, name):
+        return self._q1asm[name]
 
     def _add_statement(self, statement, init_section=False):
         if not isinstance(statement, RegisterAssignment):
