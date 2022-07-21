@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.4.2] - 2022-07-21
+
+### Changed
+- Improved performance: use dict argument to set sequence.
+- Improved performance: disable sequencers without meaningful sequence.
+
 ## \[0.4.1] - 2022-07-19
 
 ### Added
