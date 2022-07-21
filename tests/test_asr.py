@@ -23,7 +23,7 @@ p.R.h = -9 >> 1     # Python evaluation
 
 seq.describe()
 
-p.compile(annotate=True, listing=True, verbose=True)
+p.compile(annotate=True, listing=True, verbose=True, optimize=0)
 
 instrument.run_program(p)
 

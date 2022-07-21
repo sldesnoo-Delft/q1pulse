@@ -74,24 +74,28 @@ class Q1Instrument:
         return program
 
     def run_program(self, program):
+        self.start_program(program)
+        self.wait_stopped()
+
+    def start_program(self, program):
         t_start = time.perf_counter()
 
         for instrument in self.root_instruments:
             check_instrument_status(instrument)
 
-        # @@@ replace by program sequence builders, i.s.o. all available..
         sequencers = { **self.controllers, **self.readouts }
         for name,seq in sequencers.items():
             module = self.modules[seq.module_name]
 
-#            filename = program.seq_filename(name)
-#            module.upload(seq.seq_nr, filename)
-#            t = (time.perf_counter() - t_start) * 1000
-#            logging.info(f'Sequencer {name} loaded {filename} ({t:5.3f} ms)')
             prog_dict = program.q1asm(name)
+            if prog_dict is None:
+                module.disable_seq(seq)
+                logging.info(f'Sequencer {name} no sequence')
+                continue
             module.upload(seq.seq_nr, prog_dict)
             t = (time.perf_counter() - t_start) * 1000
             logging.info(f'Sequencer {name} loaded ({t:5.3f} ms)')
+
             module.enable_seq(seq)
             prog_seq = program[name]
             module.set_nco(seq.seq_nr, prog_seq.nco_frequency)
@@ -103,29 +107,29 @@ class Q1Instrument:
         for name,seq in self.readouts.items():
             readout = program[name]
             module = self.modules[seq.module_name]
+            if not module.enabled(seq.seq_nr):
+                continue
             module.phase_rotation_acq(seq.seq_nr, readout.phase_rotation_acq)
             module.discretization_threshold_acq(seq.seq_nr, readout.discretization_threshold_acq)
             module.integration_length_acq(seq.seq_nr, int(readout.integration_length_acq))
 
-        for name,seq in sequencers.items():
-            module = self.modules[seq.module_name]
-            module.arm_sequencer(seq.seq_nr)
-#            t = (time.perf_counter() - t_start) * 1000
-#            state = module.get_sequencer_state(seq.seq_nr, 0)
-#            logging.debug(f'ARM Status {name} ({module.pulsar.name}:{seq.seq_nr}):'
-#                          f'{state} ({t:5.3f}ms)')
-
         for module in self.modules.values():
-            module.pulsar.start_sequencer()
+            module.arm_sequencers()
+            module.start_sequencers()
 
         t = (time.perf_counter() - t_start) * 1000
         logging.info(f'Duration upload/start: ({t:5.3f}ms)')
+
+    def wait_stopped(self, timeout_minutes=1):
         # Wait for completion
         errors = {}
         msg_level = 0
+        sequencers = { **self.controllers, **self.readouts }
         for name,seq in sequencers.items():
             module = self.modules[seq.module_name]
-            state = module.get_sequencer_state(seq.seq_nr, 1)
+            if not module.enabled(seq.seq_nr):
+                continue
+            state = module.get_sequencer_state(seq.seq_nr, timeout_minutes)
             logging.log(state.level,
                         f'Status {name} ({module.pulsar.name}:{seq.seq_nr}):'
                          f'{state}')
@@ -138,17 +142,14 @@ class Q1Instrument:
                 logging.error(f'  {name}: {state}')
             raise Exception(f'Q1 failures (see logging):\n {errors}')
 
-
         for name,seq in sequencers.items():
             module = self.modules[seq.module_name]
-            #Stop sequencer.
-            module.pulsar.stop_sequencer()
-
+            module.stop_sequencers()
 
     def get_acquisition_bins(self, sequencer_name, bins):
         seq = self.readouts[sequencer_name]
         module = self.modules[seq.module_name]
-        state = module.pulsar.get_acquisition_state(seq.seq_nr, 1)
+        state = module.pulsar.get_acquisition_state(seq.seq_nr, 1) # TOOD @@@ check if any bins...; handle timeout
         logging.info(f'Acquisition status {sequencer_name} ({module.pulsar.name}:'
                      f'{seq.seq_nr}): {state}')
         return module.pulsar.get_acquisitions(seq.seq_nr)[bins]['acquisition']['bins']
@@ -165,6 +166,7 @@ class Q1Instrument:
                 1.0 * 10**(-dB/20)
                 for dB in [in0_gain, in1_gain])
         return in_range
+
 
 def check_instrument_status(instrument, print_status=False):
     sys_state = instrument.get_system_state()

@@ -62,8 +62,20 @@ class QbloxModule:
         else:
             self._sset(seq_nr, 'sequence', sequence)
 
-    def arm_sequencer(self, seq_nr):
-        self.pulsar.arm_sequencer(seq_nr)
+    def arm_sequencers(self):
+        for seq_nr in range(0, self.n_sequencers):
+            if self.enabled(seq_nr):
+                self.pulsar.arm_sequencer(seq_nr)
+
+    def start_sequencers(self):
+        any_enabled = False
+        for seq_nr in range(0, self.n_sequencers):
+            any_enabled = any_enabled or self.enabled(seq_nr)
+        if any_enabled:
+            self.pulsar.start_sequencer()
+
+    def stop_sequencers(self):
+        self.pulsar.stop_sequencer()
 
     def get_sequencer_state(self, seq_nr, timeout=0):
         state = self.pulsar.get_sequencer_state(seq_nr, timeout)
@@ -86,6 +98,14 @@ class QbloxModule:
 
     def set_mixer_phase_offset_degree(self, seq_nr, value):
         self._sset(seq_nr, 'mixer_corr_phase_offset_degree', value)
+
+    def enabled(self, seq_nr):
+        full_name = f'sequencer{seq_nr}.sync_en'
+        return self._cache.get(full_name)
+
+    def disable_seq(self, sequencer):
+        seq_nr = sequencer.seq_nr
+        self.enable_sync(seq_nr, False)
 
     def enable_seq(self, sequencer):
         seq_nr = sequencer.seq_nr

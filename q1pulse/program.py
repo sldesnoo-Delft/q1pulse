@@ -42,7 +42,7 @@ class Program:
         return os.path.join(self.path, f'q1seq_{name}.json')
 
     def compile(self, annotate=False, add_comments=True,
-                listing=False, json=True):
+                listing=False, json=True, optimize=1):
         # store compiled sequences
         self._q1asm = {}
 
@@ -51,7 +51,8 @@ class Program:
             g = Q1asmGenerator(add_comments=add_comments,
                                listing=listing,
                                json_output=json,
-                               filename=filename)
+                               filename=filename,
+                               optimize=optimize)
             g.repetitions = self.repetitions
             builder.compile(g, annotate=annotate)
             g.assemble()

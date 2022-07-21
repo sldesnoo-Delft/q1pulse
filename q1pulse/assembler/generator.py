@@ -1,4 +1,5 @@
 import json
+import logging
 from pprint import pprint
 from numbers import Number
 import numpy as np
@@ -128,7 +129,8 @@ def register_args(signature):
 class Q1asmGenerator(InstructionQueue, GeneratorBase):
     def __init__(self, add_comments=False, list_registers=True,
                  line_numbers=True, comment_arg_conversions=False,
-                 listing=False, json_output=False, filename=None):
+                 listing=False, json_output=False, filename=None,
+                 optimize=1):
         super().__init__()
         self.add_comments = add_comments
         self._list_registers = list_registers
@@ -137,6 +139,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         self._listing = listing
         self._json_output = json_output
         self._filename = filename
+        self._optimize = optimize
         self.q1asm = None
         self._repetitions = 1
         self._last_rt_settings = {}
@@ -159,6 +162,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         self._add_rt_command('wait_sync', time=0)
         self._reset_time()
         self.reset_phase(0)
+        self._n_rt_instr = 0
         self.add_comment('--START-- (t=0)')
         self.set_label('_start')
         self.block_start()
@@ -628,14 +632,18 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         return lines
 
     def assemble(self):
-        d = self._data.get_data_dict()
-        d['program'] = self._q1asm_prog(skip_comment_lines=True, compact=True)
-        self.q1asm = d
         if self._listing:
             self._save_prog_and_data_txt(self._filename.replace('.json','.q1asm'))
-        if self._json_output:
-            self._save_prog_and_data_json(self._filename)
-
+        if self._optimize > 0 and self._n_rt_instr == 0:
+            # no RT instructions (ohter than reset_ph): program does nothing
+            logging.debug('No RT statements')
+            self.q1asm = None
+        else:
+            d = self._data.get_data_dict()
+            d['program'] = self._q1asm_prog(skip_comment_lines=True, compact=True)
+            self.q1asm = d
+            if self._json_output:
+                self._save_prog_and_data_json(self._filename)
 
     def _q1asm_prog(self, skip_comment_lines=False, compact=False):
         return '\n'.join(self.q1asm_lines(skip_comment_lines, compact))
