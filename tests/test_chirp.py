@@ -27,7 +27,7 @@ add_chirp(10000, -10e6, 10e6, 0.5, qs)
 p.describe()
 print()
 
-p.compile(verbose=True, listing=True, annotate=True)
+p.compile(listing=True, annotate=True)
 
 instrument.run_program(p)
 

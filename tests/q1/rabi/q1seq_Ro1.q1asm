@@ -29,8 +29,8 @@ wait1:     wait           65528      # L0014
            nop                       # L0016  jge wait for R4
            jge            R4,65532,@wait1 # L0017 
 endwait1:  wait           R4         # L0018 
-# block_pulse(600, 0.1, None) 
-           set_awg_offs   3276,0     # L0019 @ 420
+# block_pulse(600, 0.5, None) 
+           set_awg_offs   16383,0    # L0019 @ 420
            wait           200        # L0020 
            upd_param      600        # L0021 t=420
            set_awg_offs   0,0        # L0022 @ 1020

@@ -27,7 +27,7 @@ v_init = [0.120, 0.040]
 v_manip = [0.0, 0.0]
 v_read = [-0.030, 0.060]
 t_pulse = 80
-v_pulse = 0.8
+v_pulse = 0.5
 
 R1.reset_bin_counter('q1value')
 with p.loop_range(100, 2001, 100) as t_wait:

@@ -30,7 +30,7 @@ R1.integration_length_acq = 80
 
 amplitude = 0.125
 
-q1.shaped_pulse(gauss80, 0.5, gauss80, 0.5)
+q1.shaped_pulse(gauss80, 0.4, gauss80, 0.4)
 p.wait(20)
 P1.shaped_pulse(tukey100, 0.1)
 p.wait(20)
