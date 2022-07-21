@@ -2,7 +2,6 @@ import logging
 from dataclasses import dataclass
 from typing import List, Optional
 from abc import abstractmethod
-from functools import wraps
 
 from .sequencer_states import translate_seq_state
 
