@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.4.3] - 2022-08-16
+
+### Added
+- Added state flag "SEQUENCE PROCESSOR RT EXEC COMMAND UNDERFLOW"
+
+### Fixed
+- Slow ramps around 1 LSB per 100 ns.
+
 ## \[0.4.2] - 2022-07-21
 
 ### Changed
