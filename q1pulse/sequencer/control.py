@@ -149,10 +149,11 @@ class ControlBuilder(SequenceBuilder):
             raise Q1TypeError('Ramp duration cannot be a variable or expression; '
                               'Unroll loop using Python for-loop.')
 
+        ramp_loop_time = 100
         self.add_comment(f'ramp({duration}, {v_start}, {v_end})')
         with self._local_timeline(t_offset=t_offset, duration=duration):
             # w_ramp is a wave from 0 to 1.0
-            if duration <= 100:
+            if duration <= ramp_loop_time:
                 w_ramp = self._waves.get_ramp(duration)
                 self.set_gain(v_end - v_start)
                 self.set_offset(v_start)
@@ -160,7 +161,7 @@ class ControlBuilder(SequenceBuilder):
                 self.wait(duration)
             elif (isinstance(v_start, (Register, Expression))
                   or isinstance(v_end, (Register, Expression))):
-                # divide duration till smallest multiple of 4 larger than or equal to 200
+                # divide duration till smallest multiple of 4 larger than or equal to 100
                 shift = 0
                 wave_duration = duration
                 while wave_duration > 200 and wave_duration % 8 == 0:
@@ -178,28 +179,34 @@ class ControlBuilder(SequenceBuilder):
                     self.Rs._ramp_offset += self.Rs._ramp_step
                     self.wait(wave_duration)
             else:
-                step = (v_end - v_start) * 100 / duration
+                step = (v_end - v_start) * ramp_loop_time / duration
                 # step is a fixed point value in q1asm.  Resolution is 1/65536 of LSB output.
-                # Gain range: -1/32768 ... +1/32768
-                if abs(step) > 1/(2**15):
+                lsb = 1/(2**15)
+                if abs(step) > lsb:
+                    gain = step
+                    min_lsb_steps = 2**6
+                    if abs(step) < lsb*min_lsb_steps:
+                        # decrease ramp, increase gain for better accuracy
+                        w_ramp = self._waves.get_ramp(ramp_loop_time, stop=1/min_lsb_steps)
+                        gain = step * min_lsb_steps
+                    else:
+                        w_ramp = self._waves.get_ramp(ramp_loop_time)
                     # divmod, but with rem [1,100], and n > 1
-                    n, rem = divmod(duration-1, 100)
+                    n, rem = divmod(duration-1, ramp_loop_time)
                     rem += 1
-                    w_ramp = self._waves.get_ramp(100)
                     self.Rs._ramp_offset = v_start
-
-                    self.set_gain(step)
+                    self.set_gain(gain)
                     with self._seq_repeat(n):
                         self.set_offset(self.Rs._ramp_offset)
                         self.play(w_ramp)
                         self.Rs._ramp_offset += step
-                        self.wait(100)
+                        self.wait(ramp_loop_time)
                     self.set_offset(self.Rs._ramp_offset)
                     self.play(w_ramp)
                     self.wait(rem)
                 else:
                     # steps of 1 LSB
-                    min_step = 1/(2**16)
+                    min_step = lsb
                     n_steps = int(abs(v_end - v_start) / min_step)
                     # minimum time multiple of 4 ns
                     t_step = int(duration / n_steps)

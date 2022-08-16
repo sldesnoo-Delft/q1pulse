@@ -1,0 +1,46 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           2,R1       # L0001 R1: _repetitions
+           move           0,R0       # L0002 R0: always 0 register
+           wait_sync      4          # L0003 
+           reset_ph                  # L0004 @ 0
+# --START-- (t=0) 
+# ramp(6580, -0.001, 0.001) 
+# Rs._ramp_offset:float = -0.001 
+_start:    move           4292819812,R2 # L0005 R2: Rs._ramp_offset
+# repeat(65): t=0 
+           move           65,R3      # L0006 R3: Rs._cnt0
+# awg_offset = Rs._ramp_offset, None t=0 
+local_0:   asr            R2,16,R4   # L0007 temp R4
+           nop                       # L0008  set_awg_offs wait for R4
+           set_awg_offs   R4,R0      # L0009 @ 0
+           upd_param      100        # L0010 t=0
+# Rs._ramp_offset:float = Rs._ramp_offset + 3.0395136778115502e-05 
+           add            R2,65273,R2 # L0011 
+# endloop t=100 
+           loop           R3,@local_0 # L0012 
+#     --- loop duration: 6500 
+# awg_offset = Rs._ramp_offset, None t=6500 
+           asr            R2,16,R3   # L0013 temp R3
+           nop                       # L0014  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0015 @ 6500
+           upd_param      80         # L0016 t=6500
+# awg_offset = 0.0, None t=6580 
+           set_awg_offs   0,0        # L0017 @ 6580
+# awg_gain = 0.0, None t=6580 
+           set_awg_gain   0,0        # L0018 @ 6580
+           upd_param      100        # L0019 t=6580
+# --END-- 
+           loop           R1,@_start # L0020 
+           upd_param      4          # L0021 t=6680
+           stop                      # L0022 
+"""
+
