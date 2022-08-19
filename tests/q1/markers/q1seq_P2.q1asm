@@ -10,11 +10,11 @@ seq_prog="""
 # --INIT-- 
            move           1000,R1    # L0001 R1: _repetitions
            wait_sync      4          # L0002 
-           reset_ph                  # L0003 @ 0
 # --START-- (t=0) 
+_start:    reset_ph                  # L0003 @ 0
 # block_pulse(20, -0.5, None) 
 # awg_offset = -0.5, None t=0 
-_start:    set_awg_offs   -16384,0   # L0004 @ 0
+           set_awg_offs   -16384,0   # L0004 @ 0
            upd_param      20         # L0005 t=0
 # awg_offset = 0.0, None t=20 
            set_awg_offs   0,0        # L0006 @ 20

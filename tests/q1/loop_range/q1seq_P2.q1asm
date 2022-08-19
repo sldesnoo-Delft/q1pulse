@@ -10,9 +10,9 @@ seq_prog="""
 # --INIT-- 
            move           3,R1       # L0001 R1: _repetitions
            wait_sync      4          # L0002 
-           reset_ph                  # L0003 @ 0
 # --START-- (t=0) 
-_start:    upd_param      200        # L0004 t=0
+_start:    reset_ph                  # L0003 @ 0
+           upd_param      200        # L0004 t=0
 # loop_range(20, 100, 20):R._var0 t=200 
            move           20,R2      # L0005 R2: R._var0
            move           4,R3       # L0006 R3: R._cnt0

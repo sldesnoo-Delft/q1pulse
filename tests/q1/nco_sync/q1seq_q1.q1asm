@@ -9,9 +9,9 @@ acquisitions={}
 seq_prog="""
 # --INIT-- 
            wait_sync      4          # L0001 
-           reset_ph                  # L0002 @ 0
 # --START-- (t=0) 
-_start:    move           0,R1       # L0003 R1: R._var0
+_start:    reset_ph                  # L0002 @ 0
+           move           0,R1       # L0003 R1: R._var0
            move           10000,R2   # L0004 R2: R._cnt0
 loop_0:    upd_param      49380      # L0005 t=0
            add            R1,1,R1    # L0006 

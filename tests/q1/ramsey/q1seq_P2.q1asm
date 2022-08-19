@@ -39,10 +39,10 @@ seq_prog="""
 # --INIT-- 
            move           2,R1       # L0001 R1: _repetitions
            wait_sync      4          # L0002 
-           reset_ph                  # L0003 @ 0
 # --START-- (t=0) 
+_start:    reset_ph                  # L0003 @ 0
 # loop_range(100, 2001, 100):R._var0 t=0 
-_start:    move           100,R2     # L0004 R2: R._var0
+           move           100,R2     # L0004 R2: R._var0
            move           20,R3      # L0005 R3: R._cnt0
 # block_pulse(200, 0.04, None) 
 # awg_offset = None, 0.04 t=0 

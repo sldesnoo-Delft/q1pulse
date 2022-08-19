@@ -2749,9 +2749,9 @@ acquisitions={}
 seq_prog="""
 # --INIT-- 
            wait_sync      4          # L0001 
-           reset_ph                  # L0002 @ 0
 # --START-- (t=0) 
-_start:    upd_param      200        # L0003 t=0
+_start:    reset_ph                  # L0002 @ 0
+           upd_param      200        # L0003 t=0
 # shaped_pulse(chirp_I0, 0.5, chirp_Q0, 0.5) 
 # awg_gain = 0.5, 0.5 t=200 
            set_awg_gain   16383,16383 # L0004 @ 200

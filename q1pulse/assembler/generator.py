@@ -161,11 +161,11 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
     def start_main(self):
         self._add_rt_command('wait_sync', time=0)
         self._reset_time()
-        self.reset_phase(0)
-        self._n_rt_instr = 0
         self.add_comment('--START-- (t=0)')
         self.set_label('_start')
         self.block_start()
+        self.reset_phase(0)
+        self._n_rt_instr = 0
 
         if self._repetitions > 1:
             self.repetitions_reg = self.allocate_reg('_repetitions')

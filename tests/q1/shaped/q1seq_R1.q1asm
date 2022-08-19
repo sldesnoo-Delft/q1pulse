@@ -12,9 +12,9 @@ seq_prog="""
 # Rs._bin_acq_bins:int = 0 
            move           0,R1       # L0002 R1: Rs._bin_acq_bins
            wait_sync      4          # L0003 
-           reset_ph                  # L0004 @ 0
 # --START-- (t=0) 
-_start:    upd_param      340        # L0005 t=0
+_start:    reset_ph                  # L0004 @ 0
+           upd_param      340        # L0005 t=0
 # acquire(acq_bins, increment) 
 # acquire(bins=acq_bins, bin=Rs._bin_acq_bins) t=340 
            acquire        0,R1,100   # L0006 t=340

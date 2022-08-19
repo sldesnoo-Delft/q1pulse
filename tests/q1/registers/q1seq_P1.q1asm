@@ -9,9 +9,9 @@ acquisitions={}
 seq_prog="""
 # --INIT-- 
            wait_sync      4          # L0001 
-           reset_ph                  # L0002 @ 0
 # --START-- (t=0) 
-_start:    upd_param      1000       # L0003 t=0
+_start:    reset_ph                  # L0002 @ 0
+           upd_param      1000       # L0003 t=0
 # awg_offset = 0.0, None t=1000 
            set_awg_offs   0,0        # L0004 @ 1000
            upd_param      4          # L0005 t=1000

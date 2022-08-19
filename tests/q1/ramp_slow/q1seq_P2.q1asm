@@ -32,11 +32,11 @@ seq_prog="""
            move           2,R1       # L0001 R1: _repetitions
            move           0,R0       # L0002 R0: always 0 register
            wait_sync      4          # L0003 
-           reset_ph                  # L0004 @ 0
 # --START-- (t=0) 
+_start:    reset_ph                  # L0004 @ 0
 # ramp(6580, -0.00101, 0.00101) 
 # Rs._ramp_offset:float = -0.00101 
-_start:    move           4292798337,R2 # L0005 R2: Rs._ramp_offset
+           move           4292798337,R2 # L0005 R2: Rs._ramp_offset
 # awg_gain = None, 0.0019647416413373863 t=0 
            set_awg_gain   0,64       # L0006 @ 0
 # repeat(65): t=0 

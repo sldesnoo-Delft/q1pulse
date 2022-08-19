@@ -45,11 +45,11 @@ seq_prog="""
            move           2,R1       # L0001 R1: _repetitions
            move           0,R0       # L0002 R0: always 0 register
            wait_sync      4          # L0003 
-           reset_ph                  # L0004 @ 0
 # --START-- (t=0) 
+_start:    reset_ph                  # L0004 @ 0
 # block_pulse(40, -0.25, None) 
 # awg_offset = -0.25, None t=0 
-_start:    set_awg_offs   -8192,0    # L0005 @ 0
+           set_awg_offs   -8192,0    # L0005 @ 0
            upd_param      40         # L0006 t=0
 # awg_offset = 0.0, None t=40 
            set_awg_offs   0,0        # L0007 @ 40

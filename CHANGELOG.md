@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.4.4] - 2022-08-19
+
+### Fixed
+- Phase reset for sequence repetition
+
 ## \[0.4.3] - 2022-08-16
 
 ### Added

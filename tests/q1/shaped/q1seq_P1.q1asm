@@ -31,9 +31,9 @@ seq_prog="""
 # --INIT-- 
            move           2,R1       # L0001 R1: _repetitions
            wait_sync      4          # L0002 
-           reset_ph                  # L0003 @ 0
 # --START-- (t=0) 
-_start:    upd_param      100        # L0004 t=0
+_start:    reset_ph                  # L0003 @ 0
+           upd_param      100        # L0004 t=0
 # shaped_pulse(tukey100, 0.1, None, None) 
 # awg_gain = 0.1, None t=100 
            set_awg_gain   3276,0     # L0005 @ 100

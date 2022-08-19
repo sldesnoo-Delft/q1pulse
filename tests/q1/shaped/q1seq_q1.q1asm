@@ -28,11 +28,11 @@ seq_prog="""
 # --INIT-- 
            move           2,R1       # L0001 R1: _repetitions
            wait_sync      4          # L0002 
-           reset_ph                  # L0003 @ 0
 # --START-- (t=0) 
+_start:    reset_ph                  # L0003 @ 0
 # shaped_pulse(gauss80, 0.4, gauss80, 0.4) 
 # awg_gain = 0.4, 0.4 t=0 
-_start:    set_awg_gain   13107,13107 # L0004 @ 0
+           set_awg_gain   13107,13107 # L0004 @ 0
 # play gauss80 gauss80 t=0 
            play           0,0,220    # L0005 t=0
 # shaped_pulse(gauss80, 0.125, gauss80, 0.125) 

@@ -63,10 +63,10 @@ seq_prog="""
            move           2,R1       # L0001 R1: _repetitions
            move           0,R0       # L0002 R0: always 0 register
            wait_sync      4          # L0003 
-           reset_ph                  # L0004 @ 0
 # --START-- (t=0) 
+_start:    reset_ph                  # L0004 @ 0
 # R.v_ramp1:float = 0.2 
-_start:    move           429496729,R2 # L0005 R2: R.v_ramp1
+           move           429496729,R2 # L0005 R2: R.v_ramp1
 # block_pulse(100, -0.1, None) 
 # awg_offset = -0.1, None t=0 
            set_awg_offs   -3277,0    # L0006 @ 0

@@ -10,9 +10,9 @@ seq_prog="""
 # --INIT-- 
            move           3,R1       # L0001 R1: _repetitions
            wait_sync      4          # L0002 
-           reset_ph                  # L0003 @ 0
 # --START-- (t=0) 
-_start:    upd_param      1700       # L0004 t=0
+_start:    reset_ph                  # L0003 @ 0
+           upd_param      1700       # L0004 t=0
 # R.amplitude:float = 0.125 
            move           268435455,R2 # L0005 R2: R.amplitude
 # block_pulse(100, -0.5, None) 
