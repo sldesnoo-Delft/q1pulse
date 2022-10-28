@@ -79,6 +79,8 @@ class InstructionQueue:
             self._init_section.append(instruction)
             return
         self.__append_instruction(instruction)
+        if mnemonic in ['move','not','add','sub','and','or','xor','asl','asr']:
+            self._updating_reg = args[-1]
 
     def _add_rt_setting(self, mnemonic, *args, time=None):
         self._n_rt_instr += 1
@@ -238,9 +240,6 @@ class InstructionQueue:
         has been modified by the previous instruction.
         Registers are modified by the arithmetic instructions.
         '''
-        if self._updating_reg in args:
+        if self._updating_reg is not None and self._updating_reg in args:
             self._add_instruction('nop', comment=f' {mnemonic} wait for {self._updating_reg}')
-        if mnemonic in ['move','not','add','sub','and','or','xor','asl','asr']:
-            self._updating_reg = args[-1]
-        else:
-            self._updating_reg = None
+        self._updating_reg = None
