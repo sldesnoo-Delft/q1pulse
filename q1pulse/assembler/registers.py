@@ -24,7 +24,8 @@ class SequencerRegisters:
         init_reg = not self._always_zero_initialized
         asm_reg = self.get_asm_reg('_always_zero_')
         if not self._always_zero_initialized:
-            self._log(f'{asm_reg}: always 0 register')
+            if self._log is not None:
+                self._log(f'{asm_reg}: always 0 register')
             self._always_zero_initialized = True
         return asm_reg, init_reg
 
@@ -37,7 +38,7 @@ class SequencerRegisters:
             reg = self._free_regs.pop()
             self._allocated_regs[name] = reg
             self._scope_regs[-1].append(name)
-            if log:
+            if log and self._log is not None:
                 self._log(f'R{reg}: {name}')
             return self.get_asm_reg(name)
         except IndexError:
@@ -64,7 +65,8 @@ class SequencerRegisters:
     def temp_regs(self, n):
         self.enter_scope()
         regs = [self.get_temp_reg(log=False) for i in range(n)]
-        self._log(f'temp {regs}')
+        if self._log is not None:
+            self._log(f'temp {regs}')
         yield regs if n > 1 else regs[0]
         self.exit_scope()
 
@@ -74,7 +76,7 @@ class SequencerRegisters:
             nr = self._free_regs[-1]
             name = f'_R{nr}'
             asm_reg = self.allocate_reg(name, log=False)
-            if log:
+            if log and self._log:
                 self._log(f'temp {asm_reg}')
             return asm_reg
         except IndexError:

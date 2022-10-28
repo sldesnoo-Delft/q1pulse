@@ -131,8 +131,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                  line_numbers=True, comment_arg_conversions=False,
                  listing=False, json_output=False, filename=None,
                  optimize=1):
-        super().__init__()
-        self.add_comments = add_comments
+        super().__init__(add_comments=add_comments)
         self._list_registers = list_registers
         self._line_numbers = line_numbers
         self._show_arg_conversions = comment_arg_conversions
@@ -144,7 +143,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         self._repetitions = 1
         self._last_rt_settings = {}
         self._data = GeneratorData()
-        self._registers = SequencerRegisters(self._add_reg_comment)
+        self._registers = SequencerRegisters(self._add_reg_comment if add_comments else None)
         # counter for signed ASR emulation
         self._asr_jumps = 0
         self.add_comment('--INIT--', init_section=True)
@@ -329,11 +328,11 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
 
     @register_args(signature='tI')
     def set_mrk(self, time, value):
-        self._add_rt_setting('set_mrk', value, time=time, comment=f'@ {time}')
+        self._add_rt_setting('set_mrk', value, time=time)
 
     @register_args(signature='t')
     def reset_phase(self, time):
-        self._add_rt_setting('reset_ph', time=time, comment=f'@ {time}')
+        self._add_rt_setting('reset_ph', time=time)
 
     @register_args(signature='tFF')
     def awg_offset(self, time, offset0, offset1):
@@ -343,7 +342,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             self.add_comment(f'-- Overwrites set_awg_offs at {time} --')
             self._overwrite_rt_setting(last[1])
         instr = self._add_rt_setting('set_awg_offs', offset0, offset1,
-                                     time=time, comment=f'@ {time}')
+                                     time=time)
         self._last_rt_settings['set_awg_offs'] = (time, instr)
 
     @register_args(signature='tFF')
@@ -354,7 +353,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             self.add_comment(f'-- Overwrites set_awg_gain at {time} --')
             self._overwrite_rt_setting(last[1])
         instr = self._add_rt_setting('set_awg_gain', gain0, gain1,
-                                     time=time, comment=f'@ {time}')
+                                     time=time)
         self._last_rt_settings['set_awg_gain'] = (time, instr)
 
 #    @register_args(signature='tFo') -- handled in _convert_phase()
@@ -362,14 +361,14 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         with self.scope():
             v1,v2,v3 = self._convert_phase(phase, hires_regs)
             self._add_rt_setting('set_ph', v1, v2, v3,
-                                 time=time, comment=f'@ {time}')
+                                 time=time)
 
 #    @register_args(signature='tFo') -- handled in _convert_phase()
     def add_phase(self, time, delta, hires_regs):
         with self.scope():
             v1,v2,v3 = self._convert_phase(delta, hires_regs)
-            self._add_rt_setting('set_ph_delta', v1, v2, v3,
-                                 time=time, comment=f'@ {time}')
+            self._add_rt_setting('set_ph_delta', v1, v2, v3, # @@@ accumulate phase shifts
+                                 time=time)
 
     @register_args(signature='tI')
     def wait_reg(self, time, register):
@@ -389,14 +388,14 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         wave0 = self._data.translate_wave(wave0)
         wave1 = self._data.translate_wave(wave1)
         self._add_rt_command('play', wave0, wave1,
-                             time=time, comment=f't={time}')
+                             time=time)
 
     @register_args(signature='toI')
     def acquire(self, time, section, bin_index):
         section = self._data.translate_acquisition(section)
         self._add_rt_command('acquire',
                              section, bin_index,
-                             time=time, comment=f't={time}')
+                             time=time)
 
     @register_args(signature='toIoo')
     def acquire_weighed(self, time, bins, bin_index, weight0, weight1):
@@ -411,11 +410,11 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                 self.move(weight1, rw1)
                 self._add_rt_command('acquire_weighed',
                                      bins, bin_index, rw0, rw1,
-                                     time=time, comment=f't={time}')
+                                     time=time)
         else:
             self._add_rt_command('acquire_weighed',
                                  bins, bin_index, weight0, weight1,
-                                 time=time, comment=f't={time}')
+                                 time=time)
 
     @contextmanager
     def unsigned_registers(self):
@@ -598,7 +597,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
 
         return f'{label:10} {mnemonic:14} {arg_str:10}{c}'
 
-    def q1asm_lines(self, skip_comment_lines=False, compact=False):
+    def q1asm_lines(self, compact=False):
         lines = []
         line_nr = 0
         line_label = None
@@ -608,7 +607,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                 if i.startswith('Q1Sim:'):
                     lines += [f'#{i} ']
                 # comment line
-                elif self.add_comments and not skip_comment_lines:
+                elif self.add_comments and not compact:
                     lines += [f'# {i} ']
                 continue
 
@@ -635,18 +634,18 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         if self._listing:
             self._save_prog_and_data_txt(self._filename.replace('.json','.q1asm'))
         if self._optimize > 0 and self._n_rt_instr == 0:
-            # no RT instructions (ohter than reset_ph): program does nothing
+            # no RT instructions (other than reset_ph): program does nothing
             logging.debug('No RT statements')
             self.q1asm = None
         else:
             d = self._data.get_data_dict()
-            d['program'] = self._q1asm_prog(skip_comment_lines=True, compact=True)
+            d['program'] = self._q1asm_prog(compact=True)
             self.q1asm = d
             if self._json_output:
                 self._save_prog_and_data_json(self._filename)
 
-    def _q1asm_prog(self, skip_comment_lines=False, compact=False):
-        return '\n'.join(self.q1asm_lines(skip_comment_lines, compact))
+    def _q1asm_prog(self, compact=False):
+        return '\n'.join(self.q1asm_lines(compact))
 
     def _save_prog_and_data_json(self, filename):
         with open(filename, 'w', encoding='utf-8') as f:

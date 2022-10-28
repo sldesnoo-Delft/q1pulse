@@ -29,8 +29,9 @@ class InstructionQueue:
     _check_time_reg = True
     emulate_signed = True
 
-    def __init__(self):
+    def __init__(self, add_comments=False):
         super().__init__()
+        self.add_comments = add_comments
         self._init_section = []
         self._instructions = []
         self._reg_comment = None
@@ -43,6 +44,8 @@ class InstructionQueue:
         self._n_rt_instr = 0
 
     def add_comment(self, line, init_section=False):
+        if not self.add_comments:
+            return
         if self._finalized:
             raise Q1StateError('Sequence already finalized')
         if init_section:
@@ -77,18 +80,25 @@ class InstructionQueue:
             return
         self.__append_instruction(instruction)
 
-    def _add_rt_setting(self, mnemonic, *args, time=None, comment=None):
+    def _add_rt_setting(self, mnemonic, *args, time=None):
         self._n_rt_instr += 1
+        if self.add_comments:
+            comment = f'@ {time}'
+        else:
+            comment = None
         instruction = Instruction(mnemonic, args, comment=comment)
         self.__append_instruction(instruction)
         self._schedule_update(time)
         return instruction
 
-    def _add_rt_command(self, mnemonic, *args, time=None, comment=None,
-                        index=None):
+    def _add_rt_command(self, mnemonic, *args, time=None, index=None):
         self._n_rt_instr += 1
         self._wait_till(time, pending_update='merge')
         wait_after = RT_RESOLUTION
+        if self.add_comments:
+            comment = f't={time}'
+        else:
+            comment = None
         instruction = Instruction(mnemonic, args, comment=comment, wait_after=wait_after)
         if index is None:
             self.__append_instruction(instruction)
@@ -99,7 +109,8 @@ class InstructionQueue:
 
     def _overwrite_rt_setting(self, instruction):
         instruction.overwritten = True
-        instruction.comment += ' = overwritten ='
+        if self.add_comments:
+            instruction.comment += ' = overwritten ='
 
     def _reset_time(self):
         self._flush_pending_update()
