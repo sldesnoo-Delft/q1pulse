@@ -15,7 +15,6 @@ class Program:
     def __init__(self, path=None):
         self.sequence_builders = {}
         self.path = path if path is not None else os.path.join('q1','_prog')
-        os.makedirs(self.path, exist_ok=True)
         self.R = Registers(self, local=False)
         self.repetitions = 1
         self._q1asm = {}
@@ -39,6 +38,7 @@ class Program:
             builder.describe()
 
     def seq_filename(self, name):
+        os.makedirs(self.path, exist_ok=True)
         return os.path.join(self.path, f'q1seq_{name}.json')
 
     def compile(self, annotate=False, add_comments=True,
@@ -47,15 +47,12 @@ class Program:
         self._q1asm = {}
 
         for builder in self.sequence_builders.values():
-            filename = self.seq_filename(builder.name)
             g = Q1asmGenerator(add_comments=add_comments,
-                               listing=listing,
-                               json_output=json,
-                               filename=filename,
                                optimize=optimize)
             g.repetitions = self.repetitions
             builder.compile(g, annotate=annotate)
-            g.assemble()
+            filename = self.seq_filename(builder.name) if listing or json else None
+            g.assemble(listing=listing, json_output=json, filename=filename)
             self._q1asm[builder.name] = g.q1asm
 
     def q1asm(self, name):

@@ -4,7 +4,8 @@ All notable changes to Q1Pulse will be documented in this file.
 ## \[0.4.5] - 2022-11-16
 
 ### Fixed
-- repeated_acquire with n==1
+- repeated_acquire with n=1
+- Do not create empty directories if listing = False and json = False
 
 ### Changed
 - Some minor performance improvements

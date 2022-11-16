@@ -129,15 +129,11 @@ def register_args(signature):
 class Q1asmGenerator(InstructionQueue, GeneratorBase):
     def __init__(self, add_comments=False, list_registers=True,
                  line_numbers=True, comment_arg_conversions=False,
-                 listing=False, json_output=False, filename=None,
                  optimize=1):
         super().__init__(add_comments=add_comments)
         self._list_registers = list_registers
         self._line_numbers = line_numbers
         self._show_arg_conversions = comment_arg_conversions
-        self._listing = listing
-        self._json_output = json_output
-        self._filename = filename
         self._optimize = optimize
         self.q1asm = None
         self._repetitions = 1
@@ -630,9 +626,9 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             lines += [line]
         return lines
 
-    def assemble(self):
-        if self._listing:
-            self._save_prog_and_data_txt(self._filename.replace('.json','.q1asm'))
+    def assemble(self, listing=False, json_output=False, filename=None):
+        if listing:
+            self._save_prog_and_data_txt(filename.replace('.json','.q1asm'))
         if self._optimize > 0 and self._n_rt_instr == 0:
             # no RT instructions (other than reset_ph): program does nothing
             logging.debug('No RT statements')
@@ -641,8 +637,8 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             d = self._data.get_data_dict()
             d['program'] = self._q1asm_prog(compact=True)
             self.q1asm = d
-            if self._json_output:
-                self._save_prog_and_data_json(self._filename)
+            if json_output:
+                self._save_prog_and_data_json(filename)
 
     def _q1asm_prog(self, compact=False):
         return '\n'.join(self.q1asm_lines(compact))
