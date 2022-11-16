@@ -177,12 +177,10 @@ class InstructionQueue:
         if time < 0:
             raise Q1InternalError(f'Illegal wait time {time}')
         n_max,rem_wait = divmod(time, MAX_WAIT)
-        if n_max == 1:
-            self._add_instruction('wait', MAX_WAIT)
-        if n_max == 2:
-            self._add_instruction('wait', MAX_WAIT)
-            self._add_instruction('wait', MAX_WAIT)
-        if n_max > 2:
+        if n_max <= 2:
+            for _ in range(n_max):
+                self._add_instruction('wait', MAX_WAIT)
+        else:
             self._wait_loop_cnt += 1
             with self.temp_regs(1) as wait_reg:
                 self._add_instruction('move', n_max, wait_reg)

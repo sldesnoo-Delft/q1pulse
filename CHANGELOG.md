@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.4.5] - 2022-11-16
+
+### Fixed
+- repeated_acquire with n==1
+
+### Changed
+- Some minor performance improvements
+
 ## \[0.4.4] - 2022-08-19
 
 ### Fixed

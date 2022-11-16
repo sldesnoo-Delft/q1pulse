@@ -91,9 +91,10 @@ class ReadoutBuilder(ControlBuilder):
             # Repeat only n-1 times to avoid wait after last acquire.
             # A wait after the last acquire could create unwanted waits in the
             # control sequencers, because acquisition is ~100 ns delayed w.r.t. control.
-            with self._seq_repeat(n-1):
-                self.acquire(bins, bin_index)
-                self.wait(period)
+            if n > 1:
+                with self._seq_repeat(n-1):
+                    self.acquire(bins, bin_index)
+                    self.wait(period)
             self.acquire(bins, bin_index)
 
     def repeated_acquire_weighed(self, n, period, bins, bin_index,
@@ -106,9 +107,10 @@ class ReadoutBuilder(ControlBuilder):
             # Repeat only n-1 times to avoid wait after last acquire.
             # A wait after the last acquire could create unwanted waits in the
             # control sequencers, because acquisition is ~100 ns delayed w.r.t. control.
-            with self._seq_repeat(n-1):
-                self.acquire_weighed(bins, bin_index, weight0, weight1)
-                self.wait(period)
+            if n > 1:
+                with self._seq_repeat(n-1):
+                    self.acquire_weighed(bins, bin_index, weight0, weight1)
+                    self.wait(period)
             self.acquire_weighed(bins, bin_index, weight0, weight1)
 
     def reset_bin_counter(self, bins):
