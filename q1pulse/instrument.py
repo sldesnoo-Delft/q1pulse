@@ -9,11 +9,13 @@ from .sequencer.sequencer import SequenceBuilder
 from .sequencer.control import ControlBuilder
 from .sequencer.readout import ReadoutBuilder
 from .modules.modules import QcmModule, QrmModule
-
+from .util.qblox_version import check_qblox_instrument_version, qblox_version, Version
 from qblox_instruments import InstrumentType
+
 
 class Q1Instrument:
     def __init__(self, path=None, add_traceback=True):
+        check_qblox_instrument_version()
         if path:
             self.path = path
         else:
@@ -114,6 +116,8 @@ class Q1Instrument:
             module.phase_rotation_acq(seq.seq_nr, readout.phase_rotation_acq)
             module.discretization_threshold_acq(seq.seq_nr, readout.discretization_threshold_acq)
             module.integration_length_acq(seq.seq_nr, int(readout.integration_length_acq))
+            if qblox_version >= Version('0.7'):
+                module.delete_acquisition_data(seq.seq_nr)
 
         for module in self.modules.values():
             module.arm_sequencers()

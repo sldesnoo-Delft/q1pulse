@@ -4,6 +4,7 @@ from typing import List, Optional
 from abc import abstractmethod
 
 from .sequencer_states import translate_seq_state
+from ..util.qblox_version import qblox_version, Version
 
 @dataclass
 class Sequencer:
@@ -206,10 +207,16 @@ class QrmModule(QbloxModule):
     def integration_length_acq(self, seq_nr, length):
         self._sset(seq_nr, 'integration_length_acq', length)
 
+    def delete_acquisition_data(self, seq_nr):
+        self.pulsar.delete_acquisition_data(seq_nr, all=True)
+
     def set_nco(self, seq_nr, nco_frequency):
         super().set_nco(seq_nr, nco_frequency)
         self._sset(seq_nr, 'demod_en_acq', nco_frequency is not None)
 
     def upload(self, seq_nr, sequence):
-        # Don't cache upload or QRM. Upload is required to clear acquisition memory
-        self._sset(seq_nr, 'sequence', sequence, cache=False)
+        if qblox_version < Version('0.7'):
+            # Don't cache upload or QRM. Upload is required to clear acquisition memory
+            self._sset(seq_nr, 'sequence', sequence, cache=False)
+        else:
+            super().upload(seq_nr, sequence)
