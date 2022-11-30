@@ -74,6 +74,9 @@ p.compile(listing=True, annotate=True)
 data0 = np.linspace(-v1_max, v1_max, N).repeat(N)
 data1 = np.tile(np.linspace(-v2_max, v2_max, N), N)
 
+data0 = np.tile(data0, p.repetitions)
+data1 = np.tile(data1, p.repetitions)
+
 set_mock_data(qrm1, 1, 'non-weighed',
               np.array([data0, data1]).T * R1.integration_length_acq)
 set_mock_data(qrm1, 1, 'weighed', (data0 + 1j*data1)/2)
