@@ -1,4 +1,4 @@
 from .instrument import Q1Instrument
 from .lang.math_expressions import Lsr as lsr
 
-__version__ = "0.4.5"
+__version__ = "0.6.0"
