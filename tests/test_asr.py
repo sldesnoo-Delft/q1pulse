@@ -10,7 +10,7 @@ p = instrument.new_program('asr')
 
 seq = p.P1
 
-p.R.a = 1
+p.R.a = 9
 p.R.b = 2
 
 p.R.c = p.R.a >> 2
