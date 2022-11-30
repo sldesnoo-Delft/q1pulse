@@ -10,11 +10,11 @@ seq_prog="""
 # --INIT-- 
            move           10,R1      # L0001 R1: _repetitions
            move           0,R0       # L0002 R0: always 0 register
-           wait_sync      4          # L0003 
-           reset_ph                  # L0004 @ 0
+           wait_sync      4          # L0003 t=0
 # --START-- (t=0) 
+_start:    reset_ph                  # L0004 @ 0
 # R.phase1:float = 0.125 
-_start:    move           268435455,R2 # L0005 R2: R.phase1
+           move           268435455,R2 # L0005 R2: R.phase1
 # Rs.phase2:float = -0.125 
            move           4026531840,R3 # L0006 R3: Rs.phase2
 # set_phase 0.5 t=0 

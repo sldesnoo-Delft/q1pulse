@@ -10,7 +10,7 @@ seq_prog="""
 # --INIT-- 
 # Rs._bin_default:int = 0 
            move           0,R1       # L0001 R1: Rs._bin_default
-           wait_sync      4          # L0002 
+           wait_sync      4          # L0002 t=0
 # --START-- (t=0) 
 _start:    reset_ph                  # L0003 @ 0
 # loop_linspace(-0.5, 0.5, 100):R._var0 t=0 

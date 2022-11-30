@@ -31,7 +31,7 @@ seq_prog="""
 # --INIT-- 
            move           2,R1       # L0001 R1: _repetitions
            move           0,R0       # L0002 R0: always 0 register
-           wait_sync      4          # L0003 
+           wait_sync      4          # L0003 t=0
 # --START-- (t=0) 
 _start:    reset_ph                  # L0004 @ 0
            move           100,R2     # L0005 R2: R._var0

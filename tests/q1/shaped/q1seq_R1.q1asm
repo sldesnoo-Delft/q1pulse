@@ -11,7 +11,7 @@ seq_prog="""
            move           2,R2       # L0001 R2: _repetitions
 # Rs._bin_acq_bins:int = 0 
            move           0,R1       # L0002 R1: Rs._bin_acq_bins
-           wait_sync      4          # L0003 
+           wait_sync      4          # L0003 t=0
 # --START-- (t=0) 
 _start:    reset_ph                  # L0004 @ 0
            upd_param      340        # L0005 t=0

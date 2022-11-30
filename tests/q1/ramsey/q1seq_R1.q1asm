@@ -9,7 +9,7 @@ acquisitions={'q1value': {'index': 0, 'num_bins': 20}}
 seq_prog="""
 # --INIT-- 
            move           2,R1       # L0001 R1: _repetitions
-           wait_sync      4          # L0002 
+           wait_sync      4          # L0002 t=0
 # --START-- (t=0) 
 _start:    reset_ph                  # L0003 @ 0
 # Rs._bin_q1value:int = 0 
