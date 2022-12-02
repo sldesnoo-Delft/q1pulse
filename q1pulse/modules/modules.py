@@ -68,10 +68,8 @@ class QbloxModule:
                 self.pulsar.arm_sequencer(seq_nr)
 
     def start_sequencers(self):
-        any_enabled = False
-        for seq_nr in range(0, self.n_sequencers):
-            any_enabled = any_enabled or self.enabled(seq_nr)
-        if any_enabled:
+        enabled = [self.enabled(seq_nr) for seq_nr in range(0, self.n_sequencers)]
+        if any(enabled):
             self.pulsar.start_sequencer()
 
     def stop_sequencers(self):

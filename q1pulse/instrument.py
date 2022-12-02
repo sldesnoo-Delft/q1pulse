@@ -14,6 +14,9 @@ from qblox_instruments import InstrumentType
 
 
 class Q1Instrument:
+    # postpone error checking till the end to save communication overhead.
+    _i_feel_lucky = False
+
     def __init__(self, path=None, add_traceback=True):
         check_qblox_instrument_version()
         if path:
@@ -41,11 +44,11 @@ class Q1Instrument:
 
     def add_qcm(self, pulsar):
         self.modules[pulsar.name] = QcmModule(pulsar)
-        self.root_instruments.add(pulsar.root_instrument)
+        self._add_root_instrument(pulsar.root_instrument)
 
     def add_qrm(self, pulsar):
         self.modules[pulsar.name] = QrmModule(pulsar)
-        self.root_instruments.add(pulsar.root_instrument)
+        self._add_root_instrument(pulsar.root_instrument)
 
     def add_control(self, name, module_name, channels, nco_frequency=None):
         sequencer = self.modules[module_name].get_sequencer(channels)
@@ -59,6 +62,13 @@ class Q1Instrument:
         sequencer = module.get_sequencer(out_channels)
         sequencer.nco_frequency = nco_frequency
         self.readouts[name] = sequencer
+
+    def _add_root_instrument(self, root_instrument):
+        self.root_instruments.add(root_instrument)
+        if Q1Instrument._i_feel_lucky and hasattr(root_instrument, '_debug'):
+            # Change the debug level to speed up communication.
+            # Errors will be checked before start of the sequence.
+            root_instrument._debug = 2
 
     def new_program(self, prog_name):
         program = Program(path=os.path.join(self.path, prog_name))
@@ -108,6 +118,8 @@ class Q1Instrument:
             if prog_seq.mixer_phase_offset_degree is not None:
                 module.set_mixer_phase_offset_degree(seq.seq_nr, prog_seq.mixer_phase_offset_degree)
 
+        t = (time.perf_counter() - t_start) * 1000
+        logging.info(f'Configure QRMs ({t:5.3f} ms)')
         for name,seq in self.readouts.items():
             readout = program[name]
             module = self.modules[seq.module_name]
@@ -119,9 +131,21 @@ class Q1Instrument:
             if qblox_version >= Version('0.7'):
                 module.delete_acquisition_data(seq.seq_nr)
 
+        # Note: arm per sequencer. Arm on the cluster still gives red leds on the modules.
         for module in self.modules.values():
             module.arm_sequencers()
-            module.start_sequencers()
+#        for instrument in self.root_instruments:
+#            instrument.arm_sequencer()
+
+        if Q1Instrument._i_feel_lucky:
+            t = (time.perf_counter() - t_start) * 1000
+            logging.info(f'Check status  ({t:5.3f} ms)')
+            self.check_system_errors()
+
+        for instrument in self.root_instruments:
+            t = (time.perf_counter() - t_start) * 1000
+            logging.info(f'Start  ({t:5.3f} ms)')
+            instrument.start_sequencer()
 
         t = (time.perf_counter() - t_start) * 1000
         logging.info(f'Duration upload/start: ({t:5.3f}ms)')
@@ -148,9 +172,22 @@ class Q1Instrument:
                 logging.error(f'  {name}: {state}')
             raise Exception(f'Q1 failures (see logging):\n {errors}')
 
-        for name,seq in sequencers.items():
-            module = self.modules[seq.module_name]
-            module.stop_sequencers()
+        for instrument in self.root_instruments:
+            logging.info(f'Stop')
+            instrument.stop_sequencer()
+
+    def check_system_errors(self):
+        for instrument in self.root_instruments:
+            errors = []
+            while instrument.get_num_system_error() != 0:
+                errors.append(instrument.get_system_error())
+
+            if len(errors) > 0:
+                if Q1Instrument._i_feel_lucky:
+                    logging.error(f"You're not lucky. One of the previous calls failed...")
+                msg = instrument.name + ':' + '\n'.join(errors)
+                logging.error(msg)
+                raise RuntimeError(msg)
 
     def get_acquisition_bins(self, sequencer_name, bins):
         seq = self.readouts[sequencer_name]

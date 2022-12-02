@@ -32,7 +32,7 @@ _flag_map = {
 @dataclass
 class SequencerState:
     status: str
-    level: int = 0
+    level: int = 10
     errors: List[str] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
     info_msgs: List[str] = field(default_factory=list)
