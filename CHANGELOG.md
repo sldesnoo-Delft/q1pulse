@@ -1,10 +1,11 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
-## \[0.7.0] - 2022-@@@@
+## \[0.7.0] - 2022-12-02
 
 - Aligned version with qblox-instruments version
 - Added `delete_acquisition_data` to QRM
+- Improved performance with smarter calls to cluster/pulsar
 
 ## \[0.4.5] - 2022-11-16
 
