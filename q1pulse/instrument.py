@@ -135,7 +135,6 @@ class Q1Instrument:
 
         # Note: arm per sequencer. Arm on the cluster still gives red leds on the modules.
         for module in self.modules.values():
-            print('ARM')
             module.arm_sequencers()
 #        for instrument in self.root_instruments:
 #            instrument.arm_sequencer()
@@ -148,7 +147,6 @@ class Q1Instrument:
         for instrument in self.root_instruments:
             t = (time.perf_counter() - t_start) * 1000
             logging.info(f'Start  ({t:5.3f} ms)')
-            print('Start', instrument.name)
             instrument.start_sequencer()
 
         t = (time.perf_counter() - t_start) * 1000
