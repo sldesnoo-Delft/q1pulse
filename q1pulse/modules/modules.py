@@ -17,7 +17,7 @@ class Sequencer:
 
 
 class QbloxModule:
-    verbose = True
+    verbose = False
     n_sequencers = 6
 
     def __init__(self, pulsar):
