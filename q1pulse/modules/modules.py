@@ -17,14 +17,13 @@ class Sequencer:
 
 
 class QbloxModule:
-    verbose = False
+    verbose = True
     n_sequencers = 6
 
     def __init__(self, pulsar):
         self.name = pulsar.name
         self.pulsar = pulsar
         self._allocated_seq = 0
-        self._cache = {}
         self.disable_all_out()
         # disable all sequencers
         for seq_nr in range(0, self.n_sequencers):
@@ -98,8 +97,9 @@ class QbloxModule:
         self._sset(seq_nr, 'mixer_corr_phase_offset_degree', value)
 
     def enabled(self, seq_nr):
-        full_name = f'sequencer{seq_nr}.sync_en'
-        return self._cache.get(full_name)
+        seq = getattr(self.pulsar, f'sequencer{seq_nr}')
+        param = getattr(seq, 'sync_en')
+        return param.cache()
 
     def disable_seq(self, sequencer):
         seq_nr = sequencer.seq_nr
@@ -113,14 +113,13 @@ class QbloxModule:
 
     def _sset(self, seq_nr, name, value, cache=True):
         full_name = f'sequencer{seq_nr}.{name}'
-        current = self._cache.get(full_name, None)
-        if cache and current == value:
+        seq = getattr(self.pulsar, f'sequencer{seq_nr}')
+        param = getattr(seq, name)
+        if cache and param.cache() == value:
             if QbloxModule.verbose:
                 logging.debug(f'# {full_name}={value} -- cached')
             return
-        seq = getattr(self.pulsar, f'sequencer{seq_nr}')
-        result = seq.set(name, value)
-        self._cache[full_name] = value
+        result = param(value)
         if QbloxModule.verbose:
             logging.info(f'{full_name}={value}')
         return result
@@ -133,14 +132,13 @@ class QbloxModule:
             name = f'out{channel}_offset'
             value = offset_mV/1000
 
-        current = self._cache.get(name, None)
-        if current == value:
+        param = getattr(self.pulsar, name)
+        if param.cache() == value:
             if QbloxModule.verbose:
                 logging.debug(f'# {name}={value} -- cached')
             return
+        param(value)
 
-        setattr(self.pulsar, name, value)
-        self._cache[name] = value
 
 class QcmModule(QbloxModule):
     n_channels = 4

@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.7.1] - 2022-12-08
+
+- Improved communication (configuration/upload) speed by postponing error checks.
+- Use qcodes parameter cache to check whether setting has changed.
+
 ## \[0.7.0] - 2022-12-02
 
 - Aligned version with qblox-instruments version
