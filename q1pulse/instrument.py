@@ -14,8 +14,10 @@ from qblox_instruments import InstrumentType
 
 
 class Q1Instrument:
-    # postpone error checking till the end to save communication overhead.
-    _i_feel_lucky = False
+    # Postpone error checking till the end to save communication overhead.
+    # System errors are only reported for SCPI errors. It's almost impossible to 
+    # get an error, because everything is already checked in qblox-instruments code.
+    _i_feel_lucky = True
 
     def __init__(self, path=None, add_traceback=True):
         check_qblox_instrument_version()
