@@ -40,6 +40,26 @@ class WaveCollection:
             wave = self.add_wave(name, data)
             return wave
 
+    def get_chirp(self, n_samples, f_end):
+        # Start with f = 0 and the delta phase / ns = 0
+        # Every ns f_step/n_samples is added to delta phase / ns.
+        # dp/ns = 0, 1, 2, 3, 4, ...
+        # phase = 0, 1, 3, 6, 10, ...
+        # phase expressed in rotations!
+        dp_ns_end = f_end / 1e9
+        dp = np.linspace(0, dp_ns_end, n_samples, endpoint=False)
+        phase = np.cumsum(dp)
+        dp_next = (phase[-1] + dp_ns_end) * 2
+        nameI = f'_chirp({n_samples}, {f_end}).real'
+        nameQ = f'_chirp({n_samples}, {f_end}).imag'
+        try:
+            return self._waves[nameI], self._waves[nameQ], dp_next
+        except:
+            waveI = self.add_wave(nameI, np.cos(2*np.pi*phase))
+            waveQ = self.add_wave(nameQ, np.sin(2*np.pi*phase))
+            # phase shift for next chirp, expressed in pi*rad!
+            return waveI, waveQ, dp_next
+
 
 @dataclass
 class AcquisitionBins:

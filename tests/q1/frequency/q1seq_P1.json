@@ -1,0 +1,1 @@
+{"waveforms":{},"weights":{},"acquisitions":{},"program":" move 2,R1\n wait_sync 4\n_start: reset_ph \n move 12000000,R2\n move 30000000,R3\n set_awg_offs 16383,0\n set_freq 40000000\n upd_param 100\n set_freq 20000000\n upd_param 100\n asl R2,2,R4\n nop \n set_freq R4\n upd_param 100\n asl R3,2,R5\n nop \n set_freq R5\n upd_param 100\n loop R1,@_start\n upd_param 4\n stop "}

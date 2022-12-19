@@ -134,6 +134,7 @@ class SequenceBuilder(BuilderBase):
             generator.start_main()
             self._sequence_stack[0].compile(generator, annotate)
             generator.end_main(self.end_time)
+            self.modifies_frequency = generator.modifies_frequency
         except Q1Exception as ex:
             msgs = [f'Error compiling {self.name}.']
             tb = []

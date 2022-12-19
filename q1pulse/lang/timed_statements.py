@@ -43,6 +43,17 @@ class PlayWaveStatement(TimedStatement):
     def write_instruction(self, generator):
         generator.play(self.time, self.wave0, self.wave1)
 
+class SetFrequencyStatement(TimedStatement):
+    def __init__(self, time, frequency):
+        super().__init__(time)
+        self.frequency = frequency
+
+    def __repr__(self):
+        return f'set_freq {self.frequency}'
+
+    def write_instruction(self, generator):
+        generator.set_freq(self.time, self.frequency)
+
 class ShiftPhaseStatement(TimedStatement):
     def __init__(self, time, delta, hires_regs=False):
         super().__init__(time)

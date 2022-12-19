@@ -98,7 +98,7 @@ class QbloxModule:
 
     def enabled(self, seq_nr):
         seq = getattr(self.pulsar, f'sequencer{seq_nr}')
-        param = getattr(seq, 'sync_en')
+        param = seq.parameters['sync_en']
         return param.cache()
 
     def disable_seq(self, sequencer):
@@ -114,7 +114,7 @@ class QbloxModule:
     def _sset(self, seq_nr, name, value, cache=True):
         full_name = f'sequencer{seq_nr}.{name}'
         seq = getattr(self.pulsar, f'sequencer{seq_nr}')
-        param = getattr(seq, name)
+        param = seq.parameters[name]
         if cache and param.cache() == value:
             if QbloxModule.verbose:
                 logging.debug(f'# {full_name}={value} -- cached')
@@ -124,6 +124,11 @@ class QbloxModule:
             logging.info(f'{full_name}={value}')
         return result
 
+    def invalidate_cache(self, seq_nr, param_name):
+        seq = getattr(self.pulsar, f'sequencer{seq_nr}')
+        param = seq.parameters[param_name]
+        param.cache.invalidate()
+
     def set_out_offset(self, channel, offset_mV):
         if self.pulsar.is_rf_type:
             name = f'out{channel//2}_offset_path{channel%2}'
@@ -132,7 +137,7 @@ class QbloxModule:
             name = f'out{channel}_offset'
             value = offset_mV/1000
 
-        param = getattr(self.pulsar, name)
+        param = self.pulsar.parameters[name]
         if param.cache() == value:
             if QbloxModule.verbose:
                 logging.debug(f'# {name}={value} -- cached')

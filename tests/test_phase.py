@@ -18,11 +18,11 @@ P1.Rs.phase2 = -0.125
 P1.set_phase(0.5)
 p.wait(100)
 P1.set_phase(p.R.phase1)
-p.wait(100)
+p.wait(300)
 P1.shift_phase(P1.Rs.phase2)
-p.wait(100)
+p.wait(300)
 P1.shift_phase(P1.Rs.phase2 + 0.1)
-p.wait(200)
+p.wait(300)
 
 p.describe()
 

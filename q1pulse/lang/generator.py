@@ -116,6 +116,10 @@ class GeneratorBase(ABC):
         pass
 
     @abstractmethod
+    def set_freq(self, time, frequency):
+        pass
+
+    @abstractmethod
     def set_phase(self, time, phase, hires_regs):
         pass
 

@@ -1,1 +1,0 @@
-{"waveforms": {}, "weights": {}, "acquisitions": {}, "program": " wait_sync 4\n reset_ph \n_start: upd_param 10200\n stop "}

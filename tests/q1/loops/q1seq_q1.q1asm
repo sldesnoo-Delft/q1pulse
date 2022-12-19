@@ -28,7 +28,7 @@ loop_0:    upd_param      120        # L0007 t=0
 # awg_offset = 0.0, None t=160 
            set_awg_offs   0,0        # L0014 @ 160
 # phase_delta 0.5 t=160 
-           set_ph_delta   100,0,0    # L0015 @ 160
+           set_ph_delta   250000000  # L0015 @ 160
 # endloop t=160 
            add            R2,429496729,R2 # L0016 
            loop           R3,@loop_0 # L0017 

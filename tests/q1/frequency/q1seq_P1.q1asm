@@ -1,0 +1,42 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           2,R1       # L0001 R1: _repetitions
+           wait_sync      4          # L0002 t=0
+# --START-- (t=0) 
+_start:    reset_ph                  # L0003 @ 0
+# R.frequency:int = 12000000 
+           move           12000000,R2 # L0004 R2: R.frequency
+# Rs.frequency:int = 30000000 
+           move           30000000,R3 # L0005 R3: Rs.frequency
+# awg_offset = 0.5, None t=0 
+           set_awg_offs   16383,0    # L0006 @ 0
+# set_freq 10000000.0 t=0 
+           set_freq       40000000   # L0007 @ 0
+           upd_param      100        # L0008 t=0
+# set_freq 5000000.0 t=100 
+           set_freq       20000000   # L0009 @ 100
+           upd_param      100        # L0010 t=100
+# set_freq R.frequency t=200 
+           asl            R2,2,R4    # L0011 temp R4
+           nop                       # L0012  set_freq wait for R4
+           set_freq       R4         # L0013 @ 200
+           upd_param      100        # L0014 t=200
+# set_freq Rs.frequency t=300 
+           asl            R3,2,R5    # L0015 temp R5
+           nop                       # L0016  set_freq wait for R5
+           set_freq       R5         # L0017 @ 300
+           upd_param      100        # L0018 t=300
+# --END-- 
+           loop           R1,@_start # L0019 
+           upd_param      4          # L0020 t=400
+           stop                      # L0021 
+"""
+

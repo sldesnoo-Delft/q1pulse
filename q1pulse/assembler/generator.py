@@ -142,6 +142,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         self._registers = SequencerRegisters(self._add_reg_comment if add_comments else None)
         # counter for signed ASR emulation
         self._asr_jumps = 0
+        self.modifies_frequency = False
         self.add_comment('--INIT--', init_section=True)
 
 
@@ -352,19 +353,24 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                                      time=time)
         self._last_rt_settings['set_awg_gain'] = (time, instr)
 
+#    @register_args(signature='tI') -- handled in _convert_frequency()
+    def set_freq(self, time, frequency):
+        ifreq = self._convert_frequency(frequency)
+        self._add_rt_setting('set_freq', ifreq, time=time)
+        self.modifies_frequency = True
+
 #    @register_args(signature='tFo') -- handled in _convert_phase()
     def set_phase(self, time, phase, hires_regs):
         with self.scope():
-            v1,v2,v3 = self._convert_phase(phase, hires_regs)
-            self._add_rt_setting('set_ph', v1, v2, v3,
-                                 time=time)
+            iphase = self._convert_phase(phase, hires_regs)
+            self._add_rt_setting('set_ph', iphase, time=time)
 
 #    @register_args(signature='tFo') -- handled in _convert_phase()
     def add_phase(self, time, delta, hires_regs):
         with self.scope():
-            v1,v2,v3 = self._convert_phase(delta, hires_regs)
-            self._add_rt_setting('set_ph_delta', v1, v2, v3, # @@@ accumulate phase shifts
-                                 time=time)
+            iphase = self._convert_phase(delta, hires_regs)
+            # @@@ accumulate phase shifts at same time
+            self._add_rt_setting('set_ph_delta', iphase, time=time)
 
     @register_args(signature='tI')
     def wait_reg(self, time, register):
@@ -512,16 +518,32 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         self._add_instruction('asr', reg, 16, temp_reg)
         return temp_reg
 
-    def _convert_phase(self, phase, hires_regs):
-        # convert float range -1.0 ... +1.0 => 200 ... 399; 0 ... 199
-        if isinstance(phase, float):
-            n = int(round((phase+2) * 5e8))
-            n1,nr = divmod(n, 400*6250)
-            n1 %= 400
-            n2,n3 = divmod(nr, 6250)
-            return n1,n2,n3
+    def _convert_frequency(self, frequency):
+        if isinstance(frequency, Operand):
+            dtype = get_dtype(frequency)
+            if dtype is not int:
+                raise Exception(f'frequency must be an integer value')
+            if isinstance(frequency, Expression):
+                # evaluate expression and store result in register
+                reg_freq = Register(f'_frequency')
+                statement = reg_freq.assign(frequency << 2)
+                statement.write_instruction(self)
+            else:
+                reg_freq = frequency << 2
+            return reg_freq.evaluate(self)
+        else:
+            return int(round(frequency*4))
 
-        self.add_comment('         --- phase register -> 3 phase instruction arguments')
+    def _convert_phase(self, phase, hires_regs):
+        dtype = get_dtype(phase)
+        if dtype is not float:
+            raise Exception(f'phase must be a float value')
+
+        if isinstance(phase, float):
+            # convert float range -1.0 ... +1.0 => 5e8 .. 1e9; 0 .. 5e8
+            n = int(round((phase+2) * 5e8))
+            n %= 1000_000_000
+            return n
 
         if isinstance(phase, Expression):
             # evaluate expression and store result in register
@@ -533,27 +555,19 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         if isinstance(phase, Register):
             # use unsigned operations for multiplication
             with self.unsigned_registers():
-                # shift N bits right to create space for multiplication
-                N = 10
-                # multiply with 400
-                r1 = (phase >> (N-4)) + (phase >> (N-7)) + (phase >> (N-8))
-                # add small amount for proper rounding
-                r1 += 3.5/(1<<31)
-                if not hires_regs:
-                    r1 >>= (32-N)
-                    r2 = self.get_zero_reg()
-                    r3 = r2
-                    return r1.evaluate(self), r2, r3
-                else:
-                    rem1 = r1 << N
-                    r1 >>= (32-N)
-                    # multiply with 400
-                    r2 = (rem1 >> (N-4)) + (rem1 >> (N-7)) + (rem1 >> (N-8))
-                    # add small amount for proper rounding
-                    r2 += 3.5/(1<<31)
-                    r2 >>= (32-N)
-                    r3 = self.get_zero_reg()
-                    return r1.evaluate(self), r2.evaluate(self), r3
+                # multiply with 1e9
+                # first 4 terms: rel. error -1.7e-3
+                r1 = (phase >> 2)-(phase >> 5) + (phase >> 6)-(phase >> 9)
+                # 6 terms: rel. error -1.8e4
+                r1 += (phase >> 11)-(phase >> 13)
+                # @@@ check on hardware...
+                # without hires this takes ~32 cycles = 128 ns
+                # with hires it takes ~62 cycles = 248 ns
+                if hires_regs:
+                    # 11 terms: exact solution!
+                    r1 += (phase >> 15) + (phase >> 16)-(phase >> 18)
+                    r1 += (phase >> 21) + (phase >> 23)
+                return r1.evaluate(self)
 
     def sim_log(self, msg, register, opt):
         if isinstance(register, Register):

@@ -7,7 +7,7 @@ from ..lang.timed_statements import (
         SetMarkersStatement,
         AwgDcOffsetStatement, AwgGainStatement,
         ShiftPhaseStatement, SetPhaseStatement,
-        PlayWaveStatement
+        PlayWaveStatement, SetFrequencyStatement,
         )
 
 
@@ -74,12 +74,21 @@ class ControlBuilder(SequenceBuilder):
         wave1 = self._translate_wave(wave1)
         self._add_statement(PlayWaveStatement(t1, wave0, wave1))
 
-    def shift_phase(self, delta, t_offset=0, hires_reg=False):
+    def set_frequency(self, frequency, t_offset=0):
+        '''
+        Args:
+            frequency (float): nco frequency in Hz
+        '''
+        t1 = self.current_time + t_offset
+        self.set_pulse_end(t1)
+        self._add_statement(SetFrequencyStatement(t1, frequency))
+
+    def shift_phase(self, delta, t_offset=0, hires_reg=True):
         '''
         Args:
             hires_reg:
-                If then and `phase` is a Register, use 2 registers for
-                conversion of phase, i.e. resolution = 1/(400*400)
+                Convert register to exactly phase if True, else
+                convert register value with relative error of 2e-4.
 
         NOTE:
             When `phase` is a Register many instructions are added for the
@@ -93,12 +102,12 @@ class ControlBuilder(SequenceBuilder):
         self.set_pulse_end(t1)
         self._add_statement(ShiftPhaseStatement(t1, delta, hires_reg))
 
-    def set_phase(self, phase, t_offset=0, hires_reg=False):
+    def set_phase(self, phase, t_offset=0, hires_reg=True):
         '''
         Args:
             hires_reg:
-                If then and `phase` is a Register, use 2 registers for
-                conversion of phase, i.e. resolution = 1/(400*400)
+                Convert register to exactly phase if True, else
+                convert register value with relative error of 2e-4.
 
         NOTE:
             hires_reg adds many instructions. Execution costs ~500 ns.
@@ -230,6 +239,42 @@ class ControlBuilder(SequenceBuilder):
             else:
                 # assume there will be another instruction setting offset and gain.
                 pass
+
+    def chirp(self, duration, amplitude, f_start, f_end, t_offset=0):
+        if isinstance(duration, (Register, Expression)):
+            raise Q1TypeError('Chirp duration cannot be a variable or expression; '
+                              'Unroll loop using Python for-loop.')
+        if (isinstance(f_start, (Register, Expression))
+            or isinstance(f_end, (Register, Expression))):
+            raise Q1TypeError('Chirp frequency cannot be a variable or expression; '
+                              'Unroll loop using Python for-loop.')
+
+        chirp_loop_time = 100
+        self.add_comment(f'chirp({duration}, {amplitude}, {f_start/1e6:7.3f}, {f_end/1e6:7.3f} MHz)')
+        with self._local_timeline(t_offset=t_offset, duration=duration):
+            f_step = (f_end - f_start) * chirp_loop_time / duration
+            # Note: For the loop we need an integer frequency step. This could add a small
+            # error of 0.5 Hz per iteration of the loop.
+            # The maximum errror for a 10 ms chirp (100_000 iterations) is 0.05 MHz.
+            # TODO: for more precision: add f_step fraction (use 64 bit numbers?)
+            f_step = round(f_step)
+            w_chirpI, w_chirpQ, delta_phase = self._waves.get_chirp(chirp_loop_time, f_step)
+            # divmod, but with rem [1,100], and n > 1
+            n, rem = divmod(duration-1, chirp_loop_time)
+            rem += 1
+            self.Rs._freq = int(f_start)
+            self.set_gain(amplitude, amplitude)
+            with self._seq_repeat(n):
+                self.shift_phase(delta_phase)
+                self.set_frequency(self.Rs._freq)
+                self.play(w_chirpI, w_chirpQ)
+                self.Rs._freq += f_step
+                self.wait(chirp_loop_time)
+            self.shift_phase(delta_phase)
+            self.set_frequency(self.Rs._freq)
+            self.play(w_chirpI, w_chirpQ)
+            self.wait(rem)
+            self.set_gain(0.0)
 
     def _apply_paths(self, arg0, arg1):
         if len(self._enabled_paths) == 0:
