@@ -7,6 +7,7 @@ from ..lang.timed_statements import (
         SetMarkersStatement,
         AwgDcOffsetStatement, AwgGainStatement,
         ShiftPhaseStatement, SetPhaseStatement,
+        ResetPhaseStatement,
         PlayWaveStatement, SetFrequencyStatement,
         )
 
@@ -82,6 +83,12 @@ class ControlBuilder(SequenceBuilder):
         t1 = self.current_time + t_offset
         self.set_pulse_end(t1)
         self._add_statement(SetFrequencyStatement(t1, frequency))
+
+    def reset_phase(self, t_offset=0):
+        t1 = self.current_time + t_offset
+        self.set_pulse_end(t1)
+        self._add_statement(ResetPhaseStatement(t1))
+
 
     def shift_phase(self, delta, t_offset=0, hires_reg=True):
         '''

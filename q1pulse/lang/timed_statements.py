@@ -54,6 +54,16 @@ class SetFrequencyStatement(TimedStatement):
     def write_instruction(self, generator):
         generator.set_freq(self.time, self.frequency)
 
+class ResetPhaseStatement(TimedStatement):
+    def __init__(self, time):
+        super().__init__(time)
+
+    def __repr__(self):
+        return f'reset_phase'
+
+    def write_instruction(self, generator):
+        generator.reset_phase(self.time)
+
 class ShiftPhaseStatement(TimedStatement):
     def __init__(self, time, delta, hires_regs=False):
         super().__init__(time)
