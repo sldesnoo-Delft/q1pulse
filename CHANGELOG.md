@@ -1,12 +1,16 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
-## \[0.8.0] - 2022-12-19
+## \[0.8.0] - 2022-12-@@
 
 - Update to qblox_instruments v0.8
 - Added set_freq
 - Changed arguments set_ph, set_ph_delta
 - Added chirp to sequencer
+
+## \[0.7.2] - 2022-12-20
+
+- Added try/except around qcodes cache()
 
 ## \[0.7.1] - 2022-12-08
 
