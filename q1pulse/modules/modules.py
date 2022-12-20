@@ -115,10 +115,13 @@ class QbloxModule:
         full_name = f'sequencer{seq_nr}.{name}'
         seq = getattr(self.pulsar, f'sequencer{seq_nr}')
         param = getattr(seq, name)
-        if cache and param.cache() == value:
-            if QbloxModule.verbose:
-                logging.debug(f'# {full_name}={value} -- cached')
-            return
+        try:
+            if cache and param.cache() == value:
+                if QbloxModule.verbose:
+                    logging.debug(f'# {full_name}={value} -- cached')
+                return
+        except:
+            logging.info(f'Failed to get cache value for {full_name}')
         result = param(value)
         if QbloxModule.verbose:
             logging.info(f'{full_name}={value}')
