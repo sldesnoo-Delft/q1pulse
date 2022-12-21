@@ -1,3 +1,4 @@
+import time
 
 from q1pulse.instrument import Q1Instrument
 
@@ -36,6 +37,10 @@ with p.loop_linspace(-0.5, 0.5, N) as v2:
 
 p.compile(annotate=True, listing=True)
 
+#%%
+start = time.perf_counter()
 instrument.run_program(p)
-
+duration = time.perf_counter() - start
+print(f'{duration*1000:6.3f} ms')
+#%%
 plot_output([qcm0, qrm1])
