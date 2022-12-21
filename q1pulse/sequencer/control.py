@@ -257,6 +257,11 @@ class ControlBuilder(SequenceBuilder):
                               'Unroll loop using Python for-loop.')
 
         chirp_loop_time = 100
+        f_start = round(f_start)
+        f_end = round(f_end)
+        if f_start * f_end <= 0:
+            raise Q1ValueError('Chirping through f=0.0 Hz is currently not possible')
+
         self.add_comment(f'chirp({duration}, {amplitude}, {f_start/1e6:7.3f}, {f_end/1e6:7.3f} MHz)')
         with self._local_timeline(t_offset=t_offset, duration=duration):
             f_step = (f_end - f_start) * chirp_loop_time / duration
@@ -269,14 +274,20 @@ class ControlBuilder(SequenceBuilder):
             # divmod, but with rem [1,100], and n > 1
             n, rem = divmod(duration-1, chirp_loop_time)
             rem += 1
+
+            # Note: Qblox sequencer inverts phase delta when frequency is negative
+            if f_start < 0:
+                delta_phase = -delta_phase
+
             self.Rs._freq = int(f_start)
             self.set_gain(amplitude, amplitude)
-            with self._seq_repeat(n):
-                self.shift_phase(delta_phase)
-                self.set_frequency(self.Rs._freq)
-                self.play(w_chirpI, w_chirpQ)
-                self.Rs._freq += f_step
-                self.wait(chirp_loop_time)
+            if n > 0:
+                with self._seq_repeat(n):
+                    self.shift_phase(delta_phase)
+                    self.set_frequency(self.Rs._freq)
+                    self.play(w_chirpI, w_chirpQ)
+                    self.Rs._freq += f_step
+                    self.wait(chirp_loop_time)
             self.shift_phase(delta_phase)
             self.set_frequency(self.Rs._freq)
             self.play(w_chirpI, w_chirpQ)
