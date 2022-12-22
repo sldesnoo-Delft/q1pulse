@@ -99,8 +99,8 @@ class ControlBuilder(SequenceBuilder):
 
         NOTE:
             When `phase` is a Register many instructions are added for the
-            conversion of the `phase` This costs ~150 ns when hires_reg=False.
-            When hires_reg=True this costs ~500 ns.
+            conversion of the `phase` This costs ~188 ns when hires_reg=False.
+            When hires_reg=True this costs ~268 ns.
 
             When `phase` is a constant in q1asm, then the resolution is 1e-9.
             No extra time is needed.
@@ -117,8 +117,9 @@ class ControlBuilder(SequenceBuilder):
                 convert register value with relative error of 2e-4.
 
         NOTE:
-            hires_reg adds many instructions. Execution costs ~500 ns.
-            When `phase` is a Register the conversion costs ~ 50 ns.
+            When `phase` is a Register many instructions are added for the
+            conversion of the `phase` This costs ~188 ns when hires_reg=False.
+            When hires_reg=True this costs ~268 ns.
         '''
         t1 = self.current_time + t_offset
         self.set_pulse_end(t1)
