@@ -141,10 +141,90 @@ local_0:   asr            R2,16,R4   # L0016 temp R4
            set_awg_offs   0,0        # L0044 @ 812
 # awg_gain = 0.0, None t=812 
            set_awg_gain   0,0        # L0045 @ 812
-           upd_param      140        # L0046 t=812
+           upd_param      144        # L0046 t=812
+# ramp(104, 0.0, 3.082275390625e-05) 
+# Rs._ramp_offset:float = 0.0 
+           move           0,R2       # L0047 
+# awg_offset = Rs._ramp_offset, None t=956 
+           nop                       # L0048  asr wait for R2
+           asr            R2,16,R3   # L0049 temp R3
+           nop                       # L0050  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0051 @ 956
+           upd_param      104        # L0052 t=956
+# awg_offset = 0.0, None t=1060 
+# ------:  set_awg_offs   0,0        # @ 1060 = overwritten =
+# awg_gain = 0.0, None t=1060 
+           set_awg_gain   0,0        # L0053 @ 1060
+# ramp(104, 0.0, 3.0517578125e-05) 
+# Rs._ramp_offset:float = 0.0 
+           move           0,R2       # L0054 
+# awg_offset = Rs._ramp_offset, None t=1060 
+           nop                       # L0055  asr wait for R2
+           asr            R2,16,R3   # L0056 temp R3
+# -- Overwrites set_awg_offs at 1060 -- 
+           nop                       # L0057  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0058 @ 1060
+           upd_param      104        # L0059 t=1060
+# awg_offset = 0.0, None t=1164 
+# ------:  set_awg_offs   0,0        # @ 1164 = overwritten =
+# awg_gain = 0.0, None t=1164 
+           set_awg_gain   0,0        # L0060 @ 1164
+# ramp(104, 0.0, 3.021240234375e-05) 
+# Rs._ramp_offset:float = 0.0 
+           move           0,R2       # L0061 
+# awg_offset = Rs._ramp_offset, None t=1164 
+           nop                       # L0062  asr wait for R2
+           asr            R2,16,R3   # L0063 temp R3
+# -- Overwrites set_awg_offs at 1164 -- 
+           nop                       # L0064  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0065 @ 1164
+           upd_param      104        # L0066 t=1164
+# awg_offset = 0.0, None t=1268 
+# ------:  set_awg_offs   0,0        # @ 1268 = overwritten =
+# awg_gain = 0.0, None t=1268 
+           set_awg_gain   0,0        # L0067 @ 1268
+# ramp(100000, 0.0, 6.103515625e-05) 
+# Rs._ramp_offset:float = 0.0 
+           move           0,R2       # L0068 
+# awg_offset = Rs._ramp_offset, None t=1268 
+           nop                       # L0069  asr wait for R2
+           asr            R2,16,R3   # L0070 temp R3
+# -- Overwrites set_awg_offs at 1268 -- 
+           nop                       # L0071  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0072 @ 1268
+           upd_param      50000      # L0073 t=1268
+# Rs._ramp_offset:float = Rs._ramp_offset + 3.0517578125e-05 
+           add            R2,65535,R2 # L0074 
+# awg_offset = Rs._ramp_offset, None t=51268 
+           nop                       # L0075  asr wait for R2
+           asr            R2,16,R3   # L0076 temp R3
+           nop                       # L0077  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0078 @ 51268
+           upd_param      50000      # L0079 t=51268
+# awg_offset = 0.0, None t=101268 
+# ------:  set_awg_offs   0,0        # @ 101268 = overwritten =
+# awg_gain = 0.0, None t=101268 
+           set_awg_gain   0,0        # L0080 @ 101268
+# ramp(100000, 0.0, 3.0517578125e-05) 
+# Rs._ramp_offset:float = 0.0 
+           move           0,R2       # L0081 
+# awg_offset = Rs._ramp_offset, None t=101268 
+           nop                       # L0082  asr wait for R2
+           asr            R2,16,R3   # L0083 temp R3
+# -- Overwrites set_awg_offs at 101268 -- 
+           nop                       # L0084  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0085 @ 101268
+           upd_param      65532      # L0086 t=101268
+# awg_offset = 0.0, None t=201268 
+           set_awg_offs   0,0        # L0087 @ 201268
+# wait 99996 (t=201268) 
+           wait           34468      # L0088 
+# awg_gain = 0.0, None t=201268 
+           set_awg_gain   0,0        # L0089 @ 201268
+           upd_param      100        # L0090 t=201268
 # --END-- 
-           loop           R1,@_start # L0047 
-           upd_param      4          # L0048 t=952
-           stop                      # L0049 
+           loop           R1,@_start # L0091 
+           upd_param      4          # L0092 t=201368
+           stop                      # L0093 
 """
 

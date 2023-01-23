@@ -169,8 +169,8 @@ class ControlBuilder(SequenceBuilder):
         ramp_loop_time = 100
         self.add_comment(f'ramp({duration}, {v_start}, {v_end})')
         with self._local_timeline(t_offset=t_offset, duration=duration):
-            # w_ramp is a wave from 0 to 1.0
             if duration <= ramp_loop_time:
+                # w_ramp is a wave from 0 to 1.0
                 w_ramp = self._waves.get_ramp(duration)
                 self.set_gain(v_end - v_start)
                 self.set_offset(v_start)
@@ -187,6 +187,7 @@ class ControlBuilder(SequenceBuilder):
                 self.Rs._ramp_step = (v_end - v_start)
                 if shift >= 1:
                     self.Rs._ramp_step >>= shift
+                # w_ramp is a wave from 0 to 1.0
                 w_ramp = self._waves.get_ramp(wave_duration)
                 self.Rs._ramp_offset = v_start
                 self.set_gain(self.Rs._ramp_step)
@@ -225,18 +226,23 @@ class ControlBuilder(SequenceBuilder):
                     # steps of 1 LSB
                     min_step = lsb
                     n_steps = int(abs(v_end - v_start) / min_step)
-                    # minimum time multiple of 4 ns
-                    t_step = int(duration / n_steps)
-                    t_step = int(t_step / 4) * 4
-                    # divmod, but with rem [1,100], and n > 1
-                    n, rem = divmod(duration-1, t_step)
-                    rem += 1
-                    step = (v_end - v_start) * t_step / duration
+                    if n_steps == 0:
+                        n = 0
+                        rem = duration
+                    else:
+                        # minimum time multiple of 4 ns
+                        t_step = int(duration / n_steps)
+                        t_step = int(t_step / 4) * 4
+                        # divmod, but with rem [1,100]
+                        n, rem = divmod(duration-1, t_step)
+                        rem += 1
+                        step = (v_end - v_start) * t_step / duration
                     self.Rs._ramp_offset = v_start
-                    with self._seq_repeat(n):
-                        self.set_offset(self.Rs._ramp_offset)
-                        self.Rs._ramp_offset += step
-                        self.wait(t_step)
+                    if n > 0:
+                        with self._seq_repeat(n):
+                            self.set_offset(self.Rs._ramp_offset)
+                            self.Rs._ramp_offset += step
+                            self.wait(t_step)
                     self.set_offset(self.Rs._ramp_offset)
                     self.wait(rem)
 

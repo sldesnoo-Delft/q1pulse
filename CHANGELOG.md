@@ -3,6 +3,10 @@ All notable changes to Q1Pulse will be documented in this file.
 
 ## \[0.8.0] - 2022-12-22
 
+- Fixed compilation of ramps with (v_start-v_end) < 1 bit
+
+## \[0.8.0] - 2022-12-22
+
 - Update to qblox_instruments v0.8
 - Added set_freq
 - Changed arguments set_ph, set_ph_delta
