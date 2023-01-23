@@ -128,12 +128,14 @@ Notes:
 Basic instructions:
 - set_markers (1)
 - set_offset, set_gain (1)
-- set_phase, shift_phase (1)
+- reset_phase, set_phase, shift_phase (1)
+- set_frequency (1)
 - play (1)
 Composite instructions:
 - block_pulse
 - shaped_pulse
 - ramp: creates ramp on 1 output (2)
+- chirp: a linear sweep of the frequency (using IQ modulation)
 
 Notes:
 1. instruction does not advance time in sequence.
