@@ -121,7 +121,7 @@ class QbloxModule:
                     logging.debug(f'# {full_name}={value} -- cached')
                 return
         except:
-            logging.info(f'Failed to get cache value for {full_name}')
+            logging.debug(f'No cache value for {full_name}')
         result = param(value)
         if QbloxModule.verbose:
             logging.info(f'{full_name}={value}')
@@ -191,11 +191,6 @@ class QrmModule(QbloxModule):
         self.max_output_voltage = 0.5 if not pulsar.is_rf_type else 3.3
 
     def _get_seq_paths(self, channels):
-        if len(channels) == 1:
-            channel = channels[0]
-            if channel not in [0, 1]:
-                raise Exception(f'illegal channel combination {channels}')
-
         for channel in channels:
             if channel not in [0, 1]:
                 raise Exception(f'illegal channel combination {channels}')
