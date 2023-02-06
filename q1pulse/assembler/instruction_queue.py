@@ -41,7 +41,6 @@ class InstructionQueue:
         self._last_rt_command = None
         self._finalized = False
         self._updating_reg = None
-        self._n_rt_instr = 0
 
     def add_comment(self, line, init_section=False):
         if not self.add_comments:
@@ -83,7 +82,6 @@ class InstructionQueue:
             self._updating_reg = args[-1]
 
     def _add_rt_setting(self, mnemonic, *args, time=None):
-        self._n_rt_instr += 1
         if self.add_comments:
             comment = f'@ {time}'
         else:
@@ -94,7 +92,6 @@ class InstructionQueue:
         return instruction
 
     def _add_rt_command(self, mnemonic, *args, time=None, index=None):
-        self._n_rt_instr += 1
         self._wait_till(time, pending_update='merge')
         wait_after = RT_RESOLUTION
         if self.add_comments:

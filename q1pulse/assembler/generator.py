@@ -161,7 +161,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         self.set_label('_start')
         self.block_start()
         self.reset_phase(0)
-        self._n_rt_instr = 0
+        self._contains_io_instr = False
 
         if self._repetitions > 1:
             self.repetitions_reg = self.allocate_reg('_repetitions')
@@ -326,6 +326,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
     @register_args(signature='tI')
     def set_mrk(self, time, value):
         self._add_rt_setting('set_mrk', value, time=time)
+        self._contains_io_instr = True
 
     @register_args(signature='t')
     def reset_phase(self, time):
@@ -341,6 +342,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         instr = self._add_rt_setting('set_awg_offs', offset0, offset1,
                                      time=time)
         self._last_rt_settings['set_awg_offs'] = (time, instr)
+        self._contains_io_instr = True
 
     @register_args(signature='tFF')
     def awg_gain(self, time, gain0, gain1):
@@ -391,6 +393,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         wave1 = self._data.translate_wave(wave1)
         self._add_rt_command('play', wave0, wave1,
                              time=time)
+        self._contains_io_instr = True
 
     @register_args(signature='toI')
     def acquire(self, time, section, bin_index):
@@ -398,6 +401,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         self._add_rt_command('acquire',
                              section, bin_index,
                              time=time)
+        self._contains_io_instr = True
 
     @register_args(signature='toIoo')
     def acquire_weighed(self, time, bins, bin_index, weight0, weight1):
@@ -417,6 +421,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             self._add_rt_command('acquire_weighed',
                                  bins, bin_index, weight0, weight1,
                                  time=time)
+        self._contains_io_instr = True
 
     @contextmanager
     def unsigned_registers(self):
@@ -643,9 +648,9 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
     def assemble(self, listing=False, json_output=False, filename=None):
         if listing:
             self._save_prog_and_data_txt(filename.replace('.json','.q1asm'))
-        if self._optimize > 0 and self._n_rt_instr == 0:
+        if self._optimize > 0 and not self._contains_io_instr:
             # no RT instructions (other than reset_ph): program does nothing
-            logging.debug('No RT statements')
+            logging.debug('No RT IO statements')
             self.q1asm = None
         else:
             d = self._data.get_data_dict()
