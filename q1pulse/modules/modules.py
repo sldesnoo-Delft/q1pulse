@@ -6,6 +6,8 @@ from abc import abstractmethod
 from .sequencer_states import translate_seq_state
 from ..util.qblox_version import qblox_version, Version
 
+logger = logging.getLogger(__name__)
+
 @dataclass
 class Sequencer:
     module_name: str
@@ -118,13 +120,13 @@ class QbloxModule:
         try:
             if cache and param.cache() == value:
                 if QbloxModule.verbose:
-                    logging.debug(f'# {full_name}={value} -- cached')
+                    logger.debug(f'# {full_name}={value} -- cached')
                 return
         except:
-            logging.debug(f'No cache value for {full_name}')
+            logger.debug(f'No cache value for {full_name}')
         result = param(value)
         if QbloxModule.verbose:
-            logging.info(f'{full_name}={value}')
+            logger.info(f'{full_name}={value}')
         return result
 
     def invalidate_cache(self, seq_nr, param_name):
@@ -143,7 +145,7 @@ class QbloxModule:
         param = self.pulsar.parameters[name]
         if param.cache() == value:
             if QbloxModule.verbose:
-                logging.debug(f'# {name}={value} -- cached')
+                logger.debug(f'# {name}={value} -- cached')
             return
         param(value)
 
@@ -201,7 +203,7 @@ class QrmModule(QbloxModule):
                 else:
                     pulsar.root_instrument.start_adc_calib(pulsar.slot_idx)
             except Exception as ex:
-                logging.warning('Calibration of QRM failed', ex)
+                logger.warning('Calibration of QRM failed', ex)
                 print(f'Calibration of QRM failed: {ex}')
 
     def _get_seq_paths(self, channels):

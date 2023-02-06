@@ -18,6 +18,7 @@ from ..lang.exceptions import (
         Q1Exception, Q1CompileError
         )
 
+logger = logging.getLogger(__name__)
 
 def _int_u32(value):
     if value < 0:
@@ -650,7 +651,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             self._save_prog_and_data_txt(filename.replace('.json','.q1asm'))
         if self._optimize > 0 and not self._contains_io_instr:
             # no RT instructions (other than reset_ph): program does nothing
-            logging.debug('No RT IO statements')
+            logger.debug('No RT IO statements')
             self.q1asm = None
         else:
             d = self._data.get_data_dict()

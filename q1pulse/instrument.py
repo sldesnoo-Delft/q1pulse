@@ -12,6 +12,7 @@ from .modules.modules import QcmModule, QrmModule
 from .util.qblox_version import check_qblox_instrument_version, qblox_version, Version
 from qblox_instruments import InstrumentType
 
+logger = logging.getLogger(__name__)
 
 class Q1Instrument:
     # Postpone error checking till the end to save communication overhead.
@@ -28,7 +29,7 @@ class Q1Instrument:
             q1dir.mkdir(exist_ok=True)
             self.temp_dir = TemporaryDirectory(dir=q1dir)
             self.path = self.temp_dir.name
-            logging.info('Instrument upload temp dir: ' + self.path)
+            logger.info('Instrument upload temp dir: ' + self.path)
         self.root_instruments = set()
         self.modules = {}
         self.controllers = {}
@@ -106,11 +107,11 @@ class Q1Instrument:
             self._loaded_q1asm[name] = q1asm
             if q1asm is None:
                 module.disable_seq(seq)
-                logging.info(f'Sequencer {name} no sequence')
+                logger.info(f'Sequencer {name} no sequence')
                 continue
             module.upload(seq.seq_nr, q1asm)
             t = (time.perf_counter() - t_start) * 1000
-            logging.info(f'Sequencer {name} loaded ({t:5.3f} ms)')
+            logger.info(f'Sequencer {name} loaded ({t:5.3f} ms)')
 
             module.enable_seq(seq)
             prog_seq = program[name]
@@ -123,7 +124,7 @@ class Q1Instrument:
                 module.set_mixer_phase_offset_degree(seq.seq_nr, prog_seq.mixer_phase_offset_degree)
 
         t = (time.perf_counter() - t_start) * 1000
-        logging.info(f'Configure QRMs ({t:5.3f} ms)')
+        logger.info(f'Configure QRMs ({t:5.3f} ms)')
         for name,seq in self.readouts.items():
             readout = program[name]
             module = self.modules[seq.module_name]
@@ -143,16 +144,16 @@ class Q1Instrument:
 
         if Q1Instrument._i_feel_lucky:
             t = (time.perf_counter() - t_start) * 1000
-            logging.info(f'Check status  ({t:5.3f} ms)')
+            logger.info(f'Check status  ({t:5.3f} ms)')
             self.check_system_errors()
 
         for instrument in self.root_instruments:
             t = (time.perf_counter() - t_start) * 1000
-            logging.info(f'Start  ({t:5.3f} ms)')
+            logger.info(f'Start  ({t:5.3f} ms)')
             instrument.start_sequencer()
 
         t = (time.perf_counter() - t_start) * 1000
-        logging.info(f'Duration upload/start: ({t:5.3f}ms)')
+        logger.info(f'Duration upload/start: ({t:5.3f}ms)')
 
     def wait_stopped(self, timeout_minutes=1):
         # Wait for completion
@@ -164,20 +165,20 @@ class Q1Instrument:
             if not module.enabled(seq.seq_nr):
                 continue
             state = module.get_sequencer_state(seq.seq_nr, timeout_minutes)
-            logging.log(state.level,
+            logger.log(state.level,
                         f'Status {name} ({module.pulsar.name}:{seq.seq_nr}):'
                          f'{state}')
             msg_level = max(msg_level, state.level)
             if state.status != 'STOPPED' or state.level >= logging.WARNING:
                 errors[name] = str(state)
         if msg_level == logging.ERROR:
-            logging.error('*** Program errors ***')
+            logger.error('*** Program errors ***')
             for name,state in errors.items():
-                logging.error(f'  {name}: {state}')
-            raise Exception(f'Q1 failures (see logging):\n {errors}')
+                logger.error(f'  {name}: {state}')
+            raise Exception(f'Q1 failures (see logger):\n {errors}')
 
         for instrument in self.root_instruments:
-            logging.info(f'Stop')
+            logger.info(f'Stop')
             instrument.stop_sequencer()
 
     def check_system_errors(self):
@@ -188,20 +189,20 @@ class Q1Instrument:
 
             if len(errors) > 0:
                 if Q1Instrument._i_feel_lucky:
-                    logging.error(f"You're not lucky. One of the previous calls failed...")
+                    logger.error(f"You're not lucky. One of the previous calls failed...")
                 msg = instrument.name + ':' + '\n'.join(errors)
-                logging.error(msg)
+                logger.error(msg)
                 raise RuntimeError(msg)
 
     def get_acquisition_bins(self, sequencer_name, bins):
         seq = self.readouts[sequencer_name]
         q1asm = self._loaded_q1asm[sequencer_name]
         if q1asm is None or len(q1asm['acquisitions']) == 0:
-            logging.warning(f'No acquisitions for {sequencer_name}')
+            logger.warning(f'No acquisitions for {sequencer_name}')
             return None
         module = self.modules[seq.module_name]
         state = module.pulsar.get_acquisition_state(seq.seq_nr, 1)
-        logging.info(f'Acquisition status {sequencer_name} ({module.pulsar.name}:'
+        logger.info(f'Acquisition status {sequencer_name} ({module.pulsar.name}:'
                      f'{seq.seq_nr}): {state}')
         return module.pulsar.get_acquisitions(seq.seq_nr)[bins]['acquisition']['bins']
 

@@ -3,6 +3,8 @@ from typing import List
 from logging import DEBUG, INFO, WARNING, ERROR
 import logging
 
+logger = logging.getLogger(__name__)
+
 _flag_map = {
     'DISARMED': ERROR,
     'FORCED STOP': ERROR,
@@ -60,7 +62,7 @@ class SequencerState:
         for flag in flags:
             flag_str = str(flag).replace('_', ' ')
             if flag_str not in _flag_map:
-                logging.error(f'Unknown flag {flag_str} in sequencer state')
+                logger.error(f'Unknown flag {flag_str} in sequencer state')
                 self.errors.append(flag_str)
                 self.level = ERROR
             else:
