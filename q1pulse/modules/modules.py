@@ -189,6 +189,20 @@ class QrmModule(QbloxModule):
     def __init__(self, pulsar):
         super().__init__(pulsar)
         self.max_output_voltage = 0.5 if not pulsar.is_rf_type else 3.3
+        self._start_adc_calibration()
+
+    def _start_adc_calibration(self):
+        if qblox_version >= Version('0.8') and qblox_version < Version('0.9'):
+            print(f'Calibrating QRM {self.name}')
+            try:
+                pulsar = self.pulsar
+                if hasattr(pulsar, 'start_adc_calib'):
+                    pulsar.start_adc_calib()
+                else:
+                    pulsar.root_instrument.start_adc_calib(pulsar.slot_idx)
+            except Exception as ex:
+                logging.warning('Calibration of QRM failed', ex)
+                print(f'Calibration of QRM failed: {ex}')
 
     def _get_seq_paths(self, channels):
         for channel in channels:
