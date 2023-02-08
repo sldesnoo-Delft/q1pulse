@@ -55,3 +55,9 @@ class Q1StateError(Q1Exception):
     '''
     Raised when program or sequence is modified after compilation.
     '''
+
+class Q1InputOverloaded(Q1Exception):
+    '''
+    Raised when the input of QRM is overloaded during acquisition.
+    Exception can be suppressed with `q1pulse.set_exception_on_overload(False)`.
+    '''

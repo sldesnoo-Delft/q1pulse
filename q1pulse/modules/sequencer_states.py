@@ -17,19 +17,20 @@ _flag_map = {
     'ACQ WEIGHT PLAYBACK INDEX INVALID PATH 1': ERROR,
     'ACQ SCOPE DONE PATH 0': DEBUG,
     'ACQ SCOPE DONE PATH 1': DEBUG,
-    'ACQ SCOPE OUT-OF-RANGE PATH 0': WARNING,
-    'ACQ SCOPE OUT-OF-RANGE PATH 1': WARNING,
+    'ACQ SCOPE OUT OF RANGE PATH 0': WARNING,
+    'ACQ SCOPE OUT OF RANGE PATH 1': WARNING,
     'ACQ SCOPE OVERWRITTEN PATH 0': INFO,
     'ACQ SCOPE OVERWRITTEN PATH 1': INFO,
     'ACQ BINNING DONE': DEBUG,
     'ACQ BINNING FIFO ERROR': ERROR,
     'ACQ BINNING COMM ERROR': ERROR,
-    'ACQ BINNING OUT-OF-RANGE': WARNING,
+    'ACQ BINNING OUT OF RANGE': WARNING,
     'ACQ INDEX INVALID': ERROR,
     'ACQ BIN INDEX INVALID': ERROR,
     'OUTPUT OVERFLOW': ERROR,
     'CLOCK INSTABILITY': ERROR,
     }
+
 
 @dataclass
 class SequencerState:
@@ -39,6 +40,7 @@ class SequencerState:
     warnings: List[str] = field(default_factory=list)
     info_msgs: List[str] = field(default_factory=list)
     debug_msgs: List[str] = field(default_factory=list)
+    input_overloaded: bool = False
 
     def __post_init__(self):
         self.msg_list = {
@@ -67,6 +69,8 @@ class SequencerState:
                 self.level = ERROR
             else:
                 level = _flag_map[flag_str]
+                if 'OUT OF RANGE' in flag_str:
+                    self.input_overloaded = True
                 self.level = max(level, self.level)
                 self.msg_list[level].append(flag_str)
 

@@ -5,6 +5,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from .program import Program
+from .lang.exceptions import Q1InputOverloaded
 from .sequencer.sequencer import SequenceBuilder
 from .sequencer.control import ControlBuilder
 from .sequencer.readout import ReadoutBuilder
@@ -14,11 +15,14 @@ from qblox_instruments import InstrumentType
 
 logger = logging.getLogger(__name__)
 
+
 class Q1Instrument:
     # Postpone error checking till the end to save communication overhead.
     # System errors are only reported for SCPI errors. It's almost impossible to
     # get an error, because everything is already checked in qblox-instruments code.
     _i_feel_lucky = True
+
+    _exception_on_overload = True
 
     def __init__(self, path=None, add_traceback=True):
         check_qblox_instrument_version()
@@ -169,6 +173,13 @@ class Q1Instrument:
                         f'Status {name} ({module.pulsar.name}:{seq.seq_nr}):'
                          f'{state}')
             msg_level = max(msg_level, state.level)
+            if state.input_overloaded:
+                if Q1Instrument._exception_on_overload:
+                    raise Q1InputOverloaded(
+                            f'INPUT OVERLOAD on {name}.'
+                            '\nException can be suppressed with q1pulse.set_exception_on_overload(False)')
+                else:
+                    print(f'WARNING: input overload on {name}')
             if state.status != 'STOPPED' or state.level >= logging.WARNING:
                 errors[name] = str(state)
         if msg_level == logging.ERROR:
@@ -218,6 +229,14 @@ class Q1Instrument:
                 1.0 * 10**(-dB/20)
                 for dB in [in0_gain, in1_gain])
         return in_range
+
+
+def set_exception_on_overload(enable:bool):
+    '''
+    Setting set_exception_on_overload to False suppresses Exception
+    when the QRM input is overloaded.
+    '''
+    Q1Instrument._exception_on_overload = enable
 
 
 def check_instrument_status(instrument, print_status=False):

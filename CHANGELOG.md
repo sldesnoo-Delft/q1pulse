@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.8.2] - 2023-02-08
+
+- Added QRM ADC calibration.
+- Changed logging.info() to logger.info()
+- Improved Exception and message on QRM input overload
+- Allow suppression of input overload exception with set_exception_on_overload(False)
+
 ## \[0.8.1] - 2023-01-23
 
 - Fixed compilation of ramps with (v_start-v_end) < 1 bit
