@@ -4,6 +4,8 @@ All notable changes to Q1Pulse will be documented in this file.
 ## \[0.8.3] - 2023-02-08
 
 - Do not start root-instrument if it has no active sequences.
+- Disable continuous system error checking after initial configuration of all modules.
+- Added short sleep before calibration to avoid calibration failures.
 
 ## \[0.8.2] - 2023-02-08
 
