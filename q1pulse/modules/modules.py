@@ -1,4 +1,5 @@
 import logging
+import time
 from dataclasses import dataclass
 from typing import List, Optional
 from abc import abstractmethod
@@ -195,6 +196,8 @@ class QrmModule(QbloxModule):
 
     def _start_adc_calibration(self):
         if qblox_version >= Version('0.8') and qblox_version < Version('0.9'):
+            # A short sleep before starting calibration avoids calibration failures...
+            time.sleep(0.1)
             print(f'Calibrating QRM {self.name}')
             try:
                 pulsar = self.pulsar
