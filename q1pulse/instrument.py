@@ -50,10 +50,12 @@ class Q1Instrument:
             raise Exception(f'Unknown instrument type: {pulsar.instrument_type}')
 
     def add_qcm(self, pulsar):
+        logger.info(f'Add {pulsar.name}')
         self.modules[pulsar.name] = QcmModule(pulsar)
         self._add_root_instrument(pulsar.root_instrument)
 
     def add_qrm(self, pulsar):
+        logger.info(f'Add {pulsar.name}')
         self.modules[pulsar.name] = QrmModule(pulsar)
         self._add_root_instrument(pulsar.root_instrument)
 
@@ -72,10 +74,6 @@ class Q1Instrument:
 
     def _add_root_instrument(self, root_instrument):
         self.root_instruments.add(root_instrument)
-        if Q1Instrument._i_feel_lucky and hasattr(root_instrument, '_debug'):
-            # Change the debug level to speed up communication.
-            # Errors will be checked before start of the sequence.
-            root_instrument._debug = 2
 
     def new_program(self, prog_name):
         program = Program(path=os.path.join(self.path, prog_name))
@@ -102,6 +100,10 @@ class Q1Instrument:
 
         for instrument in self.root_instruments:
             check_instrument_status(instrument)
+            if Q1Instrument._i_feel_lucky and hasattr(instrument, '_debug'):
+                # Change the debug level to speed up communication.
+                # Errors will be checked before start of the sequence.
+                instrument._debug = 2
 
         instruments_with_sequence = set()
         sequencers = { **self.controllers, **self.readouts }
