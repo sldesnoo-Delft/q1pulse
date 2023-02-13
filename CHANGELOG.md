@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.8.3] - 2023-02-08
+
+- Do not start root-instrument if it has no active sequences.
+
 ## \[0.8.2] - 2023-02-08
 
 - Added QRM ADC calibration.

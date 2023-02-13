@@ -103,6 +103,7 @@ class Q1Instrument:
         for instrument in self.root_instruments:
             check_instrument_status(instrument)
 
+        instruments_with_sequence = set()
         sequencers = { **self.controllers, **self.readouts }
         for name,seq in sequencers.items():
             module = self.modules[seq.module_name]
@@ -113,6 +114,7 @@ class Q1Instrument:
                 module.disable_seq(seq)
                 logger.info(f'Sequencer {name} no sequence')
                 continue
+            instruments_with_sequence.add(module.pulsar.root_instrument)
             module.upload(seq.seq_nr, q1asm)
             t = (time.perf_counter() - t_start) * 1000
             logger.info(f'Sequencer {name} loaded ({t:5.3f} ms)')
@@ -143,7 +145,7 @@ class Q1Instrument:
         # Note: arm per sequencer. Arm on the cluster still gives red leds on the modules.
         for module in self.modules.values():
             module.arm_sequencers()
-#        for instrument in self.root_instruments:
+#        for instrument in instruments_with_sequence:
 #            instrument.arm_sequencer()
 
         if Q1Instrument._i_feel_lucky:
@@ -151,7 +153,7 @@ class Q1Instrument:
             logger.info(f'Check status  ({t:5.3f} ms)')
             self.check_system_errors()
 
-        for instrument in self.root_instruments:
+        for instrument in instruments_with_sequence:
             t = (time.perf_counter() - t_start) * 1000
             logger.info(f'Start  ({t:5.3f} ms)')
             instrument.start_sequencer()
