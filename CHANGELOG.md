@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.8.4] - 2023-03-03
+
+- Removed ADC calibration. It is not reliable.
+
 ## \[0.8.3] - 2023-02-08
 
 - Do not start root-instrument if it has no active sequences.
