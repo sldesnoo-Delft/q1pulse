@@ -181,7 +181,6 @@ class SequenceBuilder(BuilderBase):
         else:
             self.sequence.timeline.set_pulse_end(value)
 
-
     @contextmanager
     def _local_timeline(self, duration=None, t_offset=0):
         end_time = self.current_time + t_offset

@@ -10,7 +10,7 @@ from .sequencer.sequencer import SequenceBuilder
 from .sequencer.control import ControlBuilder
 from .sequencer.readout import ReadoutBuilder
 from .modules.modules import QcmModule, QrmModule
-from .util.qblox_version import check_qblox_instrument_version, qblox_version, Version
+from .util.qblox_version import check_qblox_instrument_version
 from qblox_instruments import InstrumentType
 
 logger = logging.getLogger(__name__)
@@ -114,12 +114,12 @@ class Q1Instrument:
             self._loaded_q1asm[name] = q1asm
             if q1asm is None:
                 module.disable_seq(seq)
-                logger.info(f'Sequencer {name} no sequence')
+                logger.debug(f'Sequencer {name} no sequence')
                 continue
             instruments_with_sequence.add(module.pulsar.root_instrument)
             module.upload(seq.seq_nr, q1asm)
             t = (time.perf_counter() - t_start) * 1000
-            logger.info(f'Sequencer {name} loaded ({t:5.3f} ms)')
+            # logger.debug(f'Sequencer {name} loaded ({t:5.3f} ms)')
 
             module.enable_seq(seq)
             prog_seq = program[name]
@@ -132,17 +132,16 @@ class Q1Instrument:
                 module.set_mixer_phase_offset_degree(seq.seq_nr, prog_seq.mixer_phase_offset_degree)
 
         t = (time.perf_counter() - t_start) * 1000
-        logger.info(f'Configure QRMs ({t:5.3f} ms)')
+        # logger.debug(f'Configure QRMs ({t:5.3f} ms)')
         for name,seq in self.readouts.items():
             readout = program[name]
             module = self.modules[seq.module_name]
             if not module.enabled(seq.seq_nr):
                 continue
-            module.phase_rotation_acq(seq.seq_nr, readout.phase_rotation_acq)
-            module.discretization_threshold_acq(seq.seq_nr, readout.discretization_threshold_acq)
+            module.thresholded_acq_rotation(seq.seq_nr, readout.thresholded_acq_rotation)
+            module.thresholded_acq_threshold(seq.seq_nr, readout.thresholded_acq_threshold)
             module.integration_length_acq(seq.seq_nr, int(readout.integration_length_acq))
-            if qblox_version >= Version('0.7'):
-                module.delete_acquisition_data(seq.seq_nr)
+            module.delete_acquisition_data(seq.seq_nr)
 
         # Note: arm per sequencer. Arm on the cluster still gives red leds on the modules.
         for module in self.modules.values():
@@ -152,12 +151,12 @@ class Q1Instrument:
 
         if Q1Instrument._i_feel_lucky:
             t = (time.perf_counter() - t_start) * 1000
-            logger.info(f'Check status  ({t:5.3f} ms)')
+            # logger.debug(f'Check status  ({t:5.3f} ms)')
             self.check_system_errors()
 
         for instrument in instruments_with_sequence:
             t = (time.perf_counter() - t_start) * 1000
-            logger.info(f'Start  ({t:5.3f} ms)')
+            # logger.debug(f'Start  ({t:5.3f} ms)')
             instrument.start_sequencer()
 
         t = (time.perf_counter() - t_start) * 1000
@@ -193,7 +192,7 @@ class Q1Instrument:
             raise Exception(f'Q1 failures (see logger):\n {errors}')
 
         for instrument in self.root_instruments:
-            logger.info(f'Stop')
+            logger.info(f'Stop sequencers')
             instrument.stop_sequencer()
 
     def check_system_errors(self):

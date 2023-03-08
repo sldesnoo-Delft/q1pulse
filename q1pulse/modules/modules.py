@@ -216,11 +216,19 @@ class QrmModule(QbloxModule):
 
         return channels
 
-    def phase_rotation_acq(self, seq_nr, phase_rotation):
-        self._sset(seq_nr, 'phase_rotation_acq', phase_rotation)
+    def thresholded_acq_rotation(self, seq_nr, phase_rotation):
+        if qblox_version < Version('0.9'):
+            # v0.8.x
+            self._sset(seq_nr, 'phase_rotation_acq', phase_rotation)
+        else:
+            self._sset(seq_nr, 'thresholded_acq_rotation', phase_rotation)
 
-    def discretization_threshold_acq(self, seq_nr, threshold):
-        self._sset(seq_nr, 'discretization_threshold_acq', threshold)
+    def thresholded_acq_threshold(self, seq_nr, threshold):
+        if qblox_version < Version('0.9'):
+            # v0.8.x
+            self._sset(seq_nr, 'discretization_threshold_acq', threshold)
+        else:
+            self._sset(seq_nr, 'thresholded_acq_threshold', threshold)
 
     def integration_length_acq(self, seq_nr, length):
         self._sset(seq_nr, 'integration_length_acq', length)
@@ -231,10 +239,3 @@ class QrmModule(QbloxModule):
     def set_nco(self, seq_nr, nco_frequency):
         super().set_nco(seq_nr, nco_frequency)
         self._sset(seq_nr, 'demod_en_acq', nco_frequency is not None)
-
-    def upload(self, seq_nr, sequence):
-        if qblox_version < Version('0.7'):
-            # Don't cache upload or QRM. Upload is required to clear acquisition memory
-            self._sset(seq_nr, 'sequence', sequence, cache=False)
-        else:
-            super().upload(seq_nr, sequence)

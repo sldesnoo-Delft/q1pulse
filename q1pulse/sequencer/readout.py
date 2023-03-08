@@ -1,6 +1,7 @@
 from .control import ControlBuilder
 from ..lang.exceptions import Q1ValueError, Q1TypeError
 from ..lang.timed_statements import AcquireStatement, AcquireWeighedStatement
+from ..util.qblox_version import qblox_version, Version
 from .sequencer_data import (
         AcquisitionWeight, WeightCollection,
         AcquisitionBins, AcquisitionBinsCollection
@@ -8,7 +9,7 @@ from .sequencer_data import (
 
 
 class ReadoutBuilder(ControlBuilder):
-    MIN_ACQUISITION_INTERVAL = 1040
+    MIN_ACQUISITION_INTERVAL = 1040 if qblox_version < Version('0.9') else 300
 
     def __init__(self, name, enabled_paths, max_output_voltage,
                  nco_frequency=None):
@@ -16,24 +17,24 @@ class ReadoutBuilder(ControlBuilder):
         self._acquisitions = AcquisitionBinsCollection()
         self._weights = WeightCollection()
         self._integration_length_acq = 4
-        self._phase_rotation_acq = 0
-        self._discretization_threshold_acq = 0
+        self._thresholded_acq_rotation = 0.0
+        self._thresholded_acq_threshold = 0.0
 
     @property
-    def phase_rotation_acq(self):
-        return self._phase_rotation_acq
+    def thresholded_acq_rotation(self):
+        return self._thresholded_acq_rotation
 
-    @phase_rotation_acq.setter
-    def phase_rotation_acq(self, rotation):
-        self._phase_rotation_acq = rotation
+    @thresholded_acq_rotation.setter
+    def thresholded_acq_rotation(self, rotation):
+        self._thresholded_acq_rotation = rotation
 
     @property
-    def discretization_threshold_acq(self):
-        return self._discretization_threshold_acq
+    def thresholded_acq_threshold(self):
+        return self._thresholded_acq_threshold
 
-    @discretization_threshold_acq.setter
-    def discretization_threshold_acq(self, threshold):
-        self._discretization_threshold_acq = threshold
+    @thresholded_acq_threshold.setter
+    def thresholded_acq_threshold(self, threshold):
+        self._thresholded_acq_threshold = threshold
 
     @property
     def integration_length_acq(self):
