@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.8.5] - 2023-03-13
+
+- Support qblox-instruments v0.9.0.
+
 ## \[0.8.4] - 2023-03-03
 
 - Removed ADC calibration. It is not reliable.
