@@ -76,80 +76,75 @@ _start:    reset_ph                  # L0004 @ 0
            play           0,0,40     # L0008 t=40
 # awg_offset = None, 0.0 t=80 
            set_awg_offs   0,0        # L0009 @ 80
-# awg_gain = None, 0.0 t=80 
-           set_awg_gain   0,0        # L0010 @ 80
-           upd_param      580        # L0011 t=80
+           upd_param      580        # L0010 t=80
 # ramp(152, -0.5, -1.0) 
 # Rs._ramp_offset:float = -0.5 
-           move           3221225472,R2 # L0012 R2: Rs._ramp_offset
+           move           3221225472,R2 # L0011 R2: Rs._ramp_offset
 # awg_gain = None, -0.32894736842105265 t=660 
-           set_awg_gain   0,-10779   # L0013 @ 660
+           set_awg_gain   0,-10779   # L0012 @ 660
 # awg_offset = None, Rs._ramp_offset t=660 
-           asr            R2,16,R3   # L0014 temp R3
-           nop                       # L0015  set_awg_offs wait for R3
-           set_awg_offs   R0,R3      # L0016 @ 660
+           asr            R2,16,R3   # L0013 temp R3
+           nop                       # L0014  set_awg_offs wait for R3
+           set_awg_offs   R0,R3      # L0015 @ 660
 # play None _ramp(100) t=660 
-           play           1,1,100    # L0017 t=660
+           play           1,1,100    # L0016 t=660
 # Rs._ramp_offset:float = Rs._ramp_offset + -0.32894736842105265 
-           add            R2,3588558201,R2 # L0018 
+           add            R2,3588558201,R2 # L0017 
 # awg_offset = None, Rs._ramp_offset t=760 
-           nop                       # L0019  asr wait for R2
-           asr            R2,16,R3   # L0020 temp R3
-           nop                       # L0021  set_awg_offs wait for R3
-           set_awg_offs   R0,R3      # L0022 @ 760
+           nop                       # L0018  asr wait for R2
+           asr            R2,16,R3   # L0019 temp R3
+           nop                       # L0020  set_awg_offs wait for R3
+           set_awg_offs   R0,R3      # L0021 @ 760
 # play None _ramp(100) t=760 
-           play           1,1,52     # L0023 t=760
-# awg_offset = None, 0.0 t=812 
-# ------:  set_awg_offs   0,0        # @ 812 = overwritten =
+           play           1,1,52     # L0022 t=760
 # awg_gain = None, 0.0 t=812 
 # ------:  set_awg_gain   0,0        # @ 812 = overwritten =
+# awg_offset = None, 0.0 t=812 
+# ------:  set_awg_offs   0,0        # @ 812 = overwritten =
 # ramp(40, -1.0, -0.2) 
 # awg_gain = None, 0.8 t=812 
 # -- Overwrites set_awg_gain at 812 -- 
-           set_awg_gain   0,26214    # L0024 @ 812
+           set_awg_gain   0,26214    # L0023 @ 812
 # awg_offset = None, -1.0 t=812 
 # -- Overwrites set_awg_offs at 812 -- 
-           set_awg_offs   0,-32768   # L0025 @ 812
+           set_awg_offs   0,-32768   # L0024 @ 812
 # play None _ramp(40) t=812 
-           play           0,0,40     # L0026 t=812
+           play           0,0,40     # L0025 t=812
 # awg_offset = None, 0.0 t=852 
 # ------:  set_awg_offs   0,0        # @ 852 = overwritten =
-# awg_gain = None, 0.0 t=852 
-# ------:  set_awg_gain   0,0        # @ 852 = overwritten =
 # ramp(104, 0.0, 6.103515625e-05) 
 # Rs._ramp_offset:float = 0.0 
-           move           0,R2       # L0027 
+           move           0,R2       # L0026 
 # awg_gain = None, 0.0037560096153846155 t=852 
-# -- Overwrites set_awg_gain at 852 -- 
-           set_awg_gain   0,123      # L0028 @ 852
+           set_awg_gain   0,123      # L0027 @ 852
 # awg_offset = None, Rs._ramp_offset t=852 
-           asr            R2,16,R3   # L0029 temp R3
+           asr            R2,16,R3   # L0028 temp R3
 # -- Overwrites set_awg_offs at 852 -- 
-           nop                       # L0030  set_awg_offs wait for R3
-           set_awg_offs   R0,R3      # L0031 @ 852
+           nop                       # L0029  set_awg_offs wait for R3
+           set_awg_offs   R0,R3      # L0030 @ 852
 # play None _ramp(100, 0.000, 0.016) t=852 
-           play           2,2,100    # L0032 t=852
+           play           2,2,100    # L0031 t=852
 # Rs._ramp_offset:float = Rs._ramp_offset + 5.868765024038462e-05 
-           add            R2,126030,R2 # L0033 
+           add            R2,126030,R2 # L0032 
 # awg_offset = None, Rs._ramp_offset t=952 
-           nop                       # L0034  asr wait for R2
-           asr            R2,16,R3   # L0035 temp R3
-           nop                       # L0036  set_awg_offs wait for R3
-           set_awg_offs   R0,R3      # L0037 @ 952
+           nop                       # L0033  asr wait for R2
+           asr            R2,16,R3   # L0034 temp R3
+           nop                       # L0035  set_awg_offs wait for R3
+           set_awg_offs   R0,R3      # L0036 @ 952
 # play None _ramp(100, 0.000, 0.016) t=952 
-           play           2,2,4      # L0038 t=952
+           play           2,2,4      # L0037 t=952
+# awg_gain = None, 0.0 t=956 
+           set_awg_gain   0,0        # L0038 @ 956
 # awg_offset = None, 0.0 t=956 
            set_awg_offs   0,0        # L0039 @ 956
-# awg_gain = None, 0.0 t=956 
-           set_awg_gain   0,0        # L0040 @ 956
-           upd_param      65532      # L0041 t=956
+           upd_param      65532      # L0040 t=956
 # wait 200408 (t=201368) 
+           wait           65532      # L0041 
            wait           65532      # L0042 
-           wait           65532      # L0043 
-           wait           3816       # L0044 
+           wait           3816       # L0043 
 # --END-- 
-           loop           R1,@_start # L0045 
-           upd_param      4          # L0046 t=201368
-           stop                      # L0047 
+           loop           R1,@_start # L0044 
+           upd_param      4          # L0045 t=201368
+           stop                      # L0046 
 """
 

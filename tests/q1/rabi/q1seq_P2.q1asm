@@ -68,8 +68,8 @@ endwait1:  wait           R4         # L0022
            nop                       # L0032  set_awg_offs wait for R5
            set_awg_offs   R0,R5      # L0033 @ 320
            play           0,0,100    # L0034 t=320
-# ------:  set_awg_offs   0,0        # @ 420 = overwritten =
            set_awg_gain   0,0        # L0035 @ 420
+# ------:  set_awg_offs   0,0        # @ 420 = overwritten =
 # -- Overwrites set_awg_offs at 420 -- 
            set_awg_offs   0,1966     # L0036 @ 420
            upd_param      2000       # L0037 t=420

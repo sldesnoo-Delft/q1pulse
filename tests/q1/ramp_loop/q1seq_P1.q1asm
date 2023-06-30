@@ -116,8 +116,6 @@ local_0:   asr            R6,16,R8   # L0026 temp R8
 #     --- loop duration: 360 
 # awg_offset = 0.0, None t=760 
 # ------:  set_awg_offs   0,0        # @ 760 = overwritten =
-# awg_gain = 0.0, None t=760 
-# ------:  set_awg_gain   0,0        # @ 760 = overwritten =
 # ramp(80, R._var0, 0.0) 
 # awg_gain = 0.0 - R._var0, None t=760 
            move           0,R8       # L0032 temp ['R8']
@@ -125,7 +123,6 @@ local_0:   asr            R6,16,R8   # L0026 temp R8
            sub            R8,R3,R7   # L0034 
            nop                       # L0035  asr wait for R7
            asr            R7,16,R8   # L0036 temp R8
-# -- Overwrites set_awg_gain at 760 -- 
            nop                       # L0037  set_awg_gain wait for R8
            set_awg_gain   R8,R0      # L0038 @ 760
 # awg_offset = R._var0, None t=760 
@@ -137,16 +134,14 @@ local_0:   asr            R6,16,R8   # L0026 temp R8
            play           1,1,80     # L0042 t=760
 # awg_offset = 0.0, None t=840 
            set_awg_offs   0,0        # L0043 @ 840
-# awg_gain = 0.0, None t=840 
-           set_awg_gain   0,0        # L0044 @ 840
-           upd_param      60         # L0045 t=840
+           upd_param      60         # L0044 t=840
 # endloop t=900 
-           add            R3,536870911,R3 # L0046 
-           loop           R4,@loop_0 # L0047 
-           upd_param      100        # L0048 t=900
+           add            R3,536870911,R3 # L0045 
+           loop           R4,@loop_0 # L0046 
+           upd_param      100        # L0047 t=900
 # --END-- 
-           loop           R1,@_start # L0049 
-           upd_param      4          # L0050 t=1000
-           stop                      # L0051 
+           loop           R1,@_start # L0048 
+           upd_param      4          # L0049 t=1000
+           stop                      # L0050 
 """
 

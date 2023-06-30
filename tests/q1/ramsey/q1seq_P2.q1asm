@@ -60,48 +60,44 @@ loop_0:    set_awg_offs   0,1310     # L0006 @ 0
            play           0,0,20     # L0010 t=200
 # awg_offset = None, 0.0 t=220 
            set_awg_offs   0,0        # L0011 @ 220
-# awg_gain = None, 0.0 t=220 
-           set_awg_gain   0,0        # L0012 @ 220
-           upd_param      80         # L0013 t=220
+           upd_param      80         # L0012 t=220
 # wait(R._var0) t=300 
-           move           R2,R4      # L0014 R4: _waittime
+           move           R2,R4      # L0013 R4: _waittime
 #          --- check for negative wait time 
 #          --- emulate signed wait time 
-           nop                       # L0015  xor wait for R4
-           xor            R4,2147483648,R5 # L0016 temp ['R5']
-           nop                       # L0017  jge wait for R5
-           jge            R5,2147483652,@waitc1 # L0018 
-           illegal                   # L0019 negative wait time
-waitc1:    jlt            R4,65532,@endwait1 # L0020 
-wait1:     wait           65528      # L0021 
-           sub            R4,65528,R4 # L0022 
-           nop                       # L0023  jge wait for R4
-           jge            R4,65532,@wait1 # L0024 
-endwait1:  wait           R4         # L0025 
+           nop                       # L0014  xor wait for R4
+           xor            R4,2147483648,R5 # L0015 temp ['R5']
+           nop                       # L0016  jge wait for R5
+           jge            R5,2147483652,@waitc1 # L0017 
+           illegal                   # L0018 negative wait time
+waitc1:    jlt            R4,65532,@endwait1 # L0019 
+wait1:     wait           65528      # L0020 
+           sub            R4,65528,R4 # L0021 
+           nop                       # L0022  jge wait for R4
+           jge            R4,65532,@wait1 # L0023 
+endwait1:  wait           R4         # L0024 
 # ramp(100, 0.0, 0.06) 
 # awg_gain = None, 0.06 t=380 
-           set_awg_gain   0,1966     # L0026 @ 380
-           wait           80         # L0027 
+           set_awg_gain   0,1966     # L0025 @ 380
+           wait           80         # L0026 
 # awg_offset = None, 0.0 t=380 
-           set_awg_offs   0,0        # L0028 @ 380
+           set_awg_offs   0,0        # L0027 @ 380
 # play None _ramp(100) t=380 
-           play           1,1,100    # L0029 t=380
+           play           1,1,100    # L0028 t=380
 # awg_offset = None, 0.0 t=480 
 # ------:  set_awg_offs   0,0        # @ 480 = overwritten =
-# awg_gain = None, 0.0 t=480 
-           set_awg_gain   0,0        # L0030 @ 480
 # awg_offset = None, 0.06 t=480 
 # -- Overwrites set_awg_offs at 480 -- 
-           set_awg_offs   0,1966     # L0031 @ 480
-           upd_param      1000       # L0032 t=480
+           set_awg_offs   0,1966     # L0029 @ 480
+           upd_param      1000       # L0030 t=480
 # awg_offset = None, 0.0 t=1480 
-           set_awg_offs   0,0        # L0033 @ 1480
+           set_awg_offs   0,0        # L0031 @ 1480
 # endloop t=1480 
-           add            R2,100,R2  # L0034 
-           loop           R3,@loop_0 # L0035 
+           add            R2,100,R2  # L0032 
+           loop           R3,@loop_0 # L0033 
 # --END-- 
-           loop           R1,@_start # L0036 
-           upd_param      4          # L0037 t=1480
-           stop                      # L0038 
+           loop           R1,@_start # L0034 
+           upd_param      4          # L0035 t=1480
+           stop                      # L0036 
 """
 

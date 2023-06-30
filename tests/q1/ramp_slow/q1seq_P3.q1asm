@@ -58,10 +58,10 @@ local_0:   asr            R2,16,R4   # L0008 temp R4
            set_awg_offs   R3,R0      # L0016 @ 6500
 # play _ramp(100, 0.000, 0.016) None t=6500 
            play           0,0,80     # L0017 t=6500
-# awg_offset = 0.0, None t=6580 
-           set_awg_offs   0,0        # L0018 @ 6580
 # awg_gain = 0.0, None t=6580 
-           set_awg_gain   0,0        # L0019 @ 6580
+           set_awg_gain   0,0        # L0018 @ 6580
+# awg_offset = 0.0, None t=6580 
+           set_awg_offs   0,0        # L0019 @ 6580
            upd_param      100        # L0020 t=6580
 # --END-- 
            loop           R1,@_start # L0021 

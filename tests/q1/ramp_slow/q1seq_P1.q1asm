@@ -35,12 +35,10 @@ local_0:   asr            R2,16,R4   # L0007 temp R4
            upd_param      80         # L0016 t=6500
 # awg_offset = 0.0, None t=6580 
            set_awg_offs   0,0        # L0017 @ 6580
-# awg_gain = 0.0, None t=6580 
-           set_awg_gain   0,0        # L0018 @ 6580
-           upd_param      100        # L0019 t=6580
+           upd_param      100        # L0018 t=6580
 # --END-- 
-           loop           R1,@_start # L0020 
-           upd_param      4          # L0021 t=6680
-           stop                      # L0022 
+           loop           R1,@_start # L0019 
+           upd_param      4          # L0020 t=6680
+           stop                      # L0021 
 """
 

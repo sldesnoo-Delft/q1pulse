@@ -222,6 +222,7 @@ class ControlBuilder(SequenceBuilder):
                     self.set_offset(self.Rs._ramp_offset)
                     self.play(w_ramp)
                     self.wait(rem)
+                    self.set_gain(0.0)
                 else:
                     # steps of 1 LSB
                     min_step = lsb
@@ -249,9 +250,8 @@ class ControlBuilder(SequenceBuilder):
             if v_after is not None:
                 # set constant value
                 self.set_offset(v_after)
-                self.set_gain(0.0)
             else:
-                # assume there will be another instruction setting offset and gain.
+                # assume there will be another instruction setting offset
                 pass
 
     def chirp(self, duration, amplitude, f_start, f_end, t_offset=0):
