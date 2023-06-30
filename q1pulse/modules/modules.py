@@ -25,6 +25,10 @@ class QbloxModule:
 
     def __init__(self, pulsar):
         self.name = pulsar.name
+        # check module is present in slot.
+        if hasattr(pulsar, 'present'):
+            if not pulsar.present():
+                raise Exception('No module in slot {pulsar.slot_idx()}')
         self.pulsar = pulsar
         self._allocated_seq = 0
         self.disable_all_out()

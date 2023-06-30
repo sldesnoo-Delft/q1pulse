@@ -4,6 +4,7 @@ All notable changes to Q1Pulse will be documented in this file.
 ## \[0.8.6] - 2023-06-30
 
 - Fix bug in ramp generation.
+- Check whether QCM/QRM module is present in slot.
 
 ## \[0.8.5] - 2023-03-13
 
