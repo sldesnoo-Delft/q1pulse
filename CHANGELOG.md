@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.8.7] - 2023-06-30
+
+- Prevent keyboard interrupt during communication with Qblox instruments.
+
 ## \[0.8.6] - 2023-06-30
 
 - Fix bug in ramp generation.

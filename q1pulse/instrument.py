@@ -12,6 +12,7 @@ from .sequencer.readout import ReadoutBuilder
 from .modules.modules import QcmModule, QrmModule
 from .util.qblox_version import check_qblox_instrument_version
 from qblox_instruments import InstrumentType
+from qcodes.utils import DelayedKeyboardInterrupt
 
 logger = logging.getLogger(__name__)
 
@@ -99,65 +100,67 @@ class Q1Instrument:
         t_start = time.perf_counter()
 
         for instrument in self.root_instruments:
-            check_instrument_status(instrument)
-            if Q1Instrument._i_feel_lucky and hasattr(instrument, '_debug'):
-                # Change the debug level to speed up communication.
-                # Errors will be checked before start of the sequence.
-                instrument._debug = 2
+            with DelayedKeyboardInterrupt():
+                check_instrument_status(instrument)
+                if Q1Instrument._i_feel_lucky and hasattr(instrument, '_debug'):
+                    # Change the debug level to speed up communication.
+                    # Errors will be checked before start of the sequence.
+                    instrument._debug = 2
 
         instruments_with_sequence = set()
         sequencers = { **self.controllers, **self.readouts }
         for name,seq in sequencers.items():
-            module = self.modules[seq.module_name]
+            with DelayedKeyboardInterrupt():
+                module = self.modules[seq.module_name]
 
-            q1asm = program.q1asm(name)
-            self._loaded_q1asm[name] = q1asm
-            if q1asm is None:
-                module.disable_seq(seq)
-                logger.debug(f'Sequencer {name} no sequence')
-                continue
-            instruments_with_sequence.add(module.pulsar.root_instrument)
-            module.upload(seq.seq_nr, q1asm)
-            t = (time.perf_counter() - t_start) * 1000
-            # logger.debug(f'Sequencer {name} loaded ({t:5.3f} ms)')
+                q1asm = program.q1asm(name)
+                self._loaded_q1asm[name] = q1asm
+                if q1asm is None:
+                    module.disable_seq(seq)
+                    logger.debug(f'Sequencer {name} no sequence')
+                    continue
+                instruments_with_sequence.add(module.pulsar.root_instrument)
+                module.upload(seq.seq_nr, q1asm)
+                t = (time.perf_counter() - t_start) * 1000
+                # logger.debug(f'Sequencer {name} loaded ({t:5.3f} ms)')
 
-            module.enable_seq(seq)
-            prog_seq = program[name]
-            module.set_nco(seq.seq_nr, prog_seq.nco_frequency)
-            if prog_seq.modifies_frequency:
-                module.invalidate_cache(seq.seq_nr, 'nco_freq')
-            if prog_seq.mixer_gain_ratio is not None:
-                module.set_mixer_gain_ratio(seq.seq_nr, prog_seq.mixer_gain_ratio)
-            if prog_seq.mixer_phase_offset_degree is not None:
-                module.set_mixer_phase_offset_degree(seq.seq_nr, prog_seq.mixer_phase_offset_degree)
+                module.enable_seq(seq)
+                prog_seq = program[name]
+                module.set_nco(seq.seq_nr, prog_seq.nco_frequency)
+                if prog_seq.modifies_frequency:
+                    module.invalidate_cache(seq.seq_nr, 'nco_freq')
+                if prog_seq.mixer_gain_ratio is not None:
+                    module.set_mixer_gain_ratio(seq.seq_nr, prog_seq.mixer_gain_ratio)
+                if prog_seq.mixer_phase_offset_degree is not None:
+                    module.set_mixer_phase_offset_degree(seq.seq_nr, prog_seq.mixer_phase_offset_degree)
 
         t = (time.perf_counter() - t_start) * 1000
         # logger.debug(f'Configure QRMs ({t:5.3f} ms)')
         for name,seq in self.readouts.items():
-            readout = program[name]
-            module = self.modules[seq.module_name]
-            if not module.enabled(seq.seq_nr):
-                continue
-            module.thresholded_acq_rotation(seq.seq_nr, readout.thresholded_acq_rotation)
-            module.thresholded_acq_threshold(seq.seq_nr, readout.thresholded_acq_threshold)
-            module.integration_length_acq(seq.seq_nr, int(readout.integration_length_acq))
-            module.delete_acquisition_data(seq.seq_nr)
+            with DelayedKeyboardInterrupt():
+                readout = program[name]
+                module = self.modules[seq.module_name]
+                if not module.enabled(seq.seq_nr):
+                    continue
+                module.thresholded_acq_rotation(seq.seq_nr, readout.thresholded_acq_rotation)
+                module.thresholded_acq_threshold(seq.seq_nr, readout.thresholded_acq_threshold)
+                module.integration_length_acq(seq.seq_nr, int(readout.integration_length_acq))
+                module.delete_acquisition_data(seq.seq_nr)
 
-        # Note: arm per sequencer. Arm on the cluster still gives red leds on the modules.
-        for module in self.modules.values():
-            module.arm_sequencers()
-#        for instrument in instruments_with_sequence:
-#            instrument.arm_sequencer()
+        with DelayedKeyboardInterrupt():
+            # Note: arm per sequencer. Arm on the cluster still gives red leds on the modules.
+            for module in self.modules.values():
+                module.arm_sequencers()
 
-        if Q1Instrument._i_feel_lucky:
-            t = (time.perf_counter() - t_start) * 1000
-            # logger.debug(f'Check status  ({t:5.3f} ms)')
-            self.check_system_errors()
+            if Q1Instrument._i_feel_lucky:
+                t = (time.perf_counter() - t_start) * 1000
+                # logger.debug(f'Check status  ({t:5.3f} ms)')
+                self.check_system_errors()
 
-        for instrument in instruments_with_sequence:
-            t = (time.perf_counter() - t_start) * 1000
-            # logger.debug(f'Start  ({t:5.3f} ms)')
-            instrument.start_sequencer()
+            for instrument in instruments_with_sequence:
+                t = (time.perf_counter() - t_start) * 1000
+                # logger.debug(f'Start  ({t:5.3f} ms)')
+                instrument.start_sequencer()
 
         t = (time.perf_counter() - t_start) * 1000
         logger.info(f'Duration upload/start: ({t:5.3f}ms)')
@@ -168,32 +171,34 @@ class Q1Instrument:
         msg_level = 0
         sequencers = { **self.controllers, **self.readouts }
         for name,seq in sequencers.items():
-            module = self.modules[seq.module_name]
-            if not module.enabled(seq.seq_nr):
-                continue
-            state = module.get_sequencer_state(seq.seq_nr, timeout_minutes)
-            logger.log(state.level,
-                        f'Status {name} ({module.pulsar.name}:{seq.seq_nr}):'
-                         f'{state}')
-            msg_level = max(msg_level, state.level)
-            if state.input_overloaded:
-                if Q1Instrument._exception_on_overload:
-                    raise Q1InputOverloaded(
-                            f'INPUT OVERLOAD on {name}.'
-                            '\nException can be suppressed with q1pulse.set_exception_on_overload(False)')
-                else:
-                    print(f'WARNING: input overload on {name}')
-            if state.status != 'STOPPED' or state.level >= logging.WARNING:
-                errors[name] = str(state)
+            with DelayedKeyboardInterrupt():
+                module = self.modules[seq.module_name]
+                if not module.enabled(seq.seq_nr):
+                    continue
+                state = module.get_sequencer_state(seq.seq_nr, timeout_minutes)
+                logger.log(state.level,
+                            f'Status {name} ({module.pulsar.name}:{seq.seq_nr}):'
+                             f'{state}')
+                msg_level = max(msg_level, state.level)
+                if state.input_overloaded:
+                    if Q1Instrument._exception_on_overload:
+                        raise Q1InputOverloaded(
+                                f'INPUT OVERLOAD on {name}.'
+                                '\nException can be suppressed with q1pulse.set_exception_on_overload(False)')
+                    else:
+                        print(f'WARNING: input overload on {name}')
+                if state.status != 'STOPPED' or state.level >= logging.WARNING:
+                    errors[name] = str(state)
         if msg_level == logging.ERROR:
             logger.error('*** Program errors ***')
             for name,state in errors.items():
                 logger.error(f'  {name}: {state}')
             raise Exception(f'Q1 failures (see logger):\n {errors}')
 
-        for instrument in self.root_instruments:
-            logger.info(f'Stop sequencers')
-            instrument.stop_sequencer()
+        with DelayedKeyboardInterrupt():
+            for instrument in self.root_instruments:
+                logger.info(f'Stop sequencers')
+                instrument.stop_sequencer()
 
     def check_system_errors(self):
         for instrument in self.root_instruments:
@@ -215,10 +220,11 @@ class Q1Instrument:
             logger.warning(f'No acquisitions for {sequencer_name}')
             return None
         module = self.modules[seq.module_name]
-        state = module.pulsar.get_acquisition_state(seq.seq_nr, 1)
-        logger.info(f'Acquisition status {sequencer_name} ({module.pulsar.name}:'
-                     f'{seq.seq_nr}): {state}')
-        return module.pulsar.get_acquisitions(seq.seq_nr)[bins]['acquisition']['bins']
+        with DelayedKeyboardInterrupt():
+            state = module.pulsar.get_acquisition_state(seq.seq_nr, 1)
+            logger.info(f'Acquisition status {sequencer_name} ({module.pulsar.name}:'
+                         f'{seq.seq_nr}): {state}')
+            return module.pulsar.get_acquisitions(seq.seq_nr)[bins]['acquisition']['bins']
 
     def get_input_ranges(self, sequencer_name):
         ''' Returns input range for both channels of sequencer.
