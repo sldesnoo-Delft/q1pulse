@@ -1,5 +1,5 @@
 waveforms={
-    '_ramp(100, 0.000, 0.016)':{
+    '_ramp_100_0_1562':{
         'data':
             [  0.00000,  0.00016,  0.00031,  0.00047,  0.00063,  0.00078,
                0.00094,  0.00109,  0.00125,  0.00141,  0.00156,  0.00172,
@@ -47,7 +47,7 @@ loop_0:    move           3221225472,R3 # L0006 R3: Rs._ramp_offset
 local_0:   asr            R3,16,R5   # L0009 temp R5
            nop                       # L0010  set_awg_offs wait for R5
            set_awg_offs   R5,R0      # L0011 @ 0
-# play _ramp(100, 0.000, 0.016) None t=0 
+# play _ramp_100_0_1562 None t=0 
            play           0,0,100    # L0012 t=0
 # Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
            add            R3,204522,R3 # L0013 
@@ -58,7 +58,7 @@ local_0:   asr            R3,16,R5   # L0009 temp R5
            asr            R3,16,R4   # L0015 temp R4
            nop                       # L0016  set_awg_offs wait for R4
            set_awg_offs   R4,R0      # L0017 @ 1049900
-# play _ramp(100, 0.000, 0.016) None t=1049900 
+# play _ramp_100_0_1562 None t=1049900 
            play           0,0,100    # L0018 t=1049900
 # awg_gain = 0.0, None t=1050000 
            set_awg_gain   0,0        # L0019 @ 1050000

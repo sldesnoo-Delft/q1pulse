@@ -1,5 +1,5 @@
 waveforms={
-    '_chirp(100, 45000).real':{
+    '_chirp_100_45000_real':{
         'data':
             [  1.00000,  1.00000,  1.00000,  1.00000,  1.00000,  1.00000,
                1.00000,  1.00000,  1.00000,  1.00000,  1.00000,  1.00000,
@@ -20,7 +20,7 @@ waveforms={
                0.99991,  0.99991,  0.99991,  0.99990],
         'index':0,
         },
-    '_chirp(100, 45000).imag':{
+    '_chirp_100_45000_imag':{
         'data':
             [  0.00000,  0.00000,  0.00001,  0.00002,  0.00003,  0.00004,
                0.00006,  0.00008,  0.00010,  0.00013,  0.00016,  0.00019,
@@ -66,7 +66,7 @@ local_0:   set_ph_delta   2272500    # L0006 @ 0
            asl            R1,2,R3    # L0007 temp R3
            nop                       # L0008  set_freq wait for R3
            set_freq       R3         # L0009 @ 0
-# play _chirp(100, 45000).real _chirp(100, 45000).imag t=0 
+# play _chirp_100_45000_real _chirp_100_45000_imag t=0 
            play           0,1,100    # L0010 t=0
 # Rs._freq:int = Rs._freq + 45000 
            add            R1,45000,R1 # L0011 
@@ -79,7 +79,7 @@ local_0:   set_ph_delta   2272500    # L0006 @ 0
            asl            R1,2,R2    # L0014 temp R2
            nop                       # L0015  set_freq wait for R2
            set_freq       R2         # L0016 @ 19900
-# play _chirp(100, 45000).real _chirp(100, 45000).imag t=19900 
+# play _chirp_100_45000_real _chirp_100_45000_imag t=19900 
            play           0,1,100    # L0017 t=19900
 # awg_gain = 0.0, None t=20000 
            set_awg_gain   0,0        # L0018 @ 20000

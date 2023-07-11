@@ -29,9 +29,9 @@ class WaveCollection:
 
     def get_ramp(self, n_samples, start=0.0, stop=1.0):
         if start == 0.0 and stop == 1.0:
-            name = f'_ramp({n_samples})'
+            name = f'_ramp_{n_samples}'
         else:
-            name = f'_ramp({n_samples}, {start:5.3f}, {stop:5.3f})'
+            name = f'_ramp_{n_samples}_{start*1e5:.0f}_{stop*1e5:.0f}'
 
         try:
             return self._waves[name]
@@ -50,8 +50,8 @@ class WaveCollection:
         dp = np.linspace(0, dp_ns_end, n_samples, endpoint=False)
         phase = np.cumsum(dp)
         dp_next = (phase[-1] + dp_ns_end) * 2
-        nameI = f'_chirp({n_samples}, {f_end}).real'
-        nameQ = f'_chirp({n_samples}, {f_end}).imag'
+        nameI = f'_chirp_{n_samples}_{f_end:.0f}_real'
+        nameQ = f'_chirp_{n_samples}_{f_end:.0f}_imag'
         try:
             return self._waves[nameI], self._waves[nameQ], dp_next
         except:

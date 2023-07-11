@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.8.8] - 2023-07-11
+
+- Generate SCPI safe waveform names.
+
 ## \[0.8.7] - 2023-06-30
 
 - Prevent keyboard interrupt during communication with Qblox instruments.

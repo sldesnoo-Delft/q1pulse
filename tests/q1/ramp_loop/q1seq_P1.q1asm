@@ -1,5 +1,5 @@
 waveforms={
-    '_ramp(180)':{
+    '_ramp_180':{
         'data':
             [  0.00000,  0.00556,  0.01111,  0.01667,  0.02222,  0.02778,
                0.03333,  0.03889,  0.04444,  0.05000,  0.05556,  0.06111,
@@ -33,7 +33,7 @@ waveforms={
                0.96667,  0.97222,  0.97778,  0.98333,  0.98889,  0.99444],
         'index':0,
         },
-    '_ramp(80)':{
+    '_ramp_80':{
         'data':
             [  0.00000,  0.01250,  0.02500,  0.03750,  0.05000,  0.06250,
                0.07500,  0.08750,  0.10000,  0.11250,  0.12500,  0.13750,
@@ -107,7 +107,7 @@ asr_end0:  move           0,R6       # L0021 R6: Rs._ramp_offset
 local_0:   asr            R6,16,R8   # L0026 temp R8
            nop                       # L0027  set_awg_offs wait for R8
            set_awg_offs   R8,R0      # L0028 @ 400
-# play _ramp(180) None t=400 
+# play _ramp_180 None t=400 
            play           0,0,180    # L0029 t=400
 # Rs._ramp_offset:float = Rs._ramp_offset + Rs._ramp_step 
            add            R6,R5,R6   # L0030 
@@ -130,7 +130,7 @@ local_0:   asr            R6,16,R8   # L0026 temp R8
 # -- Overwrites set_awg_offs at 760 -- 
            nop                       # L0040  set_awg_offs wait for R7
            set_awg_offs   R7,R0      # L0041 @ 760
-# play _ramp(80) None t=760 
+# play _ramp_80 None t=760 
            play           1,1,80     # L0042 t=760
 # awg_offset = 0.0, None t=840 
            set_awg_offs   0,0        # L0043 @ 840

@@ -1,5 +1,5 @@
 waveforms={
-    '_ramp(40)':{
+    '_ramp_40':{
         'data':
             [  0.00000,  0.02500,  0.05000,  0.07500,  0.10000,  0.12500,
                0.15000,  0.17500,  0.20000,  0.22500,  0.25000,  0.27500,
@@ -10,7 +10,7 @@ waveforms={
                0.90000,  0.92500,  0.95000,  0.97500],
         'index':0,
         },
-    '_ramp(100)':{
+    '_ramp_100':{
         'data':
             [  0.00000,  0.01000,  0.02000,  0.03000,  0.04000,  0.05000,
                0.06000,  0.07000,  0.08000,  0.09000,  0.10000,  0.11000,
@@ -31,7 +31,7 @@ waveforms={
                0.96000,  0.97000,  0.98000,  0.99000],
         'index':1,
         },
-    '_ramp(100, 0.000, 0.016)':{
+    '_ramp_100_0_1562':{
         'data':
             [  0.00000,  0.00016,  0.00031,  0.00047,  0.00063,  0.00078,
                0.00094,  0.00109,  0.00125,  0.00141,  0.00156,  0.00172,
@@ -72,7 +72,7 @@ _start:    reset_ph                  # L0004 @ 0
            set_awg_gain   0,32767    # L0006 @ 40
 # awg_offset = None, 0.0 t=40 
            set_awg_offs   0,0        # L0007 @ 40
-# play None _ramp(40) t=40 
+# play None _ramp_40 t=40 
            play           0,0,40     # L0008 t=40
 # awg_offset = None, 0.0 t=80 
            set_awg_offs   0,0        # L0009 @ 80
@@ -86,7 +86,7 @@ _start:    reset_ph                  # L0004 @ 0
            asr            R2,16,R3   # L0013 temp R3
            nop                       # L0014  set_awg_offs wait for R3
            set_awg_offs   R0,R3      # L0015 @ 660
-# play None _ramp(100) t=660 
+# play None _ramp_100 t=660 
            play           1,1,100    # L0016 t=660
 # Rs._ramp_offset:float = Rs._ramp_offset + -0.32894736842105265 
            add            R2,3588558201,R2 # L0017 
@@ -95,7 +95,7 @@ _start:    reset_ph                  # L0004 @ 0
            asr            R2,16,R3   # L0019 temp R3
            nop                       # L0020  set_awg_offs wait for R3
            set_awg_offs   R0,R3      # L0021 @ 760
-# play None _ramp(100) t=760 
+# play None _ramp_100 t=760 
            play           1,1,52     # L0022 t=760
 # awg_gain = None, 0.0 t=812 
 # ------:  set_awg_gain   0,0        # @ 812 = overwritten =
@@ -108,7 +108,7 @@ _start:    reset_ph                  # L0004 @ 0
 # awg_offset = None, -1.0 t=812 
 # -- Overwrites set_awg_offs at 812 -- 
            set_awg_offs   0,-32768   # L0024 @ 812
-# play None _ramp(40) t=812 
+# play None _ramp_40 t=812 
            play           0,0,40     # L0025 t=812
 # awg_offset = None, 0.0 t=852 
 # ------:  set_awg_offs   0,0        # @ 852 = overwritten =
@@ -122,7 +122,7 @@ _start:    reset_ph                  # L0004 @ 0
 # -- Overwrites set_awg_offs at 852 -- 
            nop                       # L0029  set_awg_offs wait for R3
            set_awg_offs   R0,R3      # L0030 @ 852
-# play None _ramp(100, 0.000, 0.016) t=852 
+# play None _ramp_100_0_1562 t=852 
            play           2,2,100    # L0031 t=852
 # Rs._ramp_offset:float = Rs._ramp_offset + 5.868765024038462e-05 
            add            R2,126030,R2 # L0032 
@@ -131,7 +131,7 @@ _start:    reset_ph                  # L0004 @ 0
            asr            R2,16,R3   # L0034 temp R3
            nop                       # L0035  set_awg_offs wait for R3
            set_awg_offs   R0,R3      # L0036 @ 952
-# play None _ramp(100, 0.000, 0.016) t=952 
+# play None _ramp_100_0_1562 t=952 
            play           2,2,4      # L0037 t=952
 # awg_gain = None, 0.0 t=956 
            set_awg_gain   0,0        # L0038 @ 956
