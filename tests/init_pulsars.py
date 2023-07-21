@@ -5,14 +5,14 @@ from qblox_instruments import Cluster, ClusterType, PlugAndPlay
 #from pprint import pprint
 
 try:
-    from q1simulator import Q1Simulator
+    from q1simulator import Q1Simulator, Cluster as SimCluster
     _q1simulator_found = True
 except:
     print('package q1simulator not found')
     _q1simulator_found = False
 
 
-def add_module(module_type, name, ip_addr):
+def add_pulsar(module_type, name, ip_addr):
     try:
         pulsar = station[name]
     except:
@@ -34,19 +34,21 @@ def add_module(module_type, name, ip_addr):
     pulsar.reset()
     return pulsar
 
+
 if not qc.Station.default:
     station = qc.Station()
 else:
     station = qc.Station.default
 
+_use_cluster = True
 _use_simulator = True
 _use_dummy = False
-_use_cluster = False
 
 if not _use_simulator and not _use_dummy:
     with PlugAndPlay() as p:
         p.print_devices()
     #    pprint(p.list_devices())
+
 
 if _use_cluster:
     try:
@@ -55,8 +57,12 @@ if _use_cluster:
         qcm0 = cluster.module8
         qrm1 = cluster.module10
     except:
-        dummy_cfg = None
-        if _use_dummy:
+        if _use_simulator:
+            cluster = SimCluster('Qblox_Cluster', {
+                    8:'QCM',
+                    10:'QRM',
+                    })
+        elif _use_dummy:
             cfg = {
                 8:ClusterType.CLUSTER_QCM,
                 10:ClusterType.CLUSTER_QRM
@@ -81,9 +87,10 @@ if _use_cluster:
         qrm1 = cluster.module10
         station.add_component(qcm0)
         station.add_component(qrm1)
+
 else:
-    qcm0 = add_module('QCM', 'qcm0', '192.168.0.2')
-    qrm1 = add_module('QRM', 'qrm1', '192.168.0.3')
+    qcm0 = add_pulsar('QCM', 'qcm0', '192.168.0.2')
+    qrm1 = add_pulsar('QRM', 'qrm1', '192.168.0.3')
 
     qcm0.reference_source('internal')
     qrm1.reference_source('external')

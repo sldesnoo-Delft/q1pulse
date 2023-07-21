@@ -239,6 +239,86 @@ be used as such.
         P1.block_pulse(200, v1)
 
 
+## Conditional statements
+
+Statements can be executed conditionally on the result of acquisitions or triggers.
+
+Triggers on acquisitions must be defined with
+`trigger_x = program.configure_trigger(readout_sequencer_name, invert=False)`.
+Acquisition threshold must be set on the sequence with
+`seq.thresholded_acq_threshold = value`.
+Trigger counters must be defined with on program or sequence with
+`counter_x = program.add_trigger_counter(trigger_x, threshold=1, invert=False)`.
+
+Conditional branches must be put in a conditional block. The conditional block
+specifies which trigger counters are tested. One or more branches can be added
+each with a condition on this set of trigger counters.
+The conditions that can be checked are:
+- at_least_one_set (OR): at least one of the trigger counters is set.
+- none_set (NOR): none of the trigger counters is set.
+- all_set (AND): all trigger counters are set.
+- not_all_set (NAND): not all trigger counter are set.
+- odd (XOR): an odd number of trigger counters is set.
+- even (XNOR): an even number of trigger counters is set.
+
+Only subsets of conditions can be used within a conditional block, because
+the condition of exactly 1 branch must be true (including the automatically added
+else-branch). Allowed combinations:
+- with 1 trigger counter are:
+  one of (OR, AND, XOR) + one of (NOR, NAND, XNOR)
+- with 2 trigger counters:
+  - OR + NOR, AND + NAND, or XOR + XNOR
+  - AND + NOR + XOR. This is the only combination for 3 branches.
+- with 3 or more trigger counters:
+  - OR + NOR, AND + NAND, or XOR + XNOR
+
+The duration of a condtional block is fixed. All branches will have equal duration.
+Q1Pulse will add wait statements to enforce this equal duration.
+This results in a predictable timeline for the program.
+
+Some time is needed between the conditional block statement and the
+first statement of any else-branch, because it takes time to skip the
+statements of the previous branches.
+Some time is also needed to skip the statements of subsequent branches.
+This could result in some additional execution time for the block.
+
+The latching of trigger by the trigger counters must be enabled on the
+sequencer or on the whole program: `program.latch_enable(counters)`.
+The counters are reset with `program.latch_reset()`.
+Note that the latch_enable and latch_reset are real-time instructions
+that take 4 ns to evaluate.
+
+### Example
+
+    p = instrument.new_program('feedback')
+    p.repetitions = 2
+
+    trigger1 = p.configure_trigger('R1')
+    counter1 = p.add_trigger_counter(trigger1)
+
+    P1 = p.P1
+    R1 = p.R1
+
+    n_acq = p.repetitions
+    R1.add_acquisition_bins('measurements', n_acq)
+    R1.integration_length_acq = 100
+    R1.thresholded_acq_threshold = 0.1
+
+    # program
+    R1.acquire('measurements')
+    P1.latch_reset()
+    p.wait(4)
+    P1.latch_enable(\[counter1])
+    p.wait(96)
+    # 260 ns delay for trigger propagation
+    p.wait(260)
+    with P1.conditional(\[counter1], evaluation_time=20) as flags:
+        with flags.all_set():
+            P1.ramp(60, 0.25, 0.25)
+        with flags.none_set():
+            P1.ramp(60, 0.25, 0.0)
+
+
 ## Instrument
 
 
@@ -246,10 +326,10 @@ be used as such.
     instrument.add_qcm(qcm0)
     instrument.add_qrm(qrm1)
     # add sequencers with output channels
-    instrument.add_control('q1', qcm0.name, [0,1])
-    instrument.add_control('P1', qcm0.name, [2])
-    instrument.add_control('P2', qcm0.name, [3])
-    instrument.add_readout('R1', qrm1.name, [1])
+    instrument.add_control('q1', qcm0.name, \[0,1])
+    instrument.add_control('P1', qcm0.name, \[2])
+    instrument.add_control('P2', qcm0.name, \[3])
+    instrument.add_readout('R1', qrm1.name, \[1])
 
     p = instrument.new_program('my_q1_program')
 

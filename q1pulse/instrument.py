@@ -133,6 +133,10 @@ class Q1Instrument:
                     module.set_mixer_gain_ratio(seq.seq_nr, prog_seq.mixer_gain_ratio)
                 if prog_seq.mixer_phase_offset_degree is not None:
                     module.set_mixer_phase_offset_degree(seq.seq_nr, prog_seq.mixer_phase_offset_degree)
+                # configure trigger counters
+                for counter in prog_seq.trigger_counters:
+                    module.configure_trigger_counter(seq.seq_nr, counter.trigger.address,
+                                                     counter.threshold, counter.invert)
 
         t = (time.perf_counter() - t_start) * 1000
         # logger.debug(f'Configure QRMs ({t:5.3f} ms)')
@@ -146,6 +150,11 @@ class Q1Instrument:
                 module.thresholded_acq_threshold(seq.seq_nr, readout.thresholded_acq_threshold)
                 module.integration_length_acq(seq.seq_nr, int(readout.integration_length_acq))
                 module.delete_acquisition_data(seq.seq_nr)
+                trigger = readout.trigger
+                if trigger is not None:
+                    module.set_trigger(seq.seq_nr, trigger.address, trigger.invert)
+                else:
+                    module.set_trigger(seq.seq_nr, None)
 
         with DelayedKeyboardInterrupt():
             # Note: arm per sequencer. Arm on the cluster still gives red leds on the modules.

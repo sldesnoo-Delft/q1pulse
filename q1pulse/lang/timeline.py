@@ -25,9 +25,10 @@ class Timeline:
         return self._current_time
 
     def set_pulse_end(self, value):
+        time = max(value, self._end_time)
         if not self._disabled:
-            self._current_time = value
-        self._end_time = max(value, self._end_time)
+            self._current_time = time
+        self._end_time = time
 
     @property
     def end_time(self):

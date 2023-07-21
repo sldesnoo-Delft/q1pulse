@@ -28,6 +28,11 @@ class Q1ValueError(Q1Exception):
     Raised when invalid value is passed.
     '''
 
+class Q1SyntaxError(Q1Exception):
+    '''
+    Raised when invalid value is passed.
+    '''
+
 class Q1CompileError(Q1Exception):
     '''
     Raised when the error is detected during compilation.

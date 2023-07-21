@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.9.0] - 2023-07-@@@
+
+- Added conditional execution of statements.
+
 ## \[0.8.8] - 2023-07-11
 
 - Generate SCPI safe waveform names.

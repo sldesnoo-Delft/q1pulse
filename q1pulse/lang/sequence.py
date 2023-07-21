@@ -1,4 +1,4 @@
-from .timed_statements import TimedStatement
+from .timed_statements import TimedStatement, MultiBranchStatement
 from .flow_statements import BranchStatement
 from .exceptions import Q1Exception, Q1SequenceError
 
@@ -29,6 +29,9 @@ class Sequence:
             lines.append(line)
             if isinstance(statement, BranchStatement):
                 statement.sequence.describe(lines, indent+1)
+            if isinstance(statement, MultiBranchStatement):
+                for branch in statement.branches:
+                    branch.describe(lines, indent+1)
 
     def compile(self, generator, annotate=False):
         for statement in self._statements:

@@ -6,9 +6,11 @@ import numpy as np
 import math
 from functools import wraps
 from contextlib import contextmanager
+from dataclasses import dataclass, field
+from typing import List
 
 from .generator_data import GeneratorData
-from .instruction_queue import InstructionQueue
+from .instruction_queue import InstructionQueue, Instruction
 from .registers import SequencerRegisters
 from ..lang.math_expressions import get_dtype, Expression, Operand
 from ..lang.generator import GeneratorBase
@@ -127,6 +129,14 @@ def register_args(signature):
     return decorator_register_args
 
 
+@dataclass
+class ConditionalBlockState:
+    rt_time_start: int = 0
+    n_rt_instruction_start: int = 0
+    last_rt_instructions: List[Instruction] = field(default_factory=list)
+    rt_end_times: List[int] = field(default_factory=list)
+
+
 class Q1asmGenerator(InstructionQueue, GeneratorBase):
     def __init__(self, add_comments=False, list_registers=True,
                  line_numbers=True, comment_arg_conversions=False,
@@ -139,6 +149,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         self.q1asm = None
         self._repetitions = 1
         self._last_rt_settings = {}
+        self._conditional_block_state = None
         self._data = GeneratorData()
         self._registers = SequencerRegisters(self._add_reg_comment if add_comments else None)
         # counter for signed ASR emulation
@@ -157,6 +168,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
 
     def start_main(self):
         self._add_rt_command('wait_sync', time=0)
+        self._wait_till(100)
         self._reset_time()
         self.add_comment('--START-- (t=0)')
         self.set_label('_start')
@@ -195,6 +207,56 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
     def block_end(self):
         # NOTE pending update will move to next block start.
         self._last_rt_settings = {}
+
+    def enter_conditional(self, time):
+        self._flush_pending_update()
+        self._wait_till(time)
+        self.add_comment('Start conditional block')
+        self._conditional_block_state = ConditionalBlockState()
+
+    def set_condition(self, mask, operator):
+        # always use 4 ns for else-wait.
+        self._add_instruction('set_cond', 1, mask, operator, 4)
+        # Store rt state at start to set the time after the block.
+        self._conditional_block_state.n_rt_instruction_start = self._n_rt_instructions
+        self._conditional_block_state.rt_time_start = self._rt_time
+
+    def exit_condition(self):
+        self._flush_pending_update()
+        self._last_rt_settings = {}
+        cbs = self._conditional_block_state
+        # add wait command if there is no pending rt command with wait_after time
+        if self._last_rt_command is None:
+            self._add_rt_command('wait', time=self._rt_time)
+        else_time = 4*(self._n_rt_instructions - cbs.n_rt_instruction_start)
+        self.add_comment(f'End condition. total wait_else {else_time} ns')
+        # update end times of previous branches with time spent in else-wait.
+        for i in range(len(cbs.rt_end_times)):
+            cbs.rt_end_times[i] += else_time
+        # store last rt-statement
+        cbs.last_rt_instructions.append(self._last_rt_command)
+        cbs.rt_end_times.append(self._rt_time)
+        # set time to else time.
+        self._rt_time = cbs.rt_time_start + else_time
+        self._last_rt_command = None
+
+    def exit_conditional(self, time):
+        cbs = self._conditional_block_state
+        max_rt_time_branches = max(cbs.rt_end_times)
+        if max_rt_time_branches > time:
+            self.add_comment(f'End conditional block, wait_after {max_rt_time_branches-time} ns, '
+                             f'next at {max_rt_time_branches} ns')
+            time = max_rt_time_branches
+        else:
+            self.add_comment('End conditional block')
+        # update wait after of last instructions
+        for rt_instr, end_time in zip(cbs.last_rt_instructions, cbs.rt_end_times):
+            rt_instr.wait_after += time-end_time
+        # disable condition
+        self._add_instruction('set_cond', 0, 0, 0, 4)
+        self._conditional_block_state = None
+        self._last_rt_command = None
+        self._rt_time = time
 
     @register_args(signature='I')
     def jmp(self, label):
@@ -393,7 +455,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         wave0 = self._data.translate_wave(wave0)
         wave1 = self._data.translate_wave(wave1)
         self._add_rt_command('play', wave0, wave1,
-                             time=time)
+                             time=time, updating=True)
         self._contains_io_instr = True
 
     @register_args(signature='toI')
@@ -401,7 +463,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         section = self._data.translate_acquisition(section)
         self._add_rt_command('acquire',
                              section, bin_index,
-                             time=time)
+                             time=time, updating=True)
         self._contains_io_instr = True
 
     @register_args(signature='toIoo')
@@ -417,12 +479,19 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                 self.move(weight1, rw1)
                 self._add_rt_command('acquire_weighed',
                                      bins, bin_index, rw0, rw1,
-                                     time=time)
+                                     time=time, updating=True)
         else:
             self._add_rt_command('acquire_weighed',
                                  bins, bin_index, weight0, weight1,
-                                 time=time)
+                                 time=time, updating=True)
         self._contains_io_instr = True
+
+    @register_args(signature='tI')
+    def set_latch_en(self, time, mask):
+        self._add_rt_command('set_latch_en', mask, time=time)
+
+    def latch_rst(self, time):
+        self._add_rt_command('latch_rst', time=time)
 
     @contextmanager
     def unsigned_registers(self):

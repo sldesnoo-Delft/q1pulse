@@ -2,6 +2,9 @@ import os
 from contextlib import contextmanager
 from numbers import Number
 
+from .lang.conditions import CounterFlags
+from .lang.exceptions import Q1InternalError, Q1ValueError
+from .lang.triggers import TriggerCounter, Trigger
 from .lang.math_expressions import Expression
 from .lang.timeline import Timeline
 from .lang.registers import Registers
@@ -9,7 +12,7 @@ from .lang.register import Register
 from .lang.register_statements import RegisterAssignment
 from .lang.loops import RangeLoop, LinspaceLoop, ArrayLoop
 from .assembler.generator import Q1asmGenerator
-from .lang.exceptions import Q1InternalError, Q1ValueError
+
 
 class Program:
     def __init__(self, path=None):
@@ -19,6 +22,7 @@ class Program:
         self.repetitions = 1
         self._q1asm = {}
         self._loop_cnt = 0
+        self._triggers = []
         # shared timeline for all sequencers
         self._timeline = Timeline()
 
@@ -92,6 +96,44 @@ class Program:
         self._timeline.disable_update()
         yield
         self._timeline.enable_update()
+
+    @contextmanager
+    def conditional(self, counters, t_offset=0, evaluation_time=0):
+        for s in self.sequence_builders.values():
+            s.enter_conditional(counters, t_offset=t_offset, evaluation_time=evaluation_time)
+        flags = CounterFlags(self)
+        yield flags
+        for s in self.sequence_builders.values():
+            s.exit_conditional()
+
+    @contextmanager
+    def condition(self, operator):
+        for s in self.sequence_builders.values():
+            s.enter_condition(operator)
+        yield
+        for s in self.sequence_builders.values():
+            s.exit_condition()
+
+    def configure_trigger(self, sequencer_name, invert=False):
+        addr = len(self._triggers)+1
+        trigger = Trigger(sequencer_name, address=addr, invert=invert)
+        self._triggers.append(trigger)
+        self.sequence_builders[sequencer_name].configure_trigger(trigger)
+        return trigger
+
+    def add_trigger_counter(self, trigger, threshold=1, invert=False):
+        counter = TriggerCounter(trigger, threshold=threshold, invert=invert)
+        for s in self.sequence_builders.values():
+            s._add_trigger_counter(counter)
+        return counter
+
+    def latch_enable(self, counters, t_offset=0):
+        for s in self.sequence_builders.values():
+            s.latch_enable(counters, t_offset=t_offset)
+
+    def latch_reset(self, t_offset=0):
+        for s in self.sequence_builders.values():
+            s.latch_reset(t_offset=t_offset)
 
     def add_comment(self, comment):
         for s in self.sequence_builders.values():

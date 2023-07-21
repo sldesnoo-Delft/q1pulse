@@ -1,0 +1,95 @@
+waveforms={
+    '_ramp_60':{
+        'data':
+            [  0.00000,  0.01667,  0.03333,  0.05000,  0.06667,  0.08333,
+               0.10000,  0.11667,  0.13333,  0.15000,  0.16667,  0.18333,
+               0.20000,  0.21667,  0.23333,  0.25000,  0.26667,  0.28333,
+               0.30000,  0.31667,  0.33333,  0.35000,  0.36667,  0.38333,
+               0.40000,  0.41667,  0.43333,  0.45000,  0.46667,  0.48333,
+               0.50000,  0.51667,  0.53333,  0.55000,  0.56667,  0.58333,
+               0.60000,  0.61667,  0.63333,  0.65000,  0.66667,  0.68333,
+               0.70000,  0.71667,  0.73333,  0.75000,  0.76667,  0.78333,
+               0.80000,  0.81667,  0.83333,  0.85000,  0.86667,  0.88333,
+               0.90000,  0.91667,  0.93333,  0.95000,  0.96667,  0.98333],
+        'index':0,
+        },
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           2,R1       # L0001 R1: _repetitions
+           wait_sync      100        # L0002 t=0
+# --START-- (t=0) 
+_start:    reset_ph                  # L0003 @ 0
+           upd_param      20         # L0004 t=0
+           latch_rst      20         # L0005 t=20
+           set_latch_en   1,60       # L0006 t=40
+           set_mrk        15         # L0007 @ 100
+# ramp(60, -0.5, -0.25) 
+           set_awg_gain   8191,0     # L0008 @ 100
+           set_awg_offs   -16384,0   # L0009 @ 100
+           play           0,0,60     # L0010 t=100
+           set_awg_offs   0,0        # L0011 @ 160
+           upd_param      40         # L0012 t=160
+           set_mrk        0          # L0013 @ 200
+# ramp(60, 0.25, 0.5) 
+           set_awg_gain   8191,0     # L0014 @ 200
+           set_awg_offs   8191,0     # L0015 @ 200
+           play           0,0,60     # L0016 t=200
+           set_awg_offs   0,0        # L0017 @ 260
+           upd_param      120        # L0018 t=260
+# Start conditional block 
+           set_cond       1,1,2,4    # L0019 
+# ramp(60, 0.25, 0.25) 
+           set_awg_gain   0,0        # L0020 @ 400
+           wait           20         # L0021 
+           set_awg_offs   8191,0     # L0022 @ 400
+           play           0,0,60     # L0023 t=400
+           set_awg_offs   0,0        # L0024 @ 460
+           upd_param      4          # L0025 t=460
+# End condition. total wait_else 12 ns 
+           set_cond       1,1,1,4    # L0026 
+# ramp(60, 0.25, 0.0) 
+           set_awg_gain   -8192,0    # L0027 @ 400
+           wait           8          # L0028 
+           set_awg_offs   8191,0     # L0029 @ 400
+           play           0,0,60     # L0030 t=400
+           set_awg_offs   0,0        # L0031 @ 460
+           upd_param      16         # L0032 t=460
+# End condition. total wait_else 12 ns 
+# End conditional block, wait_after 16 ns, next at 476 ns 
+           set_cond       0,0,0,4    # L0033 
+           wait           24         # L0034 
+# Start conditional block 
+           set_cond       1,1,2,4    # L0035 
+# ramp(60, 0.25, 0.25) 
+           set_awg_gain   0,0        # L0036 @ 500
+           set_awg_offs   8191,0     # L0037 @ 500
+           play           0,0,60     # L0038 t=500
+           set_awg_offs   0,0        # L0039 @ 560
+           upd_param      4          # L0040 t=560
+# End condition. total wait_else 8 ns 
+           set_cond       1,1,3,4    # L0041 
+           wait           60         # L0042 t=508
+# End condition. total wait_else 4 ns 
+# End conditional block, wait_after 8 ns, next at 568 ns 
+           set_cond       0,0,0,4    # L0043 
+# ramp(60, 0.25, 0.5) 
+           set_awg_gain   8191,0     # L0044 @ 600
+           wait           32         # L0045 
+           set_awg_offs   8191,0     # L0046 @ 600
+           play           0,0,60     # L0047 t=600
+           set_awg_offs   0,0        # L0048 @ 660
+           upd_param      20         # L0049 t=660
+           set_latch_en   0,20       # L0050 t=680
+# --END-- 
+           loop           R1,@_start # L0051 
+           upd_param      4          # L0052 t=700
+           stop                      # L0053 
+"""
+

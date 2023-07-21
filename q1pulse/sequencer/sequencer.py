@@ -1,13 +1,15 @@
 import sys
 import os
+from copy import copy
 from contextlib import contextmanager
 import traceback
 
 from .builderbase import BuilderBase
+from ..lang.triggers import TriggerCounter
 from ..lang.exceptions import (
         Q1StateError, Q1Exception,
         Q1InternalError, Q1SequenceError,
-        Q1TimingError
+        Q1TimingError, Q1SyntaxError,
         )
 from ..lang.sequence import Sequence
 from ..lang.loops import Loop
@@ -20,6 +22,12 @@ from ..lang.flow_statements import (
         )
 from ..lang.loops import LinspaceLoop, RangeLoop, ArrayLoop
 from ..lang.simulator_statements import LogStatement
+from ..lang.conditions import (
+        LatchEnableStatement, LatchResetStatement,
+        BranchSequence, ConditionalBlockStatement,
+        CounterFlags,
+        )
+
 
 class SequenceBuilder(BuilderBase):
     add_traceback_to_instructions = True
@@ -39,6 +47,9 @@ class SequenceBuilder(BuilderBase):
         self._compiled = False
         self._init_sequence = Sequence(None)
         self._last_timed_statement = None
+        self._conditional_block = None
+        self._in_condition = False
+        self._trigger_counters = []
 
     def start_sequence(self, program, timeline):
         self._program = program
@@ -64,6 +75,7 @@ class SequenceBuilder(BuilderBase):
             self.sequence.add(statement)
 
     def _check_time(self, statement):
+        # TODO: Distinguish parameter operations vs RT IO / RT control instructions.
         if not isinstance(statement, TimedStatement):
             return
         t = statement.time
@@ -128,13 +140,12 @@ class SequenceBuilder(BuilderBase):
 
     def compile(self, generator, annotate=False):
         try:
-            if not self._compiled:
-                self._compiled = True
             self._init_sequence.compile(generator, annotate)
             generator.start_main()
             self._sequence_stack[0].compile(generator, annotate)
             generator.end_main(self.end_time)
             self.modifies_frequency = generator.modifies_frequency
+            self._compiled = True
         except Q1Exception as ex:
             msgs = [f'Error compiling {self.name}.']
             tb = []
@@ -183,6 +194,8 @@ class SequenceBuilder(BuilderBase):
 
     @contextmanager
     def _local_timeline(self, duration=None, t_offset=0):
+        if self._local_time_active:
+            raise Q1InternalError('Local timeline already active')
         end_time = self.current_time + t_offset
         if duration is not None:
             end_time += duration
@@ -220,7 +233,7 @@ class SequenceBuilder(BuilderBase):
 
     @contextmanager
     def _seq_repeat(self, n):
-        ''' repeat loop not synchronizing with other sequencers. Internal use only ''' # @@@ looks like it can be used normally
+        ''' repeat loop not synchronizing with other sequencers. '''
         if n == 0:
             raise ValueError('n must be > 0')
         if n == 1:
@@ -243,7 +256,76 @@ class SequenceBuilder(BuilderBase):
             self._sequence_stack.pop()
             self.set_pulse_end(t_start + n * t_loop)
 
-
     def _add_reg_wait(self, reg):
-        self._add_statement(WaitRegStatement(self.sequence.timeline.end_time, reg))
+        self._add_statement(WaitRegStatement(self.end_time, reg))
+
+    @property
+    def trigger_counters(self):
+        return self._trigger_counters
+
+    def _add_trigger_counter(self, counter):
+        self._trigger_counters.append(counter)
+
+    def add_trigger_counter(self, trigger, threshold=1, invert=False):
+        counter = TriggerCounter(trigger, threshold=threshold, invert=invert)
+        self._add_trigger_counter(counter)
+        return counter
+
+    def latch_enable(self, counters, t_offset=0):
+        time = self.current_time + t_offset
+        self._add_statement(LatchEnableStatement(time, counters))
+        self.set_pulse_end(time)
+
+    def latch_reset(self, t_offset=0):
+        time = self.current_time + t_offset
+        self._add_statement(LatchResetStatement(time))
+        self.set_pulse_end(time)
+
+    @contextmanager
+    def conditional(self, counters, t_offset=0, evaluation_time=0):
+        self.enter_conditional(counters, t_offset=t_offset, evaluation_time=evaluation_time)
+        flags = CounterFlags(self)
+        yield flags
+        self.exit_conditional()
+
+    def enter_conditional(self, counters, t_offset=0, evaluation_time=0):
+        if self._conditional_block:
+            raise Q1SyntaxError('Nested conditional is not supported')
+        for counter in counters:
+            if counter not in self._trigger_counters:
+                raise Q1SyntaxError('Trigger counter {counter} not registered on sequencer')
+        block = ConditionalBlockStatement(self.current_time+t_offset, counters)
+        self._add_statement(block)
+        self.set_pulse_end(self.current_time + t_offset + evaluation_time)
+        self._conditional_block = block
+
+    def exit_conditional(self):
+        timeline = copy(self._timeline)
+        self._conditional_block.close(timeline)
+        self.set_pulse_end(self._conditional_block.end_time)
+        self._conditional_block = None
+
+    @contextmanager
+    def condition(self, operator):
+        self.enter_condition(operator)
+        yield
+        self.exit_condition()
+
+    def enter_condition(self, operator):
+        if self._conditional_block is None:
+            raise Q1SyntaxError('Conditions must be wrapped in `conditional` section.')
+        if self._in_condition:
+            raise Q1SyntaxError('Conditions cannot be nested')
+        self._in_condition = True
+        timeline = copy(self._timeline)
+        branch = BranchSequence(timeline, operator)
+        self._conditional_block.add_branch(branch)
+        self._sequence_stack.append(branch)
+
+    def exit_condition(self):
+        self._conditional_block.set_end_time(self.end_time)
+        self._in_condition = False
+        self._sequence_stack.pop()
+        self._last_timed_statement = self._conditional_block
+
 

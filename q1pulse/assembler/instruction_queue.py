@@ -39,6 +39,7 @@ class InstructionQueue:
         self._rt_time = 0
         self._pending_update = None
         self._last_rt_command = None
+        self._n_rt_instructions = 0
         self._finalized = False
         self._updating_reg = None
 
@@ -91,8 +92,8 @@ class InstructionQueue:
         self._schedule_update(time)
         return instruction
 
-    def _add_rt_command(self, mnemonic, *args, time=None, index=None):
-        self._wait_till(time, pending_update='merge')
+    def _add_rt_command(self, mnemonic, *args, time=None, index=None, updating=False):
+        self._wait_till(time, pending_update='merge' if updating else 'flush')
         wait_after = RT_RESOLUTION
         if self.add_comments:
             comment = f't={time}'
@@ -104,6 +105,7 @@ class InstructionQueue:
         else:
             self._instructions.insert(index, instruction)
         self._last_rt_command = instruction
+        self._n_rt_instructions += 1
         self._rt_time += wait_after
 
     def _overwrite_rt_setting(self, instruction):
@@ -166,6 +168,7 @@ class InstructionQueue:
             wait_after = RT_RESOLUTION
             instruction = Instruction('upd_param',  wait_after=wait_after, comment=f't={pending_update.time}')
             self._instructions.insert(pending_update.index, instruction)
+            self._n_rt_instructions += 1
             self._pending_update = None
             self._last_rt_command = instruction
             self._rt_time += wait_after
@@ -173,22 +176,29 @@ class InstructionQueue:
     def __add_wait_instruction(self, time):
         if time < 0:
             raise Q1InternalError(f'Illegal wait time {time}')
-        n_max,rem_wait = divmod(time, MAX_WAIT)
-        if n_max <= 2:
-            for _ in range(n_max):
-                self._add_instruction('wait', MAX_WAIT)
+        if time < MAX_WAIT:
+            self._add_instruction('wait', time)
+            self._n_rt_instructions += 1
         else:
-            self._wait_loop_cnt += 1
-            with self.temp_regs(1) as wait_reg:
-                self._add_instruction('move', n_max, wait_reg)
-                label = f'wait{self._wait_loop_cnt}'
-                self.set_label(label)
-                self._add_instruction('wait', MAX_WAIT)
-                self._add_instruction('loop', wait_reg, '@'+label)
-        if rem_wait > 0:
-            self._add_instruction('wait', rem_wait)
+            n_max,rem_wait = divmod(time, MAX_WAIT)
+            if n_max <= 2:
+                for _ in range(n_max):
+                    self._add_instruction('wait', MAX_WAIT)
+            else:
+                self._wait_loop_cnt += 1
+                with self.temp_regs(1) as wait_reg:
+                    self._add_instruction('move', n_max, wait_reg)
+                    label = f'wait{self._wait_loop_cnt}'
+                    self.set_label(label)
+                    self._add_instruction('wait', MAX_WAIT)
+                    self._add_instruction('loop', wait_reg, '@'+label)
+            self._n_rt_instructions += n_max
+            if rem_wait > 0:
+                self._add_instruction('wait', rem_wait)
+                self._n_rt_instructions += 1
 
     def _add_wait_reg(self, time_reg, elapsed=0, less_then_65us=False): # @@@ make use of option less_then_65us
+        self._n_rt_instructions += 1 # this is not correct if > 65 us.
         if less_then_65us and elapsed == 0 and not self._check_time_reg:
             # single instruction for short simple wait
             self._add_instruction('wait', time_reg)

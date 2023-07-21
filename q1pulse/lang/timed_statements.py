@@ -5,6 +5,12 @@ class TimedStatement(Statement):
         self.time = time
 
 
+class MultiBranchStatement(TimedStatement):
+    def __init__(self, time):
+        super().__init__(time)
+        self.branches = []
+
+
 class WaitRegStatement(TimedStatement):
     def __init__(self, time, register):
         super().__init__(time)

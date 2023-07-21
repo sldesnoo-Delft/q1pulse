@@ -19,6 +19,7 @@ class ReadoutBuilder(ControlBuilder):
         self._integration_length_acq = 4
         self._thresholded_acq_rotation = 0.0
         self._thresholded_acq_threshold = 0.0
+        self._trigger = None
 
     @property
     def thresholded_acq_rotation(self):
@@ -43,6 +44,13 @@ class ReadoutBuilder(ControlBuilder):
     @integration_length_acq.setter
     def integration_length_acq(self, length):
         self._integration_length_acq = int(length)
+
+    @property
+    def trigger(self):
+        return self._trigger
+
+    def configure_trigger(self, trigger):
+        self._trigger = trigger
 
     def add_acquisition_bins(self, name, num_bins):
         return self._acquisitions.define_bins(name, num_bins)

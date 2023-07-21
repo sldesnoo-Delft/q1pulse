@@ -28,7 +28,7 @@ class QbloxModule:
         # check module is present in slot.
         if hasattr(pulsar, 'present'):
             if not pulsar.present():
-                raise Exception('No module in slot {pulsar.slot_idx()}')
+                raise Exception('No module in slot {pulsar.slot_idx}')
         self.pulsar = pulsar
         self._allocated_seq = 0
         self.disable_all_out()
@@ -103,6 +103,10 @@ class QbloxModule:
     def set_mixer_phase_offset_degree(self, seq_nr, value):
         self._sset(seq_nr, 'mixer_corr_phase_offset_degree', value)
 
+    def configure_trigger_counter(self, seq_nr, address, threshold, invert):
+        self._sset(seq_nr, f'trigger{address}_count_threshold', threshold)
+        self._sset(seq_nr, f'trigger{address}_threshold_invert', invert)
+
     def enabled(self, seq_nr):
         seq = getattr(self.pulsar, f'sequencer{seq_nr}')
         param = seq.parameters['sync_en']
@@ -123,7 +127,7 @@ class QbloxModule:
         seq = getattr(self.pulsar, f'sequencer{seq_nr}')
         param = seq.parameters[name]
         try:
-            if cache and param.cache() == value:
+            if cache and param.cache.valid and param.cache() == value:
                 if QbloxModule.verbose:
                     logger.debug(f'# {full_name}={value} -- cached')
                 return
@@ -243,3 +247,11 @@ class QrmModule(QbloxModule):
     def set_nco(self, seq_nr, nco_frequency):
         super().set_nco(seq_nr, nco_frequency)
         self._sset(seq_nr, 'demod_en_acq', nco_frequency is not None)
+
+    def set_trigger(self, seq_nr, address, invert=False):
+        enabled = address is not None and address > 0
+        self._sset(seq_nr, 'thresholded_acq_trigger_en', enabled)
+        if enabled:
+            self._sset(seq_nr, 'thresholded_acq_trigger_address', address)
+            self._sset(seq_nr, 'thresholded_acq_trigger_invert', invert)
+
