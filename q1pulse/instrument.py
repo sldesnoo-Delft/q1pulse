@@ -263,4 +263,4 @@ def check_instrument_status(instrument, print_status=False):
         if getattr(instrument, 'is_dummy', False):
             print(f'Status (Dummy) {instrument.name}:', sys_state)
         else:
-            raise Exception(f'Module {instrument.name} status not OKAY: {sys_state}')
+            raise Exception(f'{instrument.name} status not OKAY: {sys_state}')

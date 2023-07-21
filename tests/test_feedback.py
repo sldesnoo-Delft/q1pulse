@@ -1,7 +1,6 @@
 import numpy as np
 
 from q1pulse.instrument import Q1Instrument
-from q1pulse.lang.conditions import Operators
 
 from init_pulsars import qcm0, qrm1
 from plot_util import plot_output
@@ -69,7 +68,7 @@ p.wait(20)
 #p.describe()
 #print()
 
-p.compile(listing=True)#, annotate=True)
+p.compile(listing=True)
 
 #%% Set Mock data
 
