@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
-## \[0.9.0] - 2023-07-@@@
+## \[0.9.0] - 2023-07-24
 
 - Added conditional execution of statements.
 
