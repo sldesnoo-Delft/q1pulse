@@ -107,6 +107,10 @@ class QbloxModule:
         self._sset(seq_nr, f'trigger{address}_count_threshold', threshold)
         self._sset(seq_nr, f'trigger{address}_threshold_invert', invert)
 
+    def set_awg_offsets(self, seq_nr, offset0, offset1):
+        self._sset(seq_nr, f'offset_awg_path0', offset0)
+        self._sset(seq_nr, f'offset_awg_path1', offset1)
+
     def enabled(self, seq_nr):
         seq = getattr(self.pulsar, f'sequencer{seq_nr}')
         param = seq.parameters['sync_en']

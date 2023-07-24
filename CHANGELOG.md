@@ -4,6 +4,7 @@ All notable changes to Q1Pulse will be documented in this file.
 ## \[0.9.0] - 2023-07-24
 
 - Added conditional execution of statements.
+- Set AWG offsets to 0.0 after error or aborted program
 
 ## \[0.8.8] - 2023-07-11
 

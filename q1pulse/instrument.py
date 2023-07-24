@@ -117,6 +117,7 @@ class Q1Instrument:
                 self._loaded_q1asm[name] = q1asm
                 if q1asm is None:
                     module.disable_seq(seq)
+                    module.set_awg_offsets(seq.seq_nr, 0.0, 0.0)
                     logger.debug(f'Sequencer {name} no sequence')
                     continue
                 instruments_with_sequence.add(module.pulsar.root_instrument)
@@ -124,6 +125,8 @@ class Q1Instrument:
                 t = (time.perf_counter() - t_start) * 1000
                 # logger.debug(f'Sequencer {name} loaded ({t:5.3f} ms)')
 
+                module.invalidate_cache(seq.seq_nr, 'offset_awg_path0')
+                module.invalidate_cache(seq.seq_nr, 'offset_awg_path1')
                 module.enable_seq(seq)
                 prog_seq = program[name]
                 module.set_nco(seq.seq_nr, prog_seq.nco_frequency)
@@ -189,6 +192,10 @@ class Q1Instrument:
                             f'Status {name} ({module.pulsar.name}:{seq.seq_nr}):'
                              f'{state}')
                 msg_level = max(msg_level, state.level)
+                if state.status != 'STOPPED' or state.level >= logging.WARNING:
+                    errors[name] = str(state)
+                    # reset awg offsets in case of any error.
+                    module.set_awg_offsets(seq.seq_nr, 0.0, 0.0)
                 if state.input_overloaded:
                     if Q1Instrument._exception_on_overload:
                         raise Q1InputOverloaded(
@@ -196,8 +203,7 @@ class Q1Instrument:
                                 '\nException can be suppressed with q1pulse.set_exception_on_overload(False)')
                     else:
                         print(f'WARNING: input overload on {name}')
-                if state.status != 'STOPPED' or state.level >= logging.WARNING:
-                    errors[name] = str(state)
+
         if msg_level == logging.ERROR:
             logger.error('*** Program errors ***')
             for name,state in errors.items():
