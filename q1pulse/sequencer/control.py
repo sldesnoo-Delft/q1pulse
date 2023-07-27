@@ -107,6 +107,10 @@ class ControlBuilder(SequenceBuilder):
         '''
         t1 = self.current_time + t_offset
         self.set_pulse_end(t1)
+        # WORKAROUND: Qblox sequencer inverts phase delta when frequency is negative
+        # TODO: remove workaround when fixed in firmware
+        if self._nco_frequency and self._nco_frequency < 0:
+            delta = -delta
         self._add_statement(ShiftPhaseStatement(t1, delta, hires_reg))
 
     def set_phase(self, phase, t_offset=0, hires_reg=True):
@@ -282,9 +286,10 @@ class ControlBuilder(SequenceBuilder):
             n, rem = divmod(duration-1, chirp_loop_time)
             rem += 1
 
-            # Note: Qblox sequencer inverts phase delta when frequency is negative
-            if f_start < 0:
-                delta_phase = -delta_phase
+            # TODO: remove workaround when fixed in firmware
+            # Temporarily set NCO frequency for phase shift workaround.
+            nco_freq = self.nco_frequency
+            self.nco_frequency = f_start
 
             self.Rs._freq = int(f_start)
             self.set_gain(amplitude, amplitude)
@@ -300,6 +305,7 @@ class ControlBuilder(SequenceBuilder):
             self.play(w_chirpI, w_chirpQ)
             self.wait(rem)
             self.set_gain(0.0)
+            self.nco_frequency = nco_freq
 
     def _apply_paths(self, arg0, arg1):
         if len(self._enabled_paths) == 0:
