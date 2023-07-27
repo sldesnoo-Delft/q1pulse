@@ -229,7 +229,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         if self._last_rt_command is None:
             self._add_rt_command('wait', time=self._rt_time)
         else_time = 4*(self._n_rt_instructions - cbs.n_rt_instruction_start)
-        self.add_comment(f'End condition. total wait_else {else_time} ns')
+        self.add_comment(f'End condition. total wait_else {else_time} ns (t_end={self._rt_time})')
         # update end times of previous branches with time spent in else-wait.
         for i in range(len(cbs.rt_end_times)):
             cbs.rt_end_times[i] += else_time
@@ -244,11 +244,12 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         cbs = self._conditional_block_state
         max_rt_time_branches = max(cbs.rt_end_times)
         if max_rt_time_branches > time:
-            self.add_comment(f'End conditional block, wait_after {max_rt_time_branches-time} ns, '
+            self.add_comment(f'End conditional block t={time}, '
+                             f'wait_after {max_rt_time_branches-time} ns, '
                              f'next at {max_rt_time_branches} ns')
             time = max_rt_time_branches
         else:
-            self.add_comment('End conditional block')
+            self.add_comment(f'End conditional block t={time}')
         # update wait after of last instructions
         for rt_instr, end_time in zip(cbs.last_rt_instructions, cbs.rt_end_times):
             rt_instr.wait_after += time-end_time

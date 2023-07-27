@@ -49,7 +49,8 @@ class ReadoutBuilder(ControlBuilder):
     def trigger(self):
         return self._trigger
 
-    def configure_trigger(self, trigger):
+    @trigger.setter
+    def trigger(self, trigger):
         self._trigger = trigger
 
     def add_acquisition_bins(self, name, num_bins):

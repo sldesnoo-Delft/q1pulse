@@ -118,7 +118,7 @@ class Program:
         addr = len(self._triggers)+1
         trigger = Trigger(sequencer_name, address=addr, invert=invert)
         self._triggers.append(trigger)
-        self.sequence_builders[sequencer_name].configure_trigger(trigger)
+        self.sequence_builders[sequencer_name].trigger = trigger
         return trigger
 
     def add_trigger_counter(self, trigger, threshold=1, invert=False):

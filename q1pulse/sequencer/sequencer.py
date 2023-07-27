@@ -3,6 +3,7 @@ import os
 from copy import copy
 from contextlib import contextmanager
 import traceback
+import logging
 
 from .builderbase import BuilderBase
 from ..lang.triggers import TriggerCounter
@@ -27,6 +28,8 @@ from ..lang.conditions import (
         BranchSequence, ConditionalBlockStatement,
         CounterFlags,
         )
+
+logger = logging.getLogger(__name__)
 
 
 class SequenceBuilder(BuilderBase):
@@ -147,6 +150,7 @@ class SequenceBuilder(BuilderBase):
             self.modifies_frequency = generator.modifies_frequency
             self._compiled = True
         except Q1Exception as ex:
+            logger.error(f'Compilation error on {self.name}', exc_info=True)
             msgs = [f'Error compiling {self.name}.']
             tb = []
             e = ex
@@ -161,6 +165,7 @@ class SequenceBuilder(BuilderBase):
             # This avoids exposure of and confusion by q1pulse internals.
             raise Q1Exception(q1_tb) from None
         except Exception as ex:
+            logger.error(f'Compilation error on {self.name}', exc_info=True)
             self._dump_compile_state(generator, None, ex)
             raise
 
@@ -322,8 +327,11 @@ class SequenceBuilder(BuilderBase):
         self._conditional_block.add_branch(branch)
         self._sequence_stack.append(branch)
 
-    def exit_condition(self):
-        self._conditional_block.set_end_time(self.end_time)
+    def exit_condition(self, end_time=None):
+        if end_time is None:
+            end_time = self.end_time
+        self.add_comment(f'Condition end time: {end_time}')
+        self._conditional_block.set_end_time(end_time)
         self._in_condition = False
         self._sequence_stack.pop()
         self._last_timed_statement = self._conditional_block
