@@ -313,10 +313,10 @@ class ControlBuilder(SequenceBuilder):
 
         if len(self._enabled_paths) == 1:
             path = self._enabled_paths[0]
-            if arg1 is not None:
-                raise Q1ValueError('Only 1 output path enabled')
-
-            return (arg0, None) if path == 0 else (None, arg0)
+            if arg1 is None:
+                return (arg0, None) if path == 0 else (None, arg0)
+            else:
+                return (arg0, arg1) if path == 0 else (-arg1, arg0)
 
         # channels could be swapped
         args = (arg0, arg1)

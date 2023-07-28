@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.9.1] - 2023-07-28
+
+- Fixed conditionals for use with pulse-lib
+- Added workaround for set_ph_delta when NCO frequency is negative (Qblox firmware bug)
+- Fixed baseband qubit drive with NCO and only 1 output channel
+
 ## \[0.9.0] - 2023-07-24
 
 - Added conditional execution of statements.
