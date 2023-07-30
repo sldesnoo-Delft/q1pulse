@@ -12,13 +12,17 @@ class GeneratorData:
         if not isinstance(wave, Wave):
             raise Q1TypeError(f'Unsupported type for wave: {wave}')
 
-        if wave.name not in self.waveforms:
-            self.waveforms[wave.name] = {
+        waveforms = self.waveforms
+        try:
+            entry = waveforms[wave.name]
+            return entry['index']
+        except KeyError:
+            index = len(waveforms)
+            waveforms[wave.name] = {
                     'data':list(wave.data),
-                    'index':len(self.waveforms)
+                    'index':index
                     }
-
-        return self.waveforms[wave.name]['index']
+            return index
 
     def translate_acquisition(self, acquisition):
         if not isinstance(acquisition, AcquisitionBins):

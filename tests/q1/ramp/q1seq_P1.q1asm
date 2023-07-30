@@ -42,9 +42,9 @@ acquisitions={}
 
 seq_prog="""
 # --INIT-- 
-           move           2,R1       # L0001 R1: _repetitions
-           move           0,R0       # L0002 R0: always 0 register
-           wait_sync      4          # L0003 t=0
+           move           0,R0       # L0001 R0: _zero
+           move           2,R1       # L0002 R1: _repetitions
+           wait_sync      100        # L0003 t=0
 # --START-- (t=0) 
 _start:    reset_ph                  # L0004 @ 0
 # block_pulse(40, -0.25, None) 
@@ -204,7 +204,6 @@ local_0:   asr            R2,16,R4   # L0016 temp R4
            upd_param      65532      # L0081 t=101268
 # awg_offset = 0.0, None t=201268 
            set_awg_offs   0,0        # L0082 @ 201268
-# wait 99996 (t=201268) 
            wait           34468      # L0083 
            upd_param      100        # L0084 t=201268
 # --END-- 

@@ -1,4 +1,6 @@
 import os
+import time
+import logging
 from contextlib import contextmanager
 from numbers import Number
 
@@ -13,6 +15,7 @@ from .lang.register_statements import RegisterAssignment
 from .lang.loops import RangeLoop, LinspaceLoop, ArrayLoop
 from .assembler.generator import Q1asmGenerator
 
+logger = logging.getLogger(__name__)
 
 class Program:
     def __init__(self, path=None):
@@ -50,14 +53,24 @@ class Program:
         # store compiled sequences
         self._q1asm = {}
 
+        start_compile = time.perf_counter()
         for builder in self.sequence_builders.values():
             g = Q1asmGenerator(add_comments=add_comments,
                                optimize=optimize)
             g.repetitions = self.repetitions
+            start = time.perf_counter()
             builder.compile(g, annotate=annotate)
+            end = time.perf_counter()
+            d1 = (end-start)*1000
+            start = end
             filename = self.seq_filename(builder.name) if listing or json else None
             g.assemble(listing=listing, json_output=json, filename=filename)
             self._q1asm[builder.name] = g.q1asm
+            end = time.perf_counter()
+            d2 = (end-start)*1000
+            logger.debug(f'compile {builder.name} {d1:5.2f} {d2:5.2f}')
+        duration = time.perf_counter() - start_compile
+        logger.debug(f'Total compilation {duration*1000:5.2f}')
 
     def q1asm(self, name):
         return self._q1asm[name]

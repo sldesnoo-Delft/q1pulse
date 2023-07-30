@@ -12,6 +12,8 @@ instrument.add_control('P1', qcm0.name, [2])
 instrument.add_control('P2', qcm0.name, [3])
 instrument.add_readout('R1', qrm1.name, [1])
 
+#%%
+
 p = instrument.new_program('csd_ramp')
 P1 = p.P1
 P2 = p.P2
@@ -35,12 +37,15 @@ with p.loop_linspace(-0.5, 0.5, N) as v2:
 
 #p.describe()
 
+start = time.perf_counter()
 p.compile(annotate=True, listing=True)
+duration = time.perf_counter() - start
+print(f'compilation {duration*1000:6.3f} ms')
 
 #%%
 start = time.perf_counter()
 instrument.run_program(p)
 duration = time.perf_counter() - start
-print(f'{duration*1000:6.3f} ms')
+print(f'execution {duration*1000:6.3f} ms')
 #%%
 plot_output([qcm0, qrm1])

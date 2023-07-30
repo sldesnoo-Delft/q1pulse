@@ -60,9 +60,9 @@ acquisitions={}
 
 seq_prog="""
 # --INIT-- 
-           move           2,R1       # L0001 R1: _repetitions
-           move           0,R0       # L0002 R0: always 0 register
-           wait_sync      4          # L0003 t=0
+           move           0,R0       # L0001 R0: _zero
+           move           2,R1       # L0002 R1: _repetitions
+           wait_sync      100        # L0003 t=0
 # --START-- (t=0) 
 _start:    reset_ph                  # L0004 @ 0
 # R.v_ramp1:float = 0.2 
@@ -122,9 +122,9 @@ local_0:   asr            R6,16,R8   # L0026 temp R8
            nop                       # L0033  sub wait for R8
            sub            R8,R3,R7   # L0034 
            nop                       # L0035  asr wait for R7
-           asr            R7,16,R8   # L0036 temp R8
-           nop                       # L0037  set_awg_gain wait for R8
-           set_awg_gain   R8,R0      # L0038 @ 760
+           asr            R7,16,R7   # L0036 
+           nop                       # L0037  set_awg_gain wait for R7
+           set_awg_gain   R7,R0      # L0038 @ 760
 # awg_offset = R._var0, None t=760 
            asr            R3,16,R7   # L0039 temp R7
 # -- Overwrites set_awg_offs at 760 -- 

@@ -29,25 +29,26 @@ acquisitions={}
 
 seq_prog="""
 # --INIT-- 
-           move           2,R1       # L0001 R1: _repetitions
-           wait_sync      4          # L0002 t=0
+           move           0,R0       # L0001 R0: _zero
+           move           2,R1       # L0002 R1: _repetitions
+           wait_sync      100        # L0003 t=0
 # --START-- (t=0) 
-_start:    reset_ph                  # L0003 @ 0
-           upd_param      100        # L0004 t=0
+_start:    reset_ph                  # L0004 @ 0
+           upd_param      100        # L0005 t=0
 # shaped_pulse(tukey100, 0.1, None, None) 
 # awg_gain = 0.1, None t=100 
-           set_awg_gain   3276,0     # L0005 @ 100
+           set_awg_gain   3276,0     # L0006 @ 100
 # play tukey100 None t=100 
-           play           0,0,240    # L0006 t=100
+           play           0,0,240    # L0007 t=100
 # block_pulse(100, 0.25, None) 
 # awg_offset = 0.25, None t=340 
-           set_awg_offs   8191,0     # L0007 @ 340
-           upd_param      100        # L0008 t=340
+           set_awg_offs   8191,0     # L0008 @ 340
+           upd_param      100        # L0009 t=340
 # awg_offset = 0.0, None t=440 
-           set_awg_offs   0,0        # L0009 @ 440
+           set_awg_offs   0,0        # L0010 @ 440
 # --END-- 
-           loop           R1,@_start # L0010 
-           upd_param      4          # L0011 t=440
-           stop                      # L0012 
+           loop           R1,@_start # L0011 
+           upd_param      4          # L0012 t=440
+           stop                      # L0013 
 """
 

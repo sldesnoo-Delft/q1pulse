@@ -8,28 +8,30 @@ acquisitions={'measurements': {'index': 0, 'num_bins': 2}}
 
 seq_prog="""
 # --INIT-- 
-           move           2,R2       # L0001 R2: _repetitions
-           move           0,R1       # L0002 R1: Rs._bin_measurements
-           wait_sync      100        # L0003 t=0
+           move           0,R0       # L0001 R0: _zero
+           move           2,R2       # L0002 R2: _repetitions
+           move           0,R1       # L0003 R1: Rs._bin_measurements
+           wait_sync      100        # L0004 t=0
 # --START-- (t=0) 
-_start:    reset_ph                  # L0004 @ 0
+_start:    reset_ph                  # L0005 @ 0
 # acquire(measurements, increment) 
-           acquire        0,R1,20    # L0005 t=0
-           add            R1,1,R1    # L0006 
-           latch_rst      480        # L0007 t=20
+           acquire        0,R1,20    # L0006 t=0
+           add            R1,1,R1    # L0007 
+           latch_rst      480        # L0008 t=20
 # Start conditional block 
-           set_cond       1,1,2,4    # L0008 
-           wait           4          # L0009 t=500
-# End condition. total wait_else 4 ns 
-           set_cond       1,1,3,4    # L0010 
-           wait           4          # L0011 t=504
-# End condition. total wait_else 4 ns 
-# End conditional block, wait_after 8 ns, next at 508 ns 
-           set_cond       0,0,0,4    # L0012 
-           wait           192        # L0013 
+           set_cond       1,1,2,4    # L0009 
+# Condition end time: 500 
+           wait           4          # L0010 t=500
+# End condition. total wait_else 4 ns (t_end=504) 
+           set_cond       1,1,3,4    # L0011 
+           wait           4          # L0012 t=504
+# End condition. total wait_else 4 ns (t_end=508) 
+# End conditional block t=500, wait_after 8 ns, next at 508 ns 
+           set_cond       0,0,0,4    # L0013 
+           wait           192        # L0014 
 # --END-- 
-           loop           R2,@_start # L0014 
-           upd_param      4          # L0015 t=700
-           stop                      # L0016 
+           loop           R2,@_start # L0015 
+           upd_param      4          # L0016 t=700
+           stop                      # L0017 
 """
 

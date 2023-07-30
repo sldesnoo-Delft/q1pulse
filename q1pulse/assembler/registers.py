@@ -2,64 +2,44 @@ from contextlib import contextmanager
 from ..lang.exceptions import Q1NameError, Q1MemoryError
 
 class SequencerRegisters:
+    stack_size = 32
+
     def __init__(self, log_func):
         super().__init__()
         self._log = log_func
         self._allocated_regs = {}
-        self._free_regs = list(reversed(range(64)))
-        # stack with list of registers allcated in scope
-        self._scope_regs = []
+        # stack for registers allcated in scope
+        self._stack_ptr = 0
+        self._scope = []
         self.enter_scope()
-        self.allocate_reg('_always_zero_', log=False)
-        self._always_zero_initialized = False
 
     def get_asm_reg(self, name):
         try:
-            reg_nr = self._allocated_regs[name]
-        except:
+            return self._allocated_regs[name]
+        except KeyError:
             raise Q1NameError(f'Register {name} not defined')
-        return f'R{reg_nr}'
-
-    def get_zero_reg(self):
-        init_reg = not self._always_zero_initialized
-        asm_reg = self.get_asm_reg('_always_zero_')
-        if not self._always_zero_initialized:
-            if self._log is not None:
-                self._log(f'{asm_reg}: always 0 register')
-            self._always_zero_initialized = True
-        return asm_reg, init_reg
 
     def allocate_reg(self, name, log=True):
         if name in self._allocated_regs:
             self._print_reg_admin()
             raise Q1NameError(f'Register {name} already allocated')
-
         try:
-            reg = self._free_regs.pop()
-            self._allocated_regs[name] = reg
-            self._scope_regs[-1].append(name)
+            asm_reg = self._allocate_stack_reg(name)
+            self._allocated_regs[name] = asm_reg
             if log and self._log is not None:
-                self._log(f'R{reg}: {name}')
-            return self.get_asm_reg(name)
+                self._log(f'{asm_reg}: {name}')
+            return asm_reg
         except IndexError:
             raise Q1MemoryError(f'Cannot allocate register {name}')
 
-    def _release_reg(self, name):
-        try:
-            reg = self._allocated_regs[name]
-        except:
-            self._print_reg_admin()
-            raise Q1NameError(f'Error in register administration')
-        del self._allocated_regs[name]
-        self._free_regs.append(reg)
-
     def enter_scope(self):
-        self._scope_regs.append([])
+        self._scope.append((self._stack_ptr, {}))
 
     def exit_scope(self):
-        scope_regs = self._scope_regs.pop()
-        for name in reversed(scope_regs):
-            self._release_reg(name)
+        ptr, named = self._scope.pop()
+        self._stack_ptr = ptr
+        for reg_name in named:
+            del self._allocated_regs[reg_name]
 
     @contextmanager
     def temp_regs(self, n):
@@ -70,17 +50,21 @@ class SequencerRegisters:
         yield regs if n > 1 else regs[0]
         self.exit_scope()
 
+    def _allocate_stack_reg(self, name=None):
+        reg_nr = self._stack_ptr
+        self._stack_ptr += 1
+        if self._stack_ptr >= SequencerRegisters.stack_size:
+            raise Q1MemoryError('Stack overflow')
+        reg_name = f'R{reg_nr}'
+        if name:
+            self._scope[-1][1][name] = reg_name
+        return reg_name
+
     def get_temp_reg(self, log=True):
-        try:
-            # forge name for register that will be used
-            nr = self._free_regs[-1]
-            name = f'_R{nr}'
-            asm_reg = self.allocate_reg(name, log=False)
-            if log and self._log:
-                self._log(f'temp {asm_reg}')
-            return asm_reg
-        except IndexError:
-            raise Q1MemoryError('Cannot allocate temp register')
+        asm_reg = self._allocate_stack_reg()
+        if log and self._log:
+            self._log(f'temp {asm_reg}')
+        return asm_reg
 
     def _print_reg_admin(self):
         # print(f'Free: {self._free_regs}')

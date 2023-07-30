@@ -71,9 +71,9 @@ acquisitions={}
 
 seq_prog="""
 # --INIT-- 
-           move           2,R1       # L0001 R1: _repetitions
-           move           0,R0       # L0002 R0: always 0 register
-           wait_sync      4          # L0003 t=0
+           move           0,R0       # L0001 R0: _zero
+           move           2,R1       # L0002 R1: _repetitions
+           wait_sync      100        # L0003 t=0
 # --START-- (t=0) 
 _start:    reset_ph                  # L0004 @ 0
            upd_param      160        # L0005 t=0
@@ -84,9 +84,9 @@ _start:    reset_ph                  # L0004 @ 0
            nop                       # L0007  sub wait for R2
            sub            R2,0,R3    # L0008 temp R3
            nop                       # L0009  asr wait for R3
-           asr            R3,16,R4   # L0010 temp R4
-           nop                       # L0011  set_awg_gain wait for R4
-           set_awg_gain   R0,R4      # L0012 @ 160
+           asr            R3,16,R3   # L0010 
+           nop                       # L0011  set_awg_gain wait for R3
+           set_awg_gain   R0,R3      # L0012 @ 160
 # awg_offset = None, 0.0 t=160 
            set_awg_offs   0,0        # L0013 @ 160
 # play None _ramp_40 t=160 
@@ -97,9 +97,9 @@ _start:    reset_ph                  # L0004 @ 0
 # awg_gain = None, R.v_ramp1 - 0.2 t=200 
            sub            R2,429496729,R3 # L0015 temp R3
            nop                       # L0016  asr wait for R3
-           asr            R3,16,R4   # L0017 temp R4
-           nop                       # L0018  set_awg_gain wait for R4
-           set_awg_gain   R0,R4      # L0019 @ 200
+           asr            R3,16,R3   # L0017 
+           nop                       # L0018  set_awg_gain wait for R3
+           set_awg_gain   R0,R3      # L0019 @ 200
 # awg_offset = None, 0.2 t=200 
 # -- Overwrites set_awg_offs at 200 -- 
            set_awg_offs   0,6553     # L0020 @ 200

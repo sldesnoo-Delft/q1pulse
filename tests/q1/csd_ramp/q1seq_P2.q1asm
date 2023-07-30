@@ -8,8 +8,8 @@ acquisitions={}
 
 seq_prog="""
 # --INIT-- 
-           move           0,R0       # L0001 R0: always 0 register
-           wait_sync      4          # L0002 t=0
+           move           0,R0       # L0001 R0: _zero
+           wait_sync      100        # L0002 t=0
 # --START-- (t=0) 
 _start:    reset_ph                  # L0003 @ 0
 # loop_linspace(-0.5, 0.5, 100):R._var0 t=0 
@@ -23,7 +23,6 @@ loop_0:    asr            R1,16,R3   # L0006 temp R3
            upd_param      65532      # L0009 t=0
 # awg_offset = None, 0.0 t=1050000 
            set_awg_offs   0,0        # L0010 @ 1050000
-# wait 1049996 (t=1050000) 
            move           15,R3      # L0011 temp ['R3']
 wait1:     wait           65532      # L0012 
            loop           R3,@wait1  # L0013 

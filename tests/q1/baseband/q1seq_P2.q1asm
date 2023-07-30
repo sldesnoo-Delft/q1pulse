@@ -8,44 +8,44 @@ acquisitions={}
 
 seq_prog="""
 # --INIT-- 
-           move           3,R1       # L0001 R1: _repetitions
-           wait_sync      4          # L0002 t=0
+           move           0,R0       # L0001 R0: _zero
+           move           3,R1       # L0002 R1: _repetitions
+           wait_sync      100        # L0003 t=0
 # --START-- (t=0) 
-_start:    reset_ph                  # L0003 @ 0
-           upd_param      1700       # L0004 t=0
+_start:    reset_ph                  # L0004 @ 0
+           upd_param      1700       # L0005 t=0
 # R.amplitude:float = 0.125 
-           move           268435455,R2 # L0005 R2: R.amplitude
+           move           268435455,R2 # L0006 R2: R.amplitude
 # block_pulse(100, -0.5, None) 
 # awg_offset = None, -0.5 t=1700 
-           set_awg_offs   0,-16384   # L0006 @ 1700
-           upd_param      100        # L0007 t=1700
+           set_awg_offs   0,-16384   # L0007 @ 1700
+           upd_param      100        # L0008 t=1700
 # awg_offset = None, 0.0 t=1800 
-           set_awg_offs   0,0        # L0008 @ 1800
-           upd_param      1000       # L0009 t=1800
+           set_awg_offs   0,0        # L0009 @ 1800
+           upd_param      1000       # L0010 t=1800
 # block_pulse(100, -0.25, None) 
 # awg_offset = None, -0.25 t=2800 
-           set_awg_offs   0,-8192    # L0010 @ 2800
-           upd_param      100        # L0011 t=2800
+           set_awg_offs   0,-8192    # L0011 @ 2800
+           upd_param      100        # L0012 t=2800
 # awg_offset = None, 0.0 t=2900 
-           set_awg_offs   0,0        # L0012 @ 2900
-           upd_param      65532      # L0013 t=2900
+           set_awg_offs   0,0        # L0013 @ 2900
+           upd_param      65532      # L0014 t=2900
 # --- long wait 
 # --- longer wait 
 # --- very long wait 
 # block_pulse(1000, -0.75, None) 
 # awg_offset = None, -0.75 t=764900 
-           set_awg_offs   0,-24576   # L0014 @ 764900
-# wait 761996 (t=764900) 
-           move           10,R3      # L0015 temp ['R3']
-wait1:     wait           65532      # L0016 
-           loop           R3,@wait1  # L0017 
-           wait           41148      # L0018 
-           upd_param      1000       # L0019 t=764900
+           set_awg_offs   0,-24576   # L0015 @ 764900
+           move           10,R3      # L0016 temp ['R3']
+wait1:     wait           65532      # L0017 
+           loop           R3,@wait1  # L0018 
+           wait           41148      # L0019 
+           upd_param      1000       # L0020 t=764900
 # awg_offset = None, 0.0 t=765900 
-           set_awg_offs   0,0        # L0020 @ 765900
+           set_awg_offs   0,0        # L0021 @ 765900
 # --END-- 
-           loop           R1,@_start # L0021 
-           upd_param      4          # L0022 t=765900
-           stop                      # L0023 
+           loop           R1,@_start # L0022 
+           upd_param      4          # L0023 t=765900
+           stop                      # L0024 
 """
 

@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from typing import List
 
 from .generator_data import GeneratorData
-from .instruction_queue import InstructionQueue, Instruction
+from .instruction_queue import InstructionQueue, Instruction, PendingUpdate
 from .registers import SequencerRegisters
 from ..lang.math_expressions import get_dtype, Expression, Operand
 from ..lang.generator import GeneratorBase
@@ -45,10 +45,81 @@ def register_args(signature):
         Signature:
         I: integer only; Evaluate expression, allow label.
         f: float or int: Evaluate expression, if one float, then all float; label counts as int
-        F: float only: Evaluate expressoin, convert to i16
-        t: time. No register. No conversion.
+        F: float only: Evaluate expression, convert to i16
+        t: time. integer, No register. No conversion.
         o: object. No register. No conversion.
     '''
+    def arg_I(generator, i, arg, conversion_comments):
+        # translate reg, expr. to asm register
+        if isinstance(arg, Operand):
+            if arg.dtype != int:
+                raise Q1TypeError(f'Argument {i} must be of type int ({arg})')
+            asm_reg = generator._to_asm_reg(arg)
+            if conversion_comments is not None:
+                conversion_comments += [f'{arg} -> {asm_reg}']
+            return asm_reg
+        elif isinstance(arg, str):
+            # label or 'Rxx'
+            return arg
+        else:
+            # make unsigned
+            return _int_u32(arg)
+
+    def arg_f(generator, i, arg, conversion_comments):
+        # Note: label has dtype int
+#        dtype = get_dtype(arg)
+        # check optional all float or all int
+#        if opt_type is None:
+#            opt_type = dtype
+#        elif dtype is not None and dtype != opt_type:
+#            raise Q1TypeError(f'Float/int argument mismatch {dtype}<>{opt_type}')
+
+        if isinstance(arg,str):
+            # label or 'Rxx'
+            return arg
+        elif isinstance(arg, Operand):
+            asm_reg = generator._to_asm_reg(arg)
+            if conversion_comments is not None:
+                conversion_comments += [f'{arg} -> {asm_reg}']
+            return asm_reg
+        elif get_dtype(arg) == float:
+            value = _float_to_f32(arg)
+            if conversion_comments is not None:
+                conversion_comments += [f'{arg} -> {asm_reg}']
+            return value
+        else:
+            # make unsigned
+            return _int_u32(arg)
+
+    def arg_F(generator, i, arg, conversion_comments):
+        if arg is None:
+            return arg
+        elif isinstance(arg, Operand):
+            if arg.dtype != float:
+                raise Q1TypeError(f'Argument {i} must be of type float ({arg})')
+            asm_reg = generator._oper_to_f16(arg)
+            if conversion_comments is not None:
+                conversion_comments += [f'{arg} -> {asm_reg}']
+            return asm_reg
+        else:
+            value = _float_to_f16(arg)
+            if conversion_comments is not None:
+                conversion_comments += [f'{arg} -> {value}']
+            return value
+
+    arg_conv = []
+    for i,atype in enumerate(signature):
+        if atype in 'to':
+            # argument is time or object. Nothing to translate
+            continue
+        elif atype == 'I':
+            arg_conv.append((i, arg_I))
+        elif atype == 'f':
+            arg_conv.append((i, arg_f))
+        elif atype == 'F':
+            arg_conv.append((i, arg_F))
+
+
     def decorator_register_args(func):
         @wraps(func)
         def func_wrapper(self, *args, **kwargs):
@@ -56,67 +127,14 @@ def register_args(signature):
                 # print(f'{func.__name__} {args}')
                 args = list(args)
                 self._registers.enter_scope()
-                comments = []
-                opt_type = None
-                for i,(arg,atype) in enumerate(zip(args,signature)): # @@@ optimize: atype to index?
-                    converted = False
-                    if atype in 'to':
-                        # argument is time or object. Nothing to translate
-                        continue
-                    elif atype == 'I':
-                        # translate reg, expr. to asm register
-                        if isinstance(arg, Operand):
-                            if arg.dtype != int:
-                                raise Q1TypeError(f'Argument {i} must be of type int ({args[i]})')
-                            asm_reg = self._to_asm_reg(arg)
-                            args[i] = asm_reg
-                            converted = True
-                        elif isinstance(arg,str):
-                            # label or 'Rxx'
-                            pass
-                        else:
-                            # make unsigned
-                            args[i] = _int_u32(arg)
-                    elif atype == 'f':
-                        # Note: label has dtype int
-                        dtype = get_dtype(arg)
-                        # check optional all float or all int
-                        if opt_type is None:
-                            opt_type = dtype
-                        elif dtype is not None and dtype != opt_type:
-                            raise Q1TypeError(f'Float/int argument mismatch {dtype}<>{opt_type}')
-                        if isinstance(arg, Operand):
-                            asm_reg = self._to_asm_reg(arg)
-                            args[i] = asm_reg
-                            converted = True
-                        elif dtype == float:
-                            args[i] = _float_to_f32(arg)
-                            converted = True
-                        elif isinstance(arg,str):
-                            # label or 'Rxx'
-                            pass
-                        else:
-                            # make unsigned
-                            args[i] = _int_u32(arg)
-                    elif atype == 'F':
-                        if arg is None:
-                            pass
-                        elif isinstance(arg, Operand):
-                            if arg.dtype != float:
-                                raise Q1TypeError(f'Argument {i} must be of type float ({args[i]})')
-                            asm_reg = self._to_asm_reg(arg)
-                            asm_reg = self._reg_to_f16(asm_reg)
-                            args[i] = asm_reg
-                            converted = True
-                        else:
-                            args[i] = _float_to_f16(arg)
-                            converted = True
 
-                    if self._show_arg_conversions and converted:
-                        comments += [f'{arg} -> {args[i]}']
+                conversion_comments = [] if self._show_arg_conversions else None
+                for i,conv_func in arg_conv:
+                    arg = args[i]
+                    args[i] = conv_func(self, i, arg, conversion_comments)
 
-                if self._show_arg_conversions and len(comments) > 0:
-                    self.add_comment(' -- args: ' + ', '.join(comments))
+                if self._show_arg_conversions and len(conversion_comments) > 0:
+                    self.add_comment(' -- args: ' + ', '.join(conversion_comments))
                 res = func(self, *args, **kwargs)
                 self._registers.exit_scope()
                 return res
@@ -137,6 +155,18 @@ class ConditionalBlockState:
     rt_end_times: List[int] = field(default_factory=list)
 
 
+@dataclass
+class LastRtSettings:
+    awg_offs_time: int = -1
+    awg_offs_instr: Instruction = None
+    awg_gain_time: int = -1
+    awg_gain_instr: Instruction = None
+
+    def clear(self):
+        self.awg_gain_time = -1
+        self.awg_offs_time = -1
+
+
 class Q1asmGenerator(InstructionQueue, GeneratorBase):
     def __init__(self, add_comments=False, list_registers=True,
                  line_numbers=True, comment_arg_conversions=False,
@@ -148,7 +178,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         self._optimize = optimize
         self.q1asm = None
         self._repetitions = 1
-        self._last_rt_settings = {}
+        self._last_rt_settings = LastRtSettings()
         self._conditional_block_state = None
         self._data = GeneratorData()
         self._registers = SequencerRegisters(self._add_reg_comment if add_comments else None)
@@ -156,6 +186,8 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         self._asr_jumps = 0
         self.modifies_frequency = False
         self.add_comment('--INIT--', init_section=True)
+        self._zero_reg = self.allocate_reg('_zero')
+        self.move(0, self._zero_reg, init_section=True)
 
 
     @property
@@ -182,8 +214,6 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                       init_section=True)
 
     def end_main(self, time):
-        if self._finalized:
-            return
         self._wait_till(time)
         self.block_end()
         self.add_comment('--END--')
@@ -194,7 +224,6 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             self.block_end()
         self._flush_pending_update()
         self._add_instruction('stop')
-        self._finalized = True
 
     def block_start(self):
         # Pending updates of the previous block must be updated now.
@@ -202,11 +231,11 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         # at the start of the loop or immediately after the loop.
         self._schedule_update(self._rt_time)
         # rt_settings may not be overwritten across block boundary
-        self._last_rt_settings = {}
+        self._last_rt_settings.clear()
 
     def block_end(self):
         # NOTE pending update will move to next block start.
-        self._last_rt_settings = {}
+        self._last_rt_settings.clear()
 
     def enter_conditional(self, time):
         self._flush_pending_update()
@@ -223,7 +252,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
 
     def exit_condition(self):
         self._flush_pending_update()
-        self._last_rt_settings = {}
+        self._last_rt_settings.clear()
         cbs = self._conditional_block_state
         # add wait command if there is no pending rt command with wait_after time
         if self._last_rt_command is None:
@@ -277,15 +306,15 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
 
     @register_args(signature='ff')
     def move(self, source, destination, init_section=False):
-        self._add_instruction('move', source, destination,
-                              init_section=init_section)
+        self._add_reg_instruction('move', source, destination,
+                                  init_section=init_section)
 
     @register_args(signature='fff')
     def add(self, lhs, rhs, destination):
         if isinstance(lhs, int):
             # swap arguments. 1st argument cannot be immediate value
             lhs,rhs = rhs,lhs
-        self._add_instruction('add', lhs, rhs, destination)
+        self._add_reg_instruction('add', lhs, rhs, destination)
 
     @register_args(signature='fff')
     def sub(self, lhs, rhs, destination):
@@ -293,9 +322,9 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         if isinstance(lhs, Number):
             with self._registers.temp_regs(1) as temp:
                 self.move(lhs, temp)
-                self._add_instruction('sub', temp, rhs, destination)
+                self._add_reg_instruction('sub', temp, rhs, destination)
         else:
-            self._add_instruction('sub', lhs, rhs, destination)
+            self._add_reg_instruction('sub', lhs, rhs, destination)
 
     @register_args(signature='fIf')
     def asl(self, lhs, rhs, destination):
@@ -303,9 +332,9 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         if isinstance(lhs, Number):
             with self._registers.temp_regs(1) as temp:
                 self.move(lhs, temp)
-                self._add_instruction('asl', temp, rhs, destination)
+                self._add_reg_instruction('asl', temp, rhs, destination)
         else:
-            self._add_instruction('asl', lhs, rhs, destination)
+            self._add_reg_instruction('asl', lhs, rhs, destination)
 
     @register_args(signature='fIf')
     def lsr(self, lhs, rhs, destination):
@@ -314,9 +343,9 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             # q1asm has no instruction for asr imm,reg,reg. Use asr reg,reg,reg instead
             with self._registers.temp_regs(1) as temp:
                 self.move(lhs, temp)
-                self._add_instruction('asr', temp, rhs, destination)
+                self._add_reg_instruction('asr', temp, rhs, destination)
         else:
-            self._add_instruction('asr', lhs, rhs, destination)
+            self._add_reg_instruction('asr', lhs, rhs, destination)
 
     @register_args(signature='fIf')
     def asr(self, lhs, rhs, destination):
@@ -338,7 +367,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                     # get sign of lhs
                     self.bits_and(lhs, 0x8000_0000, sign)
                     # actual ASR
-                    self._add_instruction('asr', lhs, rhs, destination)
+                    self._add_reg_instruction('asr', lhs, rhs, destination)
                     # add sign extension bits if negative (highest bit set)
                     self.jlt(sign, 0x8000_0000, '@'+label)
                     sign_extension = 0xFFFF_FFFF << (31-rhs)
@@ -352,40 +381,39 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                     # get sign of lhs (highest bit)
                     self.bits_and(lhs, 0x8000_0000, sign)
                     # actual ASR
-                    self._add_instruction('asr', lhs, rhs, destination)
+                    self._add_reg_instruction('asr', lhs, rhs, destination)
                     # compute sign extension bits
                     self.lsr(sign, rhs, sign) # explicit unsigned shift
-                    zero = self.get_zero_reg()
+                    zero = self._zero_reg
                     self.sub(zero, sign, sign_extension)
                     self.bits_or(destination, sign_extension, destination)
             else:
-                self._add_instruction('asr', lhs, rhs, destination)
-
+                self._add_reg_instruction('asr', lhs, rhs, destination)
 
     @register_args(signature='II')
     def bits_not(self, source, destination):
-        self._add_instruction('not', source, destination)
+        self._add_reg_instruction('not', source, destination)
 
     @register_args(signature='III')
     def bits_and(self, lhs, rhs, destination):
         if isinstance(lhs, int):
             # swap arguments. 1st argument cannot be immediate value
             lhs,rhs = rhs,lhs
-        self._add_instruction('and', lhs, rhs, destination)
+        self._add_reg_instruction('and', lhs, rhs, destination)
 
     @register_args(signature='III')
     def bits_or(self, lhs, rhs, destination):
         if isinstance(lhs, int):
             # swap arguments. 1st argument cannot be immediate value
             lhs,rhs = rhs,lhs
-        self._add_instruction('or', lhs, rhs, destination)
+        self._add_reg_instruction('or', lhs, rhs, destination)
 
     @register_args(signature='III')
     def bits_xor(self, lhs, rhs, destination):
         if isinstance(lhs, int):
             # swap arguments. 1st argument cannot be immediate value
             lhs,rhs = rhs,lhs
-        self._add_instruction('xor', lhs, rhs, destination)
+        self._add_reg_instruction('xor', lhs, rhs, destination)
 
     @register_args(signature='tI')
     def set_mrk(self, time, value):
@@ -399,25 +427,27 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
     @register_args(signature='tFF')
     def awg_offset(self, time, offset0, offset1):
         offset0, offset1 = self._both_reg_or_imm(offset0, offset1)
-        last = self._last_rt_settings.get('set_awg_offs')
-        if last is not None and last[0] == time:
+        last_rt_settings = self._last_rt_settings
+        if last_rt_settings.awg_offs_time == time:
             self.add_comment(f'-- Overwrites set_awg_offs at {time} --')
-            self._overwrite_rt_setting(last[1])
+            self._overwrite_rt_setting(last_rt_settings.awg_offs_instr)
         instr = self._add_rt_setting('set_awg_offs', offset0, offset1,
                                      time=time)
-        self._last_rt_settings['set_awg_offs'] = (time, instr)
+        last_rt_settings.awg_offs_time = time
+        last_rt_settings.awg_offs_instr = instr
         self._contains_io_instr = True
 
     @register_args(signature='tFF')
     def awg_gain(self, time, gain0, gain1):
         gain0, gain1 = self._both_reg_or_imm(gain0, gain1)
-        last = self._last_rt_settings.get('set_awg_gain')
-        if last is not None and last[0] == time:
+        last_rt_settings = self._last_rt_settings
+        if last_rt_settings.awg_gain_time == time:
             self.add_comment(f'-- Overwrites set_awg_gain at {time} --')
-            self._overwrite_rt_setting(last[1])
+            self._overwrite_rt_setting(last_rt_settings.awg_gain_instr)
         instr = self._add_rt_setting('set_awg_gain', gain0, gain1,
                                      time=time)
-        self._last_rt_settings['set_awg_gain'] = (time, instr)
+        last_rt_settings.awg_gain_time = time
+        last_rt_settings.awg_gain_instr = instr
 
 #    @register_args(signature='tI') -- handled in _convert_frequency()
     def set_freq(self, time, frequency):
@@ -441,10 +471,12 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
     @register_args(signature='tI')
     def wait_reg(self, time, register):
         # Note: wait_reg also effectively contains a block_end and block_start.
-        elapsed = self._wait_till(time, pending_update='flush', return_negative=True)
+        elapsed = self._wait_till(time,
+                                  pending_update=PendingUpdate.FLUSH,
+                                  return_negative=True)
         self._add_wait_reg(register, elapsed)
         # rt_settings may not be overwritten across wait_reg boundary
-        self._last_rt_settings = {}
+        self._last_rt_settings.clear()
 
 #    @register_args(signature='too') # -- effectively translates nothing
     def play(self, time, wave0, wave1):
@@ -501,17 +533,11 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         yield
         self.emulate_signed = emulate_signed
 
-    def enter_scope(self):
-        self._registers.enter_scope()
-
-    def exit_scope(self):
-        self._registers.exit_scope()
-
     @contextmanager
     def scope(self):
-        self.enter_scope()
+        self._registers.enter_scope()
         yield
-        self.exit_scope()
+        self._registers.exit_scope()
 
     def get_temp_reg(self):
         ''' Allocates an assembler register for temporary use within scope. '''
@@ -530,13 +556,14 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
     def _both_reg_or_imm(self, value1, value2):
         # Note: There is an older implementation with for loops that is
         #       much shorter, but this version is mucch faster.
+        # Not checked combination: None, None
         if value1 is None:
             if isinstance(value2, int):
                 res1 = 0
                 res2 = value2
             else:
                 # None,reg => reg,reg
-                res1 = self.get_zero_reg()
+                res1 = self._zero_reg
                 res2 = value2
         elif isinstance(value1, int):
             if value2 is None:
@@ -556,7 +583,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             if value2 is None:
                 # reg,None => reg,reg
                 res1 = value1
-                res2 = self.get_zero_reg()
+                res2 = self._zero_reg
             elif isinstance(value2, int):
                 # reg,imm => reg,reg
                 temp = self._registers.get_temp_reg()
@@ -568,12 +595,6 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                 res1 = value1
                 res2 = value2
         return res1,res2
-
-    def get_zero_reg(self):
-        asm_reg, init_reg = self._registers.get_zero_reg()
-        if init_reg:
-            self._add_instruction('move', 0, asm_reg, init_section=True)
-        return asm_reg
 
     def _to_asm_reg(self, operand):
         if isinstance(operand, Register):
@@ -589,10 +610,18 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             return self._registers.get_asm_reg(value_or_reg.name)
         return value_or_reg
 
-    def _reg_to_f16(self, reg):
-        temp_reg = self.get_temp_reg()
-        self._add_instruction('asr', reg, 16, temp_reg)
-        return temp_reg
+    def _oper_to_f16(self, operand):
+        if isinstance(operand, Register):
+            asm_reg = self._registers.get_asm_reg(operand.name)
+            temp_reg = self.get_temp_reg()
+            self._add_reg_instruction('asr', asm_reg, 16, temp_reg)
+            return temp_reg
+        elif isinstance(operand, Expression):
+            asm_reg = operand.evaluate(self)
+            self._add_reg_instruction('asr', asm_reg, 16, asm_reg)
+            return asm_reg
+        else:
+            raise Q1TypeError(f'Illegal operand {operand}')
 
     def _convert_frequency(self, frequency):
         if isinstance(frequency, Operand):

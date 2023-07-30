@@ -8,9 +8,9 @@ acquisitions={}
 
 seq_prog="""
 # --INIT-- 
-           move           3,R1       # L0001 R1: _repetitions
-           move           0,R0       # L0002 R0: always 0 register
-           wait_sync      4          # L0003 t=0
+           move           0,R0       # L0001 R0: _zero
+           move           3,R1       # L0002 R1: _repetitions
+           wait_sync      100        # L0003 t=0
 # --START-- (t=0) 
 _start:    reset_ph                  # L0004 @ 0
 # R.amplitude:float = 0.125 
@@ -38,10 +38,10 @@ _start:    reset_ph                  # L0004 @ 0
 # awg_offset = R.amplitude + 0.5, None t=400 
            add            R2,1073741823,R4 # L0015 temp R4
            nop                       # L0016  asr wait for R4
-           asr            R4,16,R5   # L0017 temp R5
+           asr            R4,16,R4   # L0017 
 # -- Overwrites set_awg_offs at 400 -- 
-           nop                       # L0018  set_awg_offs wait for R5
-           set_awg_offs   R5,R0      # L0019 @ 400
+           nop                       # L0018  set_awg_offs wait for R4
+           set_awg_offs   R4,R0      # L0019 @ 400
            upd_param      200        # L0020 t=400
 # awg_offset = 0.0, None t=600 
            set_awg_offs   0,0        # L0021 @ 600
@@ -64,7 +64,6 @@ _start:    reset_ph                  # L0004 @ 0
 # block_pulse(500, -1.0, None) 
 # awg_offset = -1.0, None t=102900 
            set_awg_offs   -32768,0   # L0031 @ 102900
-# wait 99996 (t=102900) 
            wait           34468      # L0032 
            upd_param      500        # L0033 t=102900
 # awg_offset = 0.0, None t=103400 
@@ -74,7 +73,6 @@ _start:    reset_ph                  # L0004 @ 0
 # block_pulse(500, 0.5, None) 
 # awg_offset = 0.5, None t=263400 
            set_awg_offs   16383,0    # L0036 @ 263400
-# wait 159996 (t=263400) 
            wait           65532      # L0037 
            wait           28936      # L0038 
            upd_param      500        # L0039 t=263400
@@ -85,7 +83,6 @@ _start:    reset_ph                  # L0004 @ 0
 # block_pulse(1000, 0.75, None) 
 # awg_offset = 0.75, None t=763900 
            set_awg_offs   24575,0    # L0042 @ 763900
-# wait 499996 (t=763900) 
            move           6,R4       # L0043 temp ['R4']
 wait1:     wait           65532      # L0044 
            loop           R4,@wait1  # L0045 

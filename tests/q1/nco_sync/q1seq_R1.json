@@ -1,1 +1,1 @@
-{"waveforms":{},"weights":{},"acquisitions":{"default":{"num_bins":10000,"index":0}},"program":" move 0,R1\n wait_sync 4\n_start: reset_ph \n move 0,R2\n move 10000,R3\nloop_0: upd_param 160\n acquire 0,R1,49220\n add R1,1,R1\n add R2,1,R2\n loop R3,@loop_0\n upd_param 4\n stop "}
+{"waveforms":{},"weights":{},"acquisitions":{"default":{"num_bins":10000,"index":0}},"program":" move 0,R0\n move 0,R1\n wait_sync 100\n_start: reset_ph \n move 0,R2\n move 10000,R3\nloop_0: upd_param 160\n acquire 0,R1,49220\n add R1,1,R1\n add R2,1,R2\n loop R3,@loop_0\n upd_param 4\n stop "}

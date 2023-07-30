@@ -26,28 +26,29 @@ acquisitions={}
 
 seq_prog="""
 # --INIT-- 
-           move           2,R1       # L0001 R1: _repetitions
-           wait_sync      4          # L0002 t=0
+           move           0,R0       # L0001 R0: _zero
+           move           2,R1       # L0002 R1: _repetitions
+           wait_sync      100        # L0003 t=0
 # --START-- (t=0) 
-_start:    reset_ph                  # L0003 @ 0
+_start:    reset_ph                  # L0004 @ 0
 # shaped_pulse(gauss80, 0.4, gauss80, 0.4) 
 # awg_gain = 0.4, 0.4 t=0 
-           set_awg_gain   13107,13107 # L0004 @ 0
+           set_awg_gain   13107,13107 # L0005 @ 0
 # play gauss80 gauss80 t=0 
-           play           0,0,220    # L0005 t=0
+           play           0,0,220    # L0006 t=0
 # shaped_pulse(gauss80, 0.125, gauss80, 0.125) 
 # awg_gain = 0.125, 0.125 t=220 
-           set_awg_gain   4095,4095  # L0006 @ 220
+           set_awg_gain   4095,4095  # L0007 @ 220
 # play gauss80 gauss80 t=220 
-           play           0,0,120    # L0007 t=220
+           play           0,0,120    # L0008 t=220
 # shaped_pulse(gauss80, 0.125, None, None) 
 # awg_gain = 0.125, None t=340 
-           set_awg_gain   4095,0     # L0008 @ 340
+           set_awg_gain   4095,0     # L0009 @ 340
 # play gauss80 None t=340 
-           play           0,0,100    # L0009 t=340
+           play           0,0,100    # L0010 t=340
 # --END-- 
-           loop           R1,@_start # L0010 
-           upd_param      4          # L0011 t=440
-           stop                      # L0012 
+           loop           R1,@_start # L0011 
+           upd_param      4          # L0012 t=440
+           stop                      # L0013 
 """
 

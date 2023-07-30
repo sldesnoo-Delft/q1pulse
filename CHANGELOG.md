@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.9.2] - 2023-07-31
+
+- Fixed baseband qubit drive with NCO and only 1 output channel
+- Improved performance of compilation with ~10%.
+
 ## \[0.9.1] - 2023-07-28
 
 - Fixed conditionals for use with pulse-lib

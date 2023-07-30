@@ -8,112 +8,113 @@ acquisitions={}
 
 seq_prog="""
 # --INIT-- 
-           move           100,R1     # L0001 R1: _repetitions
-           wait_sync      4          # L0002 t=0
+           move           0,R0       # L0001 R0: _zero
+           move           100,R1     # L0002 R1: _repetitions
+           wait_sync      100        # L0003 t=0
 # --START-- (t=0) 
-_start:    reset_ph                  # L0003 @ 0
-           upd_param      60         # L0004 t=0
+_start:    reset_ph                  # L0004 @ 0
+           upd_param      60         # L0005 t=0
 # R.phase1:float = 0.125 
-           move           268435455,R2 # L0005 R2: R.phase1
+           move           268435455,R2 # L0006 R2: R.phase1
 # Rs.phase2:float = -0.125 
-           move           4026531840,R3 # L0006 R3: Rs.phase2
+           move           4026531840,R3 # L0007 R3: Rs.phase2
 # set_phase 0.5 t=60 
-           set_ph         250000000  # L0007 @ 60
-           upd_param      348        # L0008 t=60
+           set_ph         250000000  # L0008 @ 60
+           upd_param      348        # L0009 t=60
 # set_phase R.phase1 t=408 
-           asr            R2,2,R10   # L0009 temp R10
-           asr            R2,5,R11   # L0010 temp R11
-           nop                       # L0011  sub wait for R11
-           sub            R10,R11,R9 # L0012 
-           asr            R2,6,R12   # L0013 temp R12
-           nop                       # L0014  add wait for R12
-           add            R9,R12,R8  # L0015 
-           asr            R2,9,R13   # L0016 temp R13
-           nop                       # L0017  sub wait for R13
-           sub            R8,R13,R7  # L0018 
-           asr            R2,11,R15  # L0019 temp R15
-           asr            R2,13,R16  # L0020 temp R16
-           nop                       # L0021  sub wait for R16
-           sub            R15,R16,R14 # L0022 
-           nop                       # L0023  add wait for R14
-           add            R7,R14,R6  # L0024 
-           asr            R2,15,R19  # L0025 temp R19
-           asr            R2,16,R20  # L0026 temp R20
-           nop                       # L0027  add wait for R20
-           add            R19,R20,R18 # L0028 
-           asr            R2,18,R21  # L0029 temp R21
-           nop                       # L0030  sub wait for R21
-           sub            R18,R21,R17 # L0031 
-           nop                       # L0032  add wait for R17
-           add            R6,R17,R5  # L0033 
-           asr            R2,21,R23  # L0034 temp R23
-           asr            R2,23,R24  # L0035 temp R24
-           nop                       # L0036  add wait for R24
-           add            R23,R24,R22 # L0037 
-           nop                       # L0038  add wait for R22
-           add            R5,R22,R4  # L0039 
-           nop                       # L0040  set_ph wait for R4
-           set_ph         R4         # L0041 @ 408
-           upd_param      188        # L0042 t=408
+           asr            R2,2,R10   # L0010 temp R10
+           asr            R2,5,R11   # L0011 temp R11
+           nop                       # L0012  sub wait for R11
+           sub            R10,R11,R9 # L0013 
+           asr            R2,6,R12   # L0014 temp R12
+           nop                       # L0015  add wait for R12
+           add            R9,R12,R8  # L0016 
+           asr            R2,9,R13   # L0017 temp R13
+           nop                       # L0018  sub wait for R13
+           sub            R8,R13,R7  # L0019 
+           asr            R2,11,R15  # L0020 temp R15
+           asr            R2,13,R16  # L0021 temp R16
+           nop                       # L0022  sub wait for R16
+           sub            R15,R16,R14 # L0023 
+           nop                       # L0024  add wait for R14
+           add            R7,R14,R6  # L0025 
+           asr            R2,15,R19  # L0026 temp R19
+           asr            R2,16,R20  # L0027 temp R20
+           nop                       # L0028  add wait for R20
+           add            R19,R20,R18 # L0029 
+           asr            R2,18,R21  # L0030 temp R21
+           nop                       # L0031  sub wait for R21
+           sub            R18,R21,R17 # L0032 
+           nop                       # L0033  add wait for R17
+           add            R6,R17,R5  # L0034 
+           asr            R2,21,R23  # L0035 temp R23
+           asr            R2,23,R24  # L0036 temp R24
+           nop                       # L0037  add wait for R24
+           add            R23,R24,R22 # L0038 
+           nop                       # L0039  add wait for R22
+           add            R5,R22,R4  # L0040 
+           nop                       # L0041  set_ph wait for R4
+           set_ph         R4         # L0042 @ 408
+           upd_param      188        # L0043 t=408
 # phase_delta Rs.phase2 t=596 
-           asr            R3,2,R8    # L0043 temp R8
-           asr            R3,5,R9    # L0044 temp R9
-           nop                       # L0045  sub wait for R9
-           sub            R8,R9,R7   # L0046 
-           asr            R3,6,R10   # L0047 temp R10
-           nop                       # L0048  add wait for R10
-           add            R7,R10,R6  # L0049 
-           asr            R3,9,R11   # L0050 temp R11
-           nop                       # L0051  sub wait for R11
-           sub            R6,R11,R5  # L0052 
-           asr            R3,11,R13  # L0053 temp R13
-           asr            R3,13,R14  # L0054 temp R14
-           nop                       # L0055  sub wait for R14
-           sub            R13,R14,R12 # L0056 
-           nop                       # L0057  add wait for R12
-           add            R5,R12,R4  # L0058 
-           nop                       # L0059  set_ph_delta wait for R4
-           set_ph_delta   R4         # L0060 @ 596
-           upd_param      348        # L0061 t=596
+           asr            R3,2,R8    # L0044 temp R8
+           asr            R3,5,R9    # L0045 temp R9
+           nop                       # L0046  sub wait for R9
+           sub            R8,R9,R7   # L0047 
+           asr            R3,6,R10   # L0048 temp R10
+           nop                       # L0049  add wait for R10
+           add            R7,R10,R6  # L0050 
+           asr            R3,9,R11   # L0051 temp R11
+           nop                       # L0052  sub wait for R11
+           sub            R6,R11,R5  # L0053 
+           asr            R3,11,R13  # L0054 temp R13
+           asr            R3,13,R14  # L0055 temp R14
+           nop                       # L0056  sub wait for R14
+           sub            R13,R14,R12 # L0057 
+           nop                       # L0058  add wait for R12
+           add            R5,R12,R4  # L0059 
+           nop                       # L0060  set_ph_delta wait for R4
+           set_ph_delta   R4         # L0061 @ 596
+           upd_param      348        # L0062 t=596
 # phase_delta Rs.phase2 + 0.1 t=944 
-           add            R3,214748364,R4 # L0062 R4: R._phase
-           nop                       # L0063  asr wait for R4
-           asr            R4,2,R11   # L0064 temp R11
-           asr            R4,5,R12   # L0065 temp R12
-           nop                       # L0066  sub wait for R12
-           sub            R11,R12,R10 # L0067 
-           asr            R4,6,R13   # L0068 temp R13
-           nop                       # L0069  add wait for R13
-           add            R10,R13,R9 # L0070 
-           asr            R4,9,R14   # L0071 temp R14
-           nop                       # L0072  sub wait for R14
-           sub            R9,R14,R8  # L0073 
-           asr            R4,11,R16  # L0074 temp R16
-           asr            R4,13,R17  # L0075 temp R17
-           nop                       # L0076  sub wait for R17
-           sub            R16,R17,R15 # L0077 
-           nop                       # L0078  add wait for R15
-           add            R8,R15,R7  # L0079 
-           asr            R4,15,R20  # L0080 temp R20
-           asr            R4,16,R21  # L0081 temp R21
-           nop                       # L0082  add wait for R21
-           add            R20,R21,R19 # L0083 
-           asr            R4,18,R22  # L0084 temp R22
-           nop                       # L0085  sub wait for R22
-           sub            R19,R22,R18 # L0086 
-           nop                       # L0087  add wait for R18
-           add            R7,R18,R6  # L0088 
-           asr            R4,21,R24  # L0089 temp R24
-           asr            R4,23,R25  # L0090 temp R25
-           nop                       # L0091  add wait for R25
-           add            R24,R25,R23 # L0092 
-           nop                       # L0093  add wait for R23
-           add            R6,R23,R5  # L0094 
-           nop                       # L0095  set_ph_delta wait for R5
-           set_ph_delta   R5         # L0096 @ 944
+           add            R3,214748364,R4 # L0063 R4: R._phase
+           nop                       # L0064  asr wait for R4
+           asr            R4,2,R11   # L0065 temp R11
+           asr            R4,5,R12   # L0066 temp R12
+           nop                       # L0067  sub wait for R12
+           sub            R11,R12,R10 # L0068 
+           asr            R4,6,R13   # L0069 temp R13
+           nop                       # L0070  add wait for R13
+           add            R10,R13,R9 # L0071 
+           asr            R4,9,R14   # L0072 temp R14
+           nop                       # L0073  sub wait for R14
+           sub            R9,R14,R8  # L0074 
+           asr            R4,11,R16  # L0075 temp R16
+           asr            R4,13,R17  # L0076 temp R17
+           nop                       # L0077  sub wait for R17
+           sub            R16,R17,R15 # L0078 
+           nop                       # L0079  add wait for R15
+           add            R8,R15,R7  # L0080 
+           asr            R4,15,R20  # L0081 temp R20
+           asr            R4,16,R21  # L0082 temp R21
+           nop                       # L0083  add wait for R21
+           add            R20,R21,R19 # L0084 
+           asr            R4,18,R22  # L0085 temp R22
+           nop                       # L0086  sub wait for R22
+           sub            R19,R22,R18 # L0087 
+           nop                       # L0088  add wait for R18
+           add            R7,R18,R6  # L0089 
+           asr            R4,21,R24  # L0090 temp R24
+           asr            R4,23,R25  # L0091 temp R25
+           nop                       # L0092  add wait for R25
+           add            R24,R25,R23 # L0093 
+           nop                       # L0094  add wait for R23
+           add            R6,R23,R5  # L0095 
+           nop                       # L0096  set_ph_delta wait for R5
+           set_ph_delta   R5         # L0097 @ 944
 # --END-- 
-           loop           R1,@_start # L0097 
-           upd_param      4          # L0098 t=944
-           stop                      # L0099 
+           loop           R1,@_start # L0098 
+           upd_param      4          # L0099 t=944
+           stop                      # L0100 
 """
 
