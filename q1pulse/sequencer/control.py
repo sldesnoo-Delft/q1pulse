@@ -316,11 +316,20 @@ class ControlBuilder(SequenceBuilder):
             if arg1 is None:
                 return (arg0, None) if path == 0 else (None, arg0)
             else:
-                return (arg0, arg1) if path == 0 else (-arg1, arg0)
+                if path == 1:
+                    # NOTE:
+                    # if 1 path is enabled and 2 arguments are passed, then
+                    # IQ should be rotated over pi/2, i.e. multiplied with [[0,1],[-1,0]]
+                    # This rotation is applied to gain and offset.
+                    # The amplitude of the waveform is multiplied by the gain.
+                    # The waveforms only have to be swapped.
+                    if isinstance(arg1, Wave):
+                        return (arg1, arg0)
+                    else:
+                        return (-arg1, arg0)
+                return (arg0, arg1)
 
-        # channels could be swapped
-        args = (arg0, arg1)
-        return (args[i] for i in self._enabled_paths)
+        return (arg0, arg1)
 
     def _translate_wave(self, wave):
         if wave is None:
