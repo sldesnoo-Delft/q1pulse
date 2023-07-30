@@ -26,12 +26,12 @@ class BranchStatement(TimedStatement):
 
 
 def _assign_reg(generator, register, value, allocate=True):
-    statement = register.assign(value, allocate=allocate)
-    statement.write_instruction(generator)
+    if allocate:
+        generator.allocate_reg(register.name)
+    generator.move(value, register)
 
 def _increment_reg(generator, register, incr):
-    statement = register.assign(register + incr)
-    statement.write_instruction(generator)
+    generator.add(register, incr, register)
 
 class LoopStatement(BranchStatement):
     def __init__(self, time, sequence, loop):

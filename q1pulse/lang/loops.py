@@ -101,7 +101,7 @@ class ArrayLoop(Loop):
                 raise Q1ValueError('value out of range [-1.0, 1.0]')
 
         self._table_label = f'_table{self._loop_number}'
-        self._data_ptr = Register(f'_ptr{self._loop_number}')
+        self._data_ptr = Register(f'_ptr{self._loop_number}', dtype=int)
 
     @property
     def loopvar(self):
