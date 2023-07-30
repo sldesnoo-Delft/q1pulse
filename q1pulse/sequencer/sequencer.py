@@ -45,6 +45,7 @@ class SequenceBuilder(BuilderBase):
         self._local_loop_cnt = 0
         self.Rs = Registers(self, local=True)
         self._sequence_stack = []
+        self.sequence = None
         self._local_time = 0
         self._local_time_active = False
         self._compiled = False
@@ -57,14 +58,15 @@ class SequenceBuilder(BuilderBase):
     def start_sequence(self, program, timeline):
         self._program = program
         self._timeline = timeline
-        self._start_sequence()
+        self._sequence_push(Sequence(self._timeline))
 
-    def _start_sequence(self):
-        self._sequence_stack.append(Sequence(self._timeline))
+    def _sequence_push(self, sequence):
+        self._sequence_stack.append(sequence)
+        self.sequence = sequence
 
-    @property
-    def sequence(self):
-        return self._sequence_stack[-1]
+    def _sequence_pop(self):
+        self._sequence_stack.pop()
+        self.sequence = self._sequence_stack[-1]
 
     def _add_statement(self, statement, init_section=False):
         self._check_time(statement)
@@ -224,7 +226,7 @@ class SequenceBuilder(BuilderBase):
         else:
             raise Q1InternalError('Unknown loop')
         self._add_statement(loop_statement)
-        self._sequence_stack.append(loop_sequence)
+        self._sequence_push(loop_sequence)
 
     def exit_loop(self, loop):
         if isinstance(loop, (RangeLoop, LinspaceLoop)):
@@ -234,7 +236,7 @@ class SequenceBuilder(BuilderBase):
         else:
             raise Q1InternalError('Unknown loop')
         self._add_statement(loop_end_statement)
-        self._sequence_stack.pop()
+        self._sequence_pop()
 
     @contextmanager
     def _seq_repeat(self, n):
@@ -250,7 +252,7 @@ class SequenceBuilder(BuilderBase):
             loop_sequence = Sequence(self._timeline)
             loop_statement = LoopStatement(self.current_time, loop_sequence, loop)
             self._add_statement(loop_statement)
-            self._sequence_stack.append(loop_sequence)
+            self._sequence_push(loop_sequence)
 
             yield
 
@@ -258,7 +260,7 @@ class SequenceBuilder(BuilderBase):
             self._add_statement(loop_end_statement)
             t_loop = self.current_time - t_start
             self._add_statement(LoopDurationStatement(n, t_loop))
-            self._sequence_stack.pop()
+            self._sequence_pop()
             self.set_pulse_end(t_start + n * t_loop)
 
     def _add_reg_wait(self, reg):
@@ -325,7 +327,7 @@ class SequenceBuilder(BuilderBase):
         timeline = copy(self._timeline)
         branch = BranchSequence(timeline, operator)
         self._conditional_block.add_branch(branch)
-        self._sequence_stack.append(branch)
+        self._sequence_push(branch)
 
     def exit_condition(self, end_time=None):
         if end_time is None:
@@ -333,7 +335,7 @@ class SequenceBuilder(BuilderBase):
         self.add_comment(f'Condition end time: {end_time}')
         self._conditional_block.set_end_time(end_time)
         self._in_condition = False
-        self._sequence_stack.pop()
+        self._sequence_pop()
         self._last_timed_statement = self._conditional_block
 
 
