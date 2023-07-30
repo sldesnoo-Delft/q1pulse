@@ -23,6 +23,13 @@ class Operand(ABC):
     def __rsub__(self, lhs):
         return Subtraction(lhs, self)
 
+    def __neg__(self):
+        if self.dtype == int:
+            return Subtraction(0, self)
+        if self.dtype == float:
+            return Subtraction(0.0, self)
+        return NotImplemented
+
     def __lshift__(self, rhs):
         return Asl(self, rhs)
 
