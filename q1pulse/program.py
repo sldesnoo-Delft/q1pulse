@@ -18,6 +18,8 @@ from .assembler.generator import Q1asmGenerator
 logger = logging.getLogger(__name__)
 
 class Program:
+    verbose = False
+
     def __init__(self, path=None):
         self.sequence_builders = {}
         self.path = path if path is not None else os.path.join('q1','_prog')
@@ -68,9 +70,10 @@ class Program:
             self._q1asm[builder.name] = g.q1asm
             end = time.perf_counter()
             d2 = (end-start)*1000
-            logger.debug(f'compile {builder.name} {d1:5.2f} {d2:5.2f}')
+            if Program.verbose:
+                logger.debug(f'compile {builder.name} {d1:5.2f} {d2:5.2f} ms')
         duration = time.perf_counter() - start_compile
-        logger.debug(f'Total compilation {duration*1000:5.2f}')
+        logger.debug(f'Total compilation {duration*1000:5.2f} ms')
 
     def q1asm(self, name):
         return self._q1asm[name]

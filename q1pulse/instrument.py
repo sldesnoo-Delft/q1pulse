@@ -208,7 +208,7 @@ class Q1Instrument:
             logger.error('*** Program errors ***')
             for name,state in errors.items():
                 logger.error(f'  {name}: {state}')
-            raise Exception(f'Q1 failures (see logger):\n {errors}')
+            raise Exception(f'Q1 failures (see logging):\n {errors}')
 
         with DelayedKeyboardInterrupt():
             for instrument in self.root_instruments:
