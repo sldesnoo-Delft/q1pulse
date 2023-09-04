@@ -56,8 +56,11 @@ class QbloxModule:
     def disable_all_out(self):
         for seq_nr in range(0, self.n_sequencers):
             for out in range(0, self.n_channels):
-                path = out % 2
-                self._sset(seq_nr, f'channel_map_path{path}_out{out}_en', False)
+                if qblox_version < Version('0.11'):
+                    path = out % 2
+                    self._sset(seq_nr, f'channel_map_path{path}_out{out}_en', False)
+                else:
+                    self._sset(seq_nr, f'connect_out{out}', 'off')
 
     def upload(self, seq_nr, sequence):
         if isinstance(sequence, str):
@@ -89,8 +92,14 @@ class QbloxModule:
         self._sset(seq_nr, 'sync_en', enable)
 
     def enable_out(self, seq_nr, channel):
-        path = channel % 2
-        self._sset(seq_nr, f'channel_map_path{path}_out{channel}_en', True)
+        if qblox_version < Version('0.11'):
+            path = channel % 2
+            self._sset(seq_nr, f'channel_map_path{path}_out{channel}_en', True)
+        else:
+            # Keep old convention: I on 0 and 2, Q on 1 and 3
+            # TODO: change API to allow different IQ mapping.
+            value = 'I' if channel  % 2 == 0 else 'Q'
+            self._sset(seq_nr, f'connect_out{channel}', value)
 
     def set_nco(self, seq_nr, nco_frequency):
         self._sset(seq_nr, 'mod_en_awg', nco_frequency is not None)
