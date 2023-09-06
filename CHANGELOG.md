@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
-## \[0.11.0] - 2023-09-@@@
+## \[0.11.0] - 2023-09-06
 
 - Support qblox_instruments v0.11: connect_outX, connect_acq_I, connect_acq_Q
 - Dropped support for qblox_instruments < v0.9.0
