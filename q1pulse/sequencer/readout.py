@@ -1,7 +1,6 @@
 from .control import ControlBuilder
 from ..lang.exceptions import Q1ValueError, Q1TypeError
 from ..lang.timed_statements import AcquireStatement, AcquireWeighedStatement
-from ..util.qblox_version import qblox_version, Version
 from .sequencer_data import (
         AcquisitionWeight, WeightCollection,
         AcquisitionBins, AcquisitionBinsCollection
@@ -9,7 +8,7 @@ from .sequencer_data import (
 
 
 class ReadoutBuilder(ControlBuilder):
-    MIN_ACQUISITION_INTERVAL = 1040 if qblox_version < Version('0.9') else 300
+    MIN_ACQUISITION_INTERVAL = 300
 
     def __init__(self, name, enabled_paths, max_output_voltage,
                  nco_frequency=None):
