@@ -12,7 +12,7 @@ instrument.add_qrm(qrm1)
 instrument.add_control('P1', qcm0.name, [0])
 instrument.add_control('P2', qrm1.name, [1])
 instrument.add_control('P2c', qcm0.name, [1])
-instrument.add_readout('R1', qrm1.name, [])
+instrument.add_readout('R1', qrm1.name, [], in_channels=[0,1])
 
 # gain = 0: +/- 0.5V; gain -6 dB: +/- 1.0 V
 vmax_in = 0.5

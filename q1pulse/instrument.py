@@ -4,15 +4,16 @@ import logging
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from .program import Program
-from .lang.exceptions import Q1InputOverloaded
-from .sequencer.sequencer import SequenceBuilder
-from .sequencer.control import ControlBuilder
-from .sequencer.readout import ReadoutBuilder
-from .modules.modules import QcmModule, QrmModule
-from .util.qblox_version import check_qblox_instrument_version
 from qblox_instruments import InstrumentType
 from qcodes.utils import DelayedKeyboardInterrupt
+
+from q1pulse.program import Program
+from q1pulse.lang.exceptions import Q1InputOverloaded
+from q1pulse.sequencer.sequencer import SequenceBuilder
+from q1pulse.sequencer.control import ControlBuilder
+from q1pulse.sequencer.readout import ReadoutBuilder
+from q1pulse.modules.modules import QcmModule, QrmModule
+from q1pulse.util.qblox_version import check_qblox_instrument_version
 
 logger = logging.getLogger(__name__)
 
@@ -65,12 +66,14 @@ class Q1Instrument:
         sequencer.nco_frequency = nco_frequency
         self.controllers[name] = sequencer
 
-    def add_readout(self, name, module_name, out_channels=[], nco_frequency=None):
+    def add_readout(self, name, module_name, out_channels=[],
+                    nco_frequency=None, in_channels=[0,1]):
         module = self.modules[module_name]
         if not isinstance(module, QrmModule):
             raise Exception('Module {module_name} is not a QRM')
         sequencer = module.get_sequencer(out_channels)
         sequencer.nco_frequency = nco_frequency
+        sequencer.in_channels = in_channels
         self.readouts[name] = sequencer
 
     def _add_root_instrument(self, root_instrument):

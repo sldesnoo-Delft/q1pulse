@@ -1,11 +1,10 @@
 import logging
-import time
 from dataclasses import dataclass
 from typing import List, Optional
 from abc import abstractmethod
 
 from .sequencer_states import translate_seq_state
-from ..util.qblox_version import qblox_version, Version
+from q1pulse.util.qblox_version import qblox_version, Version
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +16,7 @@ class Sequencer:
     enabled_paths: List[int]
     max_output_voltage: float
     nco_frequency: Optional[float] = None
+    in_channels: Optional[List[int]] = None
 
 
 class QbloxModule:
@@ -171,6 +171,14 @@ class QbloxModule:
             return
         param(value)
 
+    def set_marker_invert(self, number: int, invert: bool):
+        if qblox_version < Version('0.11'):
+            raise Exception('Marker invert setting requires qblox_instruments 0.11+')
+        name = f'marker{number}_inv_en'
+        param = self.pulsar.parameters[name]
+        if param.cache() != invert:
+            param(invert)
+
 
 class QcmModule(QbloxModule):
     n_channels = 4
@@ -213,6 +221,7 @@ class QrmModule(QbloxModule):
     def __init__(self, pulsar):
         super().__init__(pulsar)
         self.max_output_voltage = 0.5 if not pulsar.is_rf_type else 3.3
+        self.disable_all_inputs()
 
     def _get_seq_paths(self, channels):
         for channel in channels:
@@ -220,6 +229,12 @@ class QrmModule(QbloxModule):
                 raise Exception(f'illegal channel combination {channels}')
 
         return channels
+
+    def disable_all_inputs(self):
+        if qblox_version >= Version('0.11'):
+            for seq_nr in range(0, self.n_sequencers):
+                self._sset(seq_nr, f'connect_acq_I', 'off')
+                self._sset(seq_nr, f'connect_acq_Q', 'off')
 
     def thresholded_acq_rotation(self, seq_nr, phase_rotation):
         self._sset(seq_nr, 'thresholded_acq_rotation', phase_rotation)
@@ -232,6 +247,22 @@ class QrmModule(QbloxModule):
 
     def delete_acquisition_data(self, seq_nr):
         self.pulsar.delete_acquisition_data(seq_nr, all=True)
+
+    def enable_in(self, seq_nr, channel):
+        if qblox_version >= Version('0.11'):
+            # Keep old convention: I on 0, Q on 1
+            # TODO: change API to allow different IQ mapping.
+            if channel == 0:
+                self._sset(seq_nr, f'connect_acq_I', 'in0')
+            else:
+                self._sset(seq_nr, f'connect_acq_Q', 'in1')
+
+    def enable_seq(self, sequencer):
+        super().enable_seq(sequencer)
+        if sequencer.in_channels is not None:
+            seq_nr = sequencer.seq_nr
+            for ch in sequencer.in_channels:
+                self.enable_in(seq_nr, ch)
 
     def set_nco(self, seq_nr, nco_frequency):
         super().set_nco(seq_nr, nco_frequency)
