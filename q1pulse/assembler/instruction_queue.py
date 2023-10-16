@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
-from ..lang.exceptions import (
+from q1pulse.lang.exceptions import (
         Q1InternalError,
         Q1TimingError
         )
+
 
 @dataclass
 class Instruction:
@@ -14,6 +15,7 @@ class Instruction:
     label: Optional[str] = None
     wait_after: Optional[int] = None
     overwritten: bool = False
+
 
 @dataclass
 class PendingUpdate:
@@ -25,7 +27,8 @@ class PendingUpdate:
 
 
 RT_RESOLUTION = 4
-MAX_WAIT = (1<<16)-RT_RESOLUTION
+MAX_WAIT = (1 << 16) - RT_RESOLUTION
+
 
 class InstructionQueue:
     _check_time_reg = True
@@ -137,7 +140,7 @@ class InstructionQueue:
         wait_time = time - self._rt_time
         if wait_time > 0:
             if self._last_rt_command is not None:
-                if self._last_rt_command.wait_after + wait_time < MAX_WAIT:
+                if self._last_rt_command.wait_after + wait_time <= MAX_WAIT:
                     self._last_rt_command.wait_after += wait_time
                 else:
                     rem_wait_time = wait_time - MAX_WAIT + self._last_rt_command.wait_after
@@ -175,7 +178,7 @@ class InstructionQueue:
             self._add_instruction('wait', time)
             self._n_rt_instructions += 1
         else:
-            n_max,rem_wait = divmod(time, MAX_WAIT)
+            n_max, rem_wait = divmod(time, MAX_WAIT)
             if n_max <= 2:
                 for _ in range(n_max):
                     self._add_instruction('wait', MAX_WAIT)
@@ -192,8 +195,8 @@ class InstructionQueue:
                 self._add_instruction('wait', rem_wait)
                 self._n_rt_instructions += 1
 
-    def _add_wait_reg(self, time_reg, elapsed=0, less_then_65us=False): # @@@ make use of option less_then_65us
-        self._n_rt_instructions += 1 # this is not correct if > 65 us.
+    def _add_wait_reg(self, time_reg, elapsed=0, less_then_65us=False):  # @@@ make use of option less_then_65us
+        self._n_rt_instructions += 1  # this is not correct if > 65 us.
         if less_then_65us and elapsed == 0 and not self._check_time_reg:
             # single instruction for short simple wait
             self._add_instruction('wait', time_reg)

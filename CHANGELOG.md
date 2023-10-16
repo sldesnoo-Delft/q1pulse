@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.11.2] - 2023-10-16
+
+- Fixed 'wait 0' bug. (Found with video mode.)
+
 ## \[0.11.1] - 2023-10-02
 
 - Successfully tested with qblox-instruments v0.11.1
