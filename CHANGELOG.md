@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.11.3] - 2023-11-27
+
+- Allow swap of IQ channels
+
 ## \[0.11.2] - 2023-10-16
 
 - Fixed 'wait 0' bug. (Found with video mode.)

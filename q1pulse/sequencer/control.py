@@ -331,7 +331,7 @@ class ControlBuilder(SequenceBuilder):
                 return (arg0, arg1)
 
         if paths[0] > paths[1]:
-            if isinstance(arg1, Wave):
+            if arg1 is None or isinstance(arg1, Wave):
                 return (arg1, arg0)
             else:
                 return (-arg1, arg0)
