@@ -233,8 +233,8 @@ class QrmModule(QbloxModule):
     def disable_all_inputs(self):
         if qblox_version >= Version('0.11'):
             for seq_nr in range(0, self.n_sequencers):
-                self._sset(seq_nr, f'connect_acq_I', 'off')
-                self._sset(seq_nr, f'connect_acq_Q', 'off')
+                self._sset(seq_nr, 'connect_acq_I', 'off')
+                self._sset(seq_nr, 'connect_acq_Q', 'off')
 
     def thresholded_acq_rotation(self, seq_nr, phase_rotation):
         self._sset(seq_nr, 'thresholded_acq_rotation', phase_rotation)
@@ -253,9 +253,9 @@ class QrmModule(QbloxModule):
             # Keep old convention: I on 0, Q on 1
             # TODO: change API to allow different IQ mapping.
             if channel == 0:
-                self._sset(seq_nr, f'connect_acq_I', 'in0')
+                self._sset(seq_nr, 'connect_acq_I', 'in0')
             else:
-                self._sset(seq_nr, f'connect_acq_Q', 'in1')
+                self._sset(seq_nr, 'connect_acq_Q', 'in1')
 
     def enable_seq(self, sequencer):
         super().enable_seq(sequencer)
