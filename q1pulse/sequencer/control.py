@@ -308,18 +308,19 @@ class ControlBuilder(SequenceBuilder):
             self.nco_frequency = nco_freq
 
     def _apply_paths(self, arg0, arg1):
-        if len(self._enabled_paths) == 0:
+        paths = self._enabled_paths
+        if len(paths) == 0:
             raise Q1ValueError('No output paths enabled')
 
-        if len(self._enabled_paths) == 1:
-            path = self._enabled_paths[0]
+        if len(paths) == 1:
+            path = paths[0]
             if arg1 is None:
                 return (arg0, None) if path == 0 else (None, arg0)
             else:
                 if path == 1:
                     # NOTE:
                     # if 1 path is enabled and 2 arguments are passed, then
-                    # IQ should be rotated over pi/2, i.e. multiplied with [[0,1],[-1,0]]
+                    # IQ should be rotated over pi/2, i.e. multiplied with [[0, 1], [-1, 0]]
                     # This rotation is applied to gain and offset.
                     # The amplitude of the waveform is multiplied by the gain.
                     # The waveforms only have to be swapped.
@@ -328,6 +329,12 @@ class ControlBuilder(SequenceBuilder):
                     else:
                         return (-arg1, arg0)
                 return (arg0, arg1)
+
+        if paths[0] > paths[1]:
+            if isinstance(arg1, Wave):
+                return (arg1, arg0)
+            else:
+                return (-arg1, arg0)
 
         return (arg0, arg1)
 
