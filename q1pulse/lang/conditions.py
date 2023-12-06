@@ -72,9 +72,10 @@ class LatchEnableStatement(TimedStatement):
         return f'latch_enable({[counter.name for counter in self.counters]})'
 
     def write_instruction(self, generator):
-        mask = 0
-        for counter in self.counters:
-            mask |= 1 << (counter.address-1)
+        # TODO: Fix properly. This is a quick fix.
+        mask = 1 if self.counters else 0
+        # for counter in self.counters:
+        #     mask |= 1 << (counter.address-1)
         generator.set_latch_en(self.time, mask)
 
 

@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.11.4] - 2023-11-27
+
+- QUICK PATCH version for error with set_latch_en.
+
 ## \[0.11.3] - 2023-11-27
 
 - Allow swap of IQ channels
