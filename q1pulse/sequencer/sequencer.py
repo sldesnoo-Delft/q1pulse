@@ -278,9 +278,11 @@ class SequenceBuilder(BuilderBase):
         self._add_trigger_counter(counter)
         return counter
 
-    def latch_enable(self, counters, t_offset=0):
+    def latch_enable(self, enable, t_offset=0):
+        if enable not in [0, 1, True, False]:
+            raise ValueError('Valid values for enable are 0, 1, True, False')
         time = self.current_time + t_offset
-        self._add_statement(LatchEnableStatement(time, counters))
+        self._add_statement(LatchEnableStatement(time, enable))
         self.set_pulse_end(time)
 
     def latch_reset(self, t_offset=0):

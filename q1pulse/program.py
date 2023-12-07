@@ -143,9 +143,9 @@ class Program:
             s._add_trigger_counter(counter)
         return counter
 
-    def latch_enable(self, counters, t_offset=0):
+    def latch_enable(self, enable, t_offset=0):
         for s in self.sequence_builders.values():
-            s.latch_enable(counters, t_offset=t_offset)
+            s.latch_enable(enable, t_offset=t_offset)
 
     def latch_reset(self, t_offset=0):
         for s in self.sequence_builders.values():

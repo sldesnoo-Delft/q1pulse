@@ -64,19 +64,15 @@ class CounterFlags():
 
 
 class LatchEnableStatement(TimedStatement):
-    def __init__(self, time, counters):
+    def __init__(self, time, enable):
         super().__init__(time)
-        self.counters = counters
+        self.enable = enable
 
     def __repr__(self):
-        return f'latch_enable({[counter.name for counter in self.counters]})'
+        return f'latch_enable({self.enable})'
 
     def write_instruction(self, generator):
-        # TODO: Fix properly. This is a quick fix.
-        mask = 1 if self.counters else 0
-        # for counter in self.counters:
-        #     mask |= 1 << (counter.address-1)
-        generator.set_latch_en(self.time, mask)
+        generator.set_latch_en(self.time, int(self.enable))
 
 
 class LatchResetStatement(TimedStatement):

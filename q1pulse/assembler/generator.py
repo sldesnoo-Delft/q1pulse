@@ -520,8 +520,8 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         self._contains_io_instr = True
 
     @register_args(signature='tI')
-    def set_latch_en(self, time, mask):
-        self._add_rt_command('set_latch_en', mask, time=time)
+    def set_latch_en(self, time, enable):
+        self._add_rt_command('set_latch_en', enable, time=time)
 
     def latch_rst(self, time):
         self._add_rt_command('latch_rst', time=time)
