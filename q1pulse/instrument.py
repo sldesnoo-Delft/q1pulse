@@ -181,42 +181,46 @@ class Q1Instrument:
         logger.info(f'Duration upload/start: ({t:5.3f}ms)')
 
     def wait_stopped(self, timeout_minutes=1):
-        # Wait for completion
-        errors = {}
-        msg_level = 0
-        sequencers = { **self.controllers, **self.readouts }
-        for name,seq in sequencers.items():
+        try:
+            # Wait for completion
+            errors = {}
+            msg_level = 0
+            sequencers = { **self.controllers, **self.readouts }
+            for name,seq in sequencers.items():
+                with DelayedKeyboardInterrupt():
+                    module = self.modules[seq.module_name]
+                    if not module.enabled(seq.seq_nr):
+                        continue
+                    state = module.get_sequencer_state(seq.seq_nr, timeout_minutes)
+                    logger.log(state.level,
+                                f'Status {name} ({module.pulsar.name}:{seq.seq_nr}):'
+                                 f'{state}')
+                    msg_level = max(msg_level, state.level)
+                    if state.status != 'STOPPED' or state.level >= logging.WARNING:
+                        errors[name] = str(state)
+                        # reset awg offsets in case of any error.
+                        module.set_awg_offsets(seq.seq_nr, 0.0, 0.0)
+                    if state.input_overloaded:
+                        if Q1Instrument._exception_on_overload:
+                            raise Q1InputOverloaded(
+                                    f'INPUT OVERLOAD on {name}.'
+                                    '\nException can be suppressed with q1pulse.set_exception_on_overload(False)')
+                        else:
+                            print(f'WARNING: input overload on {name}')
+
+            if msg_level == logging.ERROR:
+                logger.error('*** Program errors ***')
+                for name,state in errors.items():
+                    logger.error(f'  {name}: {state}')
+                raise Exception(f'Q1 failures (see logging):\n {errors}')
+        except Exception:
+            logger.error("Exception", exc_info=True)
+            raise
+        finally:
             with DelayedKeyboardInterrupt():
-                module = self.modules[seq.module_name]
-                if not module.enabled(seq.seq_nr):
-                    continue
-                state = module.get_sequencer_state(seq.seq_nr, timeout_minutes)
-                logger.log(state.level,
-                            f'Status {name} ({module.pulsar.name}:{seq.seq_nr}):'
-                             f'{state}')
-                msg_level = max(msg_level, state.level)
-                if state.status != 'STOPPED' or state.level >= logging.WARNING:
-                    errors[name] = str(state)
-                    # reset awg offsets in case of any error.
-                    module.set_awg_offsets(seq.seq_nr, 0.0, 0.0)
-                if state.input_overloaded:
-                    if Q1Instrument._exception_on_overload:
-                        raise Q1InputOverloaded(
-                                f'INPUT OVERLOAD on {name}.'
-                                '\nException can be suppressed with q1pulse.set_exception_on_overload(False)')
-                    else:
-                        print(f'WARNING: input overload on {name}')
-
-        if msg_level == logging.ERROR:
-            logger.error('*** Program errors ***')
-            for name,state in errors.items():
-                logger.error(f'  {name}: {state}')
-            raise Exception(f'Q1 failures (see logging):\n {errors}')
-
-        with DelayedKeyboardInterrupt():
-            for instrument in self.root_instruments:
-                logger.info(f'Stop sequencers')
-                instrument.stop_sequencer()
+                for instrument in self.root_instruments:
+                    logger.info('Stop sequencers')
+                    instrument.stop_sequencer()
 
     def check_system_errors(self):
         for instrument in self.root_instruments:

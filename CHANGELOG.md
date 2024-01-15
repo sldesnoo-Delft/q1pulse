@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.11.6] - 2024-01-15
+
+- Stop all sequencers after input overload or other error.
+
 ## \[0.11.5] - 2023-12-07
 
 - Correct set_latch_en
