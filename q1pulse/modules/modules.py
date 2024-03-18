@@ -6,7 +6,9 @@ from abc import abstractmethod
 from .sequencer_states import translate_seq_state
 from q1pulse.util.qblox_version import qblox_version, Version
 
+
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class Sequencer:
@@ -117,8 +119,8 @@ class QbloxModule:
         self._sset(seq_nr, f'trigger{address}_threshold_invert', invert)
 
     def set_awg_offsets(self, seq_nr, offset0, offset1):
-        self._sset(seq_nr, f'offset_awg_path0', offset0)
-        self._sset(seq_nr, f'offset_awg_path1', offset1)
+        self._sset(seq_nr, 'offset_awg_path0', offset0)
+        self._sset(seq_nr, 'offset_awg_path1', offset1)
 
     def enabled(self, seq_nr):
         seq = getattr(self.pulsar, f'sequencer{seq_nr}')
@@ -244,6 +246,17 @@ class QrmModule(QbloxModule):
 
     def integration_length_acq(self, seq_nr, length):
         self._sset(seq_nr, 'integration_length_acq', length)
+
+    def nco_prop_delay(self, seq_nr, delay):
+        if delay > 0:
+            if 96 <= delay <= 196:
+                self._sset(seq_nr, 'nco_prop_delay_comp_en', True)
+                self._sset(seq_nr, 'nco_prop_delay_comp', delay - 146)
+            else:
+                logger.warning(f"NCO delay ({delay} ns) is out of range. NCO delay not enabled.")
+                self._sset(seq_nr, 'nco_prop_delay_comp_en', False)
+        else:
+            self._sset(seq_nr, 'nco_prop_delay_comp_en', False)
 
     def delete_acquisition_data(self, seq_nr):
         self.pulsar.delete_acquisition_data(seq_nr, all=True)

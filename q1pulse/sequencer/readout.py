@@ -19,6 +19,7 @@ class ReadoutBuilder(ControlBuilder):
         self._thresholded_acq_rotation = 0.0
         self._thresholded_acq_threshold = 0.0
         self._trigger = None
+        self._nco_prop_delay = 0
 
     @property
     def thresholded_acq_rotation(self):
@@ -43,6 +44,14 @@ class ReadoutBuilder(ControlBuilder):
     @integration_length_acq.setter
     def integration_length_acq(self, length):
         self._integration_length_acq = int(length)
+
+    @property
+    def nco_prop_delay(self):
+        return self._nco_prop_delay
+
+    @nco_prop_delay.setter
+    def nco_prop_delay(self, delay):
+        self._nco_prop_delay = delay
 
     @property
     def trigger(self):
@@ -104,6 +113,34 @@ class ReadoutBuilder(ControlBuilder):
                 with self._seq_repeat(n-1):
                     self.acquire(bins, bin_index)
                     self.wait(period)
+            self.acquire(bins, bin_index)
+
+    def acquire_frequency_sweep(self, n, period,
+                                f_start, f_stop,
+                                bins, bin_index='increment',
+                                acq_delay=0,
+                                t_offset=0):
+        self.add_comment(f'acquire_frequency_sweep({n}, {period}, {f_start}, {f_stop} {bins}, {bin_index})')
+        if period < ReadoutBuilder.MIN_ACQUISITION_INTERVAL:
+            raise Q1ValueError(f'Acquisition period ({period} ns) too small. '
+                               f'Minimum is {ReadoutBuilder.MIN_ACQUISITION_INTERVAL} ns')
+        if acq_delay > period - 20:
+            raise Q1ValueError(f"acq_delay ({acq_delay}) too big. It should be less than period ({period}) - 20")
+        with self._local_timeline(t_offset=t_offset, duration=(n-1)*period):
+            # Repeat only n-1 times to avoid wait after last acquire.
+            # A wait after the last acquire could create unwanted waits in the
+            # control sequencers, because acquisition is ~100 ns delayed w.r.t. control.
+            f_step = (f_stop - f_start) / (n - 1)
+            self.Rs.frequency = int(f_start)
+            self.set_frequency(self.Rs.frequency)
+            self.wait(acq_delay)
+            if n > 1:
+                with self._seq_repeat(n-1):
+                    self.acquire(bins, bin_index)
+                    self.Rs.frequency += int(f_step)
+                    self.wait(period - acq_delay)
+                    self.set_frequency(self.Rs.frequency)
+                    self.wait(acq_delay)
             self.acquire(bins, bin_index)
 
     def repeated_acquire_weighed(self, n, period, bins, bin_index,

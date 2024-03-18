@@ -155,6 +155,7 @@ class Q1Instrument:
                 module.thresholded_acq_rotation(seq.seq_nr, readout.thresholded_acq_rotation)
                 module.thresholded_acq_threshold(seq.seq_nr, readout.thresholded_acq_threshold)
                 module.integration_length_acq(seq.seq_nr, int(readout.integration_length_acq))
+                module.nco_prop_delay(seq.seq_nr, int(readout.nco_prop_delay))
                 module.delete_acquisition_data(seq.seq_nr)
                 trigger = readout.trigger
                 if trigger is not None:
