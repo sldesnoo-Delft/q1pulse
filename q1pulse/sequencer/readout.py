@@ -120,6 +120,20 @@ class ReadoutBuilder(ControlBuilder):
                                 bins, bin_index='increment',
                                 acq_delay=0,
                                 t_offset=0):
+        """
+        Aquire `n` values with interval `period` while stepping frequency from `f_start` till `f_stop`.
+
+        Args:
+            n: number of values to acquire
+            period: time between acquisitions
+            f_start: start frequency
+            f_stop: stop frequency, inclusive
+            acq_delay: delay between changing frequency and starting acquisition
+
+        Note:
+            Experimentally it is determined that the nco_prop_delay should be 146 ns + delay in lines (~ 4 ns/m),
+            and acq_delay should be nco_prop_delay + 4 ns.
+        """
         self.add_comment(f'acquire_frequency_sweep({n}, {period}, {f_start}, {f_stop} {bins}, {bin_index})')
         if period < ReadoutBuilder.MIN_ACQUISITION_INTERVAL:
             raise Q1ValueError(f'Acquisition period ({period} ns) too small. '

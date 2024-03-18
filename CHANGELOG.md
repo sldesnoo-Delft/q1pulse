@@ -3,6 +3,7 @@ All notable changes to Q1Pulse will be documented in this file.
 
 ## \[0.11.7] - 2024-03-18
 
+- Added acquire_frequency_sweep
 - Added nco_prop_delay
 
 ## \[0.11.6] - 2024-01-15
