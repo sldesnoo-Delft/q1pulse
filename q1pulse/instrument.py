@@ -255,11 +255,16 @@ class Q1Instrument:
         '''
         seq = self.readouts[sequencer_name]
         module = self.modules[seq.module_name]
-        in0_gain = module.pulsar.in0_gain.cache()
-        in1_gain = module.pulsar.in1_gain.cache()
-        in_range = tuple(
-                1.0 * 10**(-dB/20)
-                for dB in [in0_gain, in1_gain])
+        if module.pulsar.is_rf_type:
+            att_db = module.pulsar.in0_att.cache()
+            in_range = 1.0 * 10**(att_db/20)
+            in_range = (in_range, in_range)
+        else:
+            in0_gain = module.pulsar.in0_gain.cache()
+            in1_gain = module.pulsar.in1_gain.cache()
+            in_range = tuple(
+                    1.0 * 10**(-dB/20)
+                    for dB in [in0_gain, in1_gain])
         return in_range
 
 
