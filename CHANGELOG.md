@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.11.10] - 2024-04-04
+
+- Set sequencer label to channel name.
+
 ## \[0.11.9] - 2024-03-21
 
 - Fixed get_input_ranges for QRM-RF module and qblox-instruments v0.11+.

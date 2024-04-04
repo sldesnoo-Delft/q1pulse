@@ -19,6 +19,7 @@ class Sequencer:
     max_output_voltage: float
     nco_frequency: Optional[float] = None
     in_channels: Optional[List[int]] = None
+    label: Optional[str] = None
 
 
 class QbloxModule:
@@ -66,6 +67,9 @@ class QbloxModule:
                 n_out_ch = self.n_channels // 2 if self.pulsar.is_rf_type else self.n_channels
                 for out in range(0, n_out_ch):
                     self._sset(seq_nr, f'connect_out{out}', 'off')
+
+    def set_label(self, seq_nr, label):
+        self.pulsar.sequencers[seq_nr].label = label
 
     def upload(self, seq_nr, sequence):
         if isinstance(sequence, str):

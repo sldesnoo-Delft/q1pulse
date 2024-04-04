@@ -64,6 +64,7 @@ class Q1Instrument:
     def add_control(self, name, module_name, channels, nco_frequency=None):
         sequencer = self.modules[module_name].get_sequencer(channels)
         sequencer.nco_frequency = nco_frequency
+        sequencer.label = name
         self.controllers[name] = sequencer
 
     def add_readout(self, name, module_name, out_channels=[],
@@ -74,6 +75,7 @@ class Q1Instrument:
         sequencer = module.get_sequencer(out_channels)
         sequencer.nco_frequency = nco_frequency
         sequencer.in_channels = in_channels
+        sequencer.label = name
         self.readouts[name] = sequencer
 
     def _add_root_instrument(self, root_instrument):
@@ -112,7 +114,7 @@ class Q1Instrument:
 
         instruments_with_sequence = set()
         sequencers = { **self.controllers, **self.readouts }
-        for name,seq in sequencers.items():
+        for name, seq in sequencers.items():
             with DelayedKeyboardInterrupt():
                 module = self.modules[seq.module_name]
 
@@ -124,6 +126,7 @@ class Q1Instrument:
                     logger.debug(f'Sequencer {name} no sequence')
                     continue
                 instruments_with_sequence.add(module.pulsar.root_instrument)
+                module.set_label(seq.seq_nr, name)
                 module.upload(seq.seq_nr, q1asm)
                 t = (time.perf_counter() - t_start) * 1000
                 # logger.debug(f'Sequencer {name} loaded ({t:5.3f} ms)')
