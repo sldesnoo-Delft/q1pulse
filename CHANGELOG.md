@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.11.11] - 2024-04-17
+
+- Added Q1Instrument.verbose to get more logging
+
 ## \[0.11.10] - 2024-04-04
 
 - Set sequencer label to channel name.

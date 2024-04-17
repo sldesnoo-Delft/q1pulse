@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 
 
 class Q1Instrument:
+    verbose = False
+
     # Postpone error checking till the end to save communication overhead.
     # System errors are only reported for SCPI errors. It's almost impossible to
     # get an error, because everything is already checked in qblox-instruments code.
@@ -113,8 +115,10 @@ class Q1Instrument:
                     instrument._debug = 2
 
         instruments_with_sequence = set()
-        sequencers = { **self.controllers, **self.readouts }
+        sequencers = {**self.controllers, **self.readouts}
+        n_configured = 0
         for name, seq in sequencers.items():
+            t_start_seq = time.perf_counter()
             with DelayedKeyboardInterrupt():
                 module = self.modules[seq.module_name]
 
@@ -125,11 +129,10 @@ class Q1Instrument:
                     module.set_awg_offsets(seq.seq_nr, 0.0, 0.0)
                     logger.debug(f'Sequencer {name} no sequence')
                     continue
+                n_configured += 1
                 instruments_with_sequence.add(module.pulsar.root_instrument)
                 module.set_label(seq.seq_nr, name)
                 module.upload(seq.seq_nr, q1asm)
-                t = (time.perf_counter() - t_start) * 1000
-                # logger.debug(f'Sequencer {name} loaded ({t:5.3f} ms)')
 
                 module.invalidate_cache(seq.seq_nr, 'offset_awg_path0')
                 module.invalidate_cache(seq.seq_nr, 'offset_awg_path1')
@@ -146,10 +149,12 @@ class Q1Instrument:
                 for counter in prog_seq.trigger_counters:
                     module.configure_trigger_counter(seq.seq_nr, counter.trigger.address,
                                                      counter.threshold, counter.invert)
+            if Q1Instrument.verbose:
+                duration = time.perf_counter() - t_start_seq
+                logger.debug(f"Configured {name} in {duration*1000.0:3.1f} ms")
 
-        t = (time.perf_counter() - t_start) * 1000
-        # logger.debug(f'Configure QRMs ({t:5.3f} ms)')
-        for name,seq in self.readouts.items():
+        for name, seq in self.readouts.items():
+            t_start_seq = time.perf_counter()
             with DelayedKeyboardInterrupt():
                 readout = program[name]
                 module = self.modules[seq.module_name]
@@ -165,16 +170,25 @@ class Q1Instrument:
                     module.set_trigger(seq.seq_nr, trigger.address, trigger.invert)
                 else:
                     module.set_trigger(seq.seq_nr, None)
+            if Q1Instrument.verbose:
+                duration = time.perf_counter() - t_start_seq
+                logger.debug(f"Configured QRM {name} in {duration*1000.0:3.1f} ms")
 
         with DelayedKeyboardInterrupt():
+            t_start_arm = time.perf_counter()
             # Note: arm per sequencer. Arm on the cluster still gives red leds on the modules.
             for module in self.modules.values():
                 module.arm_sequencers()
+            if Q1Instrument.verbose:
+                duration = time.perf_counter() - t_start_arm
+                logger.debug(f"Armed {n_configured} sequencers in {duration*1000.0:3.1f} ms")
 
             if Q1Instrument._i_feel_lucky:
-                t = (time.perf_counter() - t_start) * 1000
-                # logger.debug(f'Check status  ({t:5.3f} ms)')
+                t_start_check = time.perf_counter()
                 self.check_system_errors()
+                if Q1Instrument.verbose:
+                    duration = time.perf_counter() - t_start_check
+                    logger.debug(f"Checked errors in {duration*1000.0:3.1f} ms")
 
             for instrument in instruments_with_sequence:
                 t = (time.perf_counter() - t_start) * 1000
@@ -197,8 +211,7 @@ class Q1Instrument:
                         continue
                     state = module.get_sequencer_state(seq.seq_nr, timeout_minutes)
                     logger.log(state.level,
-                                f'Status {name} ({module.pulsar.name}:{seq.seq_nr}):'
-                                 f'{state}')
+                               f'Status {name} ({module.pulsar.name}:{seq.seq_nr}): {state}')
                     msg_level = max(msg_level, state.level)
                     if state.status != 'STOPPED' or state.level >= logging.WARNING:
                         errors[name] = str(state)
@@ -234,7 +247,7 @@ class Q1Instrument:
 
             if len(errors) > 0:
                 if Q1Instrument._i_feel_lucky:
-                    logger.error(f"You're not lucky. One of the previous calls failed...")
+                    logger.error("You're not lucky. One of the previous calls failed...")
                 msg = instrument.name + ':' + '\n'.join(errors)
                 logger.error(msg)
                 raise RuntimeError(msg)
@@ -247,6 +260,7 @@ class Q1Instrument:
             return None
         module = self.modules[seq.module_name]
         with DelayedKeyboardInterrupt():
+            # @@@ use cached sequencer state. Clear cache on arm, start. Saves 1 round trip per sensor. So, not much.
             state = module.pulsar.get_acquisition_state(seq.seq_nr, 1)
             logger.info(f'Acquisition status {sequencer_name} ({module.pulsar.name}:'
                          f'{seq.seq_nr}): {state}')
