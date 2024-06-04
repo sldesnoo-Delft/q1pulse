@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 from abc import abstractmethod
 
-from .sequencer_states import translate_seq_state
+from .sequencer_states import translate_seq_status, translate_seq_state
 from q1pulse.util.qblox_version import qblox_version, Version
 
 
@@ -93,9 +93,13 @@ class QbloxModule:
     def stop_sequencers(self):
         self.pulsar.stop_sequencer()
 
-    def get_sequencer_state(self, seq_nr, timeout=0):
-        state = self.pulsar.get_sequencer_state(seq_nr, timeout)
-        return translate_seq_state(state)
+    def get_sequencer_status(self, seq_nr, timeout=0):
+        if qblox_version >= Version('0.12.0'):
+            status = self.pulsar.get_sequencer_status(seq_nr, timeout)
+            return translate_seq_status(status)
+        else:
+            state = self.pulsar.get_sequencer_state(seq_nr, timeout)
+            return translate_seq_state(state)
 
     def enable_sync(self, seq_nr, enable):
         self._sset(seq_nr, 'sync_en', enable)

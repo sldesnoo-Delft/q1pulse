@@ -13,7 +13,11 @@ from q1pulse.sequencer.sequencer import SequenceBuilder
 from q1pulse.sequencer.control import ControlBuilder
 from q1pulse.sequencer.readout import ReadoutBuilder
 from q1pulse.modules.modules import QcmModule, QrmModule
-from q1pulse.util.qblox_version import check_qblox_instrument_version
+from q1pulse.util.qblox_version import (
+    check_qblox_instrument_version,
+    qblox_version,
+    Version,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -184,11 +188,7 @@ class Q1Instrument:
                 logger.debug(f"Armed {n_configured} sequencers in {duration*1000.0:3.1f} ms")
 
             if Q1Instrument._i_feel_lucky:
-                t_start_check = time.perf_counter()
                 self.check_system_errors()
-                if Q1Instrument.verbose:
-                    duration = time.perf_counter() - t_start_check
-                    logger.debug(f"Checked errors in {duration*1000.0:3.1f} ms")
 
             for instrument in instruments_with_sequence:
                 t = (time.perf_counter() - t_start) * 1000
@@ -209,15 +209,15 @@ class Q1Instrument:
                     module = self.modules[seq.module_name]
                     if not module.enabled(seq.seq_nr):
                         continue
-                    state = module.get_sequencer_state(seq.seq_nr, timeout_minutes)
-                    logger.log(state.level,
-                               f'Status {name} ({module.pulsar.name}:{seq.seq_nr}): {state}')
-                    msg_level = max(msg_level, state.level)
-                    if state.status != 'STOPPED' or state.level >= logging.WARNING:
-                        errors[name] = str(state)
+                    status = module.get_sequencer_status(seq.seq_nr, timeout_minutes)
+                    logger.log(status.level,
+                               f'Status {name} ({module.pulsar.name}:{seq.seq_nr}): {status}')
+                    msg_level = max(msg_level, status.level)
+                    if status.status != 'OKAY' or status.state != 'STOPPED' or status.level >= logging.WARNING:
+                        errors[name] = str(status)
                         # reset awg offsets in case of any error.
                         module.set_awg_offsets(seq.seq_nr, 0.0, 0.0)
-                    if state.input_overloaded:
+                    if status.input_overloaded:
                         if Q1Instrument._exception_on_overload:
                             raise Q1InputOverloaded(
                                     f'INPUT OVERLOAD on {name}.'
@@ -240,6 +240,7 @@ class Q1Instrument:
                     instrument.stop_sequencer()
 
     def check_system_errors(self):
+        t_start_check = time.perf_counter()
         for instrument in self.root_instruments:
             errors = []
             while instrument.get_num_system_error() != 0:
@@ -252,6 +253,10 @@ class Q1Instrument:
                 logger.error(msg)
                 raise RuntimeError(msg)
 
+        if Q1Instrument.verbose:
+            duration = time.perf_counter() - t_start_check
+            logger.debug(f"Checked errors in {duration*1000.0:3.1f} ms")
+
     def get_acquisition_bins(self, sequencer_name, bins):
         seq = self.readouts[sequencer_name]
         q1asm = self._loaded_q1asm[sequencer_name]
@@ -260,10 +265,12 @@ class Q1Instrument:
             return None
         module = self.modules[seq.module_name]
         with DelayedKeyboardInterrupt():
-            # @@@ use cached sequencer state. Clear cache on arm, start. Saves 1 round trip per sensor. So, not much.
-            state = module.pulsar.get_acquisition_state(seq.seq_nr, 1)
+            if qblox_version >= Version('0.12.0'):
+                completed = module.pulsar.get_acquisition_status(seq.seq_nr, 1)
+            else:
+                completed = module.pulsar.get_acquisition_state(seq.seq_nr, 1)
             logger.info(f'Acquisition status {sequencer_name} ({module.pulsar.name}:'
-                         f'{seq.seq_nr}): {state}')
+                         f'{seq.seq_nr}): {completed}')
             return module.pulsar.get_acquisitions(seq.seq_nr)[bins]['acquisition']['bins']
 
     def get_input_ranges(self, sequencer_name):
@@ -294,9 +301,20 @@ def set_exception_on_overload(enable:bool):
 
 
 def check_instrument_status(instrument, print_status=False):
-    sys_state = instrument.get_system_state()
+    t = time.perf_counter()
+    if qblox_version >= Version('0.12.0'):
+        sys_state = instrument.get_system_status()
+    else:
+        sys_state = instrument.get_system_state()
+    if Q1Instrument.verbose:
+        d = time.perf_counter() - t
+        logger.debug(f"Status {sys_state.status} {d*1000:.1f} ms")
+
     if sys_state.status != 'OKAY':
         if getattr(instrument, 'is_dummy', False):
+            print(f'Status (Dummy) {instrument.name}:', sys_state)
+        elif instrument.get_idn()['serial_number'] == 'whatever':
+            # looks like dummy cluster
             print(f'Status (Dummy) {instrument.name}:', sys_state)
         else:
             raise Exception(f'{instrument.name} status not OKAY: {sys_state}')

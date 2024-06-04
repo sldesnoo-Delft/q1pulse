@@ -37,8 +37,10 @@ _flag_map = {
 
 
 @dataclass
-class SequencerState:
-    status: str
+class SequencerStatus:
+    state: str
+    # field status added in qblox version 0.12
+    status: str = 'OKAY'
     level: int = 10
     errors: List[str] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
@@ -78,8 +80,17 @@ class SequencerState:
                 self.level = max(level, self.level)
                 self.msg_list[level].append(flag_str)
 
-def translate_seq_state(seq_state):
-    state = SequencerState(seq_state.status)
-    state.add_flags(seq_state.flags)
 
-    return state
+def translate_seq_state(seq_state):
+    status = SequencerStatus(state=seq_state.status)
+    status.add_flags(seq_state.flags)
+
+    return status
+
+def translate_seq_status(seq_status):
+    status = SequencerStatus(seq_status.state, seq_status.status)
+    status.add_flags(seq_status.info_flags)
+    status.add_flags(seq_status.warn_flags)
+    status.add_flags(seq_status.err_flags)
+
+    return status
