@@ -352,6 +352,4 @@ output:
 Note: the q1 core has a head start of 200 ns. It starts at t = -200 ns.
 This accounts for the time the real-time executor waits in wait_sync.
 
-## TODO
-- Refactor code to be separate a driver to use with pulse_lib and a standalone pulse sequence builder.
 

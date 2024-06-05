@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.13.0] - 2024-06-05
+
+- Update for qblox_instruments v0.13: changed deprecated get_XXX_state to get_XXX_status
+
 ## \[0.11.11] - 2024-04-17
 
 - Added Q1Instrument.verbose to get more logging
