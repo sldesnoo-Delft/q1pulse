@@ -47,7 +47,8 @@ class QbloxModule:
 
     def _allocate_seq_number(self):
         if self._allocated_seq == self.n_sequencers:
-            raise Exception(f'No more sequencers for channels {self.channels} of module {self.name}')
+            raise Exception(f'Module {self.name} is out of sequencers. '
+                            f'All {self.n_sequencers} are already allocated.')
         sequencer_nr = self._allocated_seq
         self._allocated_seq += 1
         return sequencer_nr
