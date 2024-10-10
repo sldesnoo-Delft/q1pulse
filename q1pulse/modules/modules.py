@@ -279,7 +279,7 @@ class QrmModule(QbloxModule):
 
     def nco_prop_delay(self, seq_nr, delay):
         if delay > 0:
-            if 96 <= delay <= 196:
+            if 96 <= delay <= 245:
                 self._sset(seq_nr, 'nco_prop_delay_comp_en', True)
                 self._sset(seq_nr, 'nco_prop_delay_comp', delay - 146)
             else:
