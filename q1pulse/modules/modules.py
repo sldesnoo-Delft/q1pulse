@@ -58,15 +58,10 @@ class QbloxModule:
 
     def disable_all_out(self):
         for seq_nr in range(0, self.n_sequencers):
-            if qblox_version < Version('0.11'):
-                for out in range(0, self.n_channels):
-                    path = out % 2
-                    self._sset(seq_nr, f'channel_map_path{path}_out{out}_en', False)
-            else:
-                # Note: RF module connect outputs in pairs.
-                n_out_ch = self.n_channels // 2 if self.pulsar.is_rf_type else self.n_channels
-                for out in range(0, n_out_ch):
-                    self._sset(seq_nr, f'connect_out{out}', 'off')
+            # Note: RF module connect outputs in pairs.
+            n_out_ch = self.n_channels // 2 if self.pulsar.is_rf_type else self.n_channels
+            for out in range(0, n_out_ch):
+                self._sset(seq_nr, f'connect_out{out}', 'off')
 
     def set_label(self, seq_nr, label):
         self.pulsar.sequencers[seq_nr].label = label
@@ -105,26 +100,18 @@ class QbloxModule:
         self._sset(seq_nr, 'sync_en', enable)
 
     def enable_out(self, seq_nr, channel):
-        if qblox_version < Version('0.11'):
-            path = channel % 2
-            self._sset(seq_nr, f'channel_map_path{path}_out{channel}_en', True)
-        else:
-            # Keep old convention: I on 0 and 2, Q on 1 and 3
-            # TODO: change API to allow different IQ mapping.
-            value = 'I' if channel  % 2 == 0 else 'Q'
-            self._sset(seq_nr, f'connect_out{channel}', value)
+        # Keep old convention: I on 0 and 2, Q on 1 and 3
+        # TODO: change API to allow different IQ mapping.
+        value = 'I' if channel  % 2 == 0 else 'Q'
+        self._sset(seq_nr, f'connect_out{channel}', value)
 
     def enable_out_iq(self, seq_nr, channels):
-        if qblox_version < Version('0.11'):
-            for ch in channels:
-                self.enable_out(seq_nr, ch)
-        else:
-            if len(channels) == 0:
-                return
-            if len(channels) != 2 or channels[0] // 2 != channels[1] // 2:
-                raise Exception(f'Incorrect channels {channels}. RF output must be enabled in pairs')
-            ch = channels[0] // 2
-            self._sset(seq_nr, f'connect_out{ch}', 'IQ')
+        if len(channels) == 0:
+            return
+        if len(channels) != 2 or channels[0] // 2 != channels[1] // 2:
+            raise Exception(f'Incorrect channels {channels}. RF output must be enabled in pairs')
+        ch = channels[0] // 2
+        self._sset(seq_nr, f'connect_out{ch}', 'IQ')
 
     def set_nco(self, seq_nr, nco_frequency):
         self._sset(seq_nr, 'mod_en_awg', nco_frequency is not None)
@@ -200,8 +187,6 @@ class QbloxModule:
         param(value)
 
     def set_marker_invert(self, number: int, invert: bool):
-        if qblox_version < Version('0.11'):
-            raise Exception('Marker invert setting requires qblox_instruments 0.11+')
         name = f'marker{number}_inv_en'
         param = self.pulsar.parameters[name]
         if param.cache() != invert:
@@ -259,13 +244,12 @@ class QrmModule(QbloxModule):
         return channels
 
     def disable_all_inputs(self):
-        if qblox_version >= Version('0.11'):
-            for seq_nr in range(0, self.n_sequencers):
-                if self.pulsar.is_rf_type:
-                    self._sset(seq_nr, 'connect_acq', 'off')
-                else:
-                    self._sset(seq_nr, 'connect_acq_I', 'off')
-                    self._sset(seq_nr, 'connect_acq_Q', 'off')
+        for seq_nr in range(0, self.n_sequencers):
+            if self.pulsar.is_rf_type:
+                self._sset(seq_nr, 'connect_acq', 'off')
+            else:
+                self._sset(seq_nr, 'connect_acq_I', 'off')
+                self._sset(seq_nr, 'connect_acq_Q', 'off')
 
     def thresholded_acq_rotation(self, seq_nr, phase_rotation):
         self._sset(seq_nr, 'thresholded_acq_rotation', phase_rotation)
@@ -291,16 +275,15 @@ class QrmModule(QbloxModule):
         self.pulsar.delete_acquisition_data(seq_nr, all=True)
 
     def enable_in(self, seq_nr, channel):
-        if qblox_version >= Version('0.11'):
-            if self.pulsar.is_rf_type:
-                self._sset(seq_nr, 'connect_acq', 'in0')
+        if self.pulsar.is_rf_type:
+            self._sset(seq_nr, 'connect_acq', 'in0')
+        else:
+            # Keep old convention: I on 0, Q on 1
+            # TODO: change API to allow different IQ mapping.
+            if channel == 0:
+                self._sset(seq_nr, 'connect_acq_I', 'in0')
             else:
-                # Keep old convention: I on 0, Q on 1
-                # TODO: change API to allow different IQ mapping.
-                if channel == 0:
-                    self._sset(seq_nr, 'connect_acq_I', 'in0')
-                else:
-                    self._sset(seq_nr, 'connect_acq_Q', 'in1')
+                self._sset(seq_nr, 'connect_acq_Q', 'in1')
 
     def enable_seq(self, sequencer):
         super().enable_seq(sequencer)
