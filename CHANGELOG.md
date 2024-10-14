@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.14.0] - 2024-10-14
+
+- Update for qblox_instruments v0.14.1
+- Fixed exception for 'out of sequencers'.
+- Require Python >= 3.10
+
 ## \[0.13.0] - 2024-06-05
 
 - Update for qblox_instruments v0.13: changed deprecated get_XXX_state to get_XXX_status
