@@ -1,6 +1,5 @@
 import logging
 from dataclasses import dataclass
-from typing import List, Optional
 from abc import abstractmethod
 
 from .sequencer_states import translate_seq_status, translate_seq_state
@@ -14,12 +13,12 @@ logger = logging.getLogger(__name__)
 class Sequencer:
     module_name: str
     seq_nr: int
-    channels: List[int]
-    enabled_paths: List[int]
+    channels: list[int]
+    enabled_paths: list[int]
     max_output_voltage: float
-    nco_frequency: Optional[float] = None
-    in_channels: Optional[List[int]] = None
-    label: Optional[str] = None
+    nco_frequency: float | None = None
+    in_channels: list[int] | None = None
+    label: str | None = None
 
 
 class QbloxModule:

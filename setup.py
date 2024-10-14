@@ -7,7 +7,7 @@ setup(name="q1pulse",
 	version="0.13.0",
     author="Sander de Snoo",
 	packages = find_packages(),
-    python_requires=">=3.7",
+    python_requires=">=3.10",
 	install_requires=[
         'qblox_instruments',
       ],

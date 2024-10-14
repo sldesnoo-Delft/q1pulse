@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import List
 from logging import DEBUG, INFO, WARNING, ERROR
 import logging
 
@@ -42,10 +41,10 @@ class SequencerStatus:
     # field status added in qblox version 0.12
     status: str = 'OKAY'
     level: int = 10
-    errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
-    info_msgs: List[str] = field(default_factory=list)
-    debug_msgs: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    info_msgs: list[str] = field(default_factory=list)
+    debug_msgs: list[str] = field(default_factory=list)
     input_overloaded: bool = False
 
     def __post_init__(self):

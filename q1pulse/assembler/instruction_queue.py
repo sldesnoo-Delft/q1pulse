@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional, Tuple
 
 from q1pulse.lang.exceptions import (
         Q1InternalError,
@@ -10,10 +9,10 @@ from q1pulse.lang.exceptions import (
 @dataclass
 class Instruction:
     mnemonic: str
-    args: Optional[Tuple[int]] = None
-    comment: Optional[str] = None
-    label: Optional[str] = None
-    wait_after: Optional[int] = None
+    args: tuple[int] | None = None
+    comment: str | None = None
+    label: str | None = None
+    wait_after: int | None = None
     overwritten: bool = False
 
 

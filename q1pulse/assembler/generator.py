@@ -7,7 +7,6 @@ import math
 from functools import wraps
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import List
 
 from .generator_data import GeneratorData
 from .instruction_queue import InstructionQueue, Instruction, PendingUpdate
@@ -151,8 +150,8 @@ def register_args(signature):
 class ConditionalBlockState:
     rt_time_start: int = 0
     n_rt_instruction_start: int = 0
-    last_rt_instructions: List[Instruction] = field(default_factory=list)
-    rt_end_times: List[int] = field(default_factory=list)
+    last_rt_instructions: list[Instruction] = field(default_factory=list)
+    rt_end_times: list[int] = field(default_factory=list)
 
 
 @dataclass
@@ -627,10 +626,10 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         if isinstance(frequency, Operand):
             dtype = get_dtype(frequency)
             if dtype is not int:
-                raise Exception(f'frequency must be an integer value')
+                raise Exception('frequency must be an integer value')
             if isinstance(frequency, Expression):
                 # evaluate expression and store result in register
-                reg_freq = Register(f'_frequency')
+                reg_freq = Register('_frequency')
                 statement = reg_freq.assign(frequency << 2)
                 statement.write_instruction(self)
             else:
@@ -642,7 +641,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
     def _convert_phase(self, phase, hires_regs):
         dtype = get_dtype(phase)
         if dtype is not float:
-            raise Exception(f'phase must be a float value')
+            raise Exception('phase must be a float value')
 
         if isinstance(phase, float):
             # convert float range -1.0 ... +1.0 => 5e8 .. 1e9; 0 .. 5e8
@@ -652,7 +651,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
 
         if isinstance(phase, Expression):
             # evaluate expression and store result in register
-            reg_phase = Register(f'_phase')
+            reg_phase = Register('_phase')
             statement = reg_phase.assign(phase)
             statement.write_instruction(self)
             phase = reg_phase
@@ -794,7 +793,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             f.write('acquisitions=')
             pprint(d['acquisitions'], f)
             f.write('\n')
-            f.write(f'seq_prog="""\n')
+            f.write('seq_prog="""\n')
             f.write(self._q1asm_prog())
             f.write('\n"""\n\n')
 
