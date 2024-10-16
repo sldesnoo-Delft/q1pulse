@@ -22,7 +22,7 @@ P2 = p.P2
 R1 = p.R1
 
 
-gauss80 = q1.add_wave('gauss80', signal.gaussian(80, std=0.12 * 80))
+gauss80 = q1.add_wave('gauss80', signal.windows.gaussian(80, std=0.12 * 80))
 tukey100 = P1.add_wave('tukey100', signal.windows.tukey(100, 0.5))
 
 R1.add_acquisition_bins('acq_bins', p.repetitions)

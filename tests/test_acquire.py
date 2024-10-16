@@ -31,7 +31,7 @@ N = 5
 n_acq = N*N*p.repetitions
 R1.add_acquisition_bins('non-weighed', n_acq)
 R1.add_acquisition_bins('weighed', n_acq)
-R1.add_weight('gaus100', signal.gaussian(100, 12))
+R1.add_weight('gaus100', signal.windows.gaussian(100, 12))
 #R1.add_weight('gaus100', np.ones(100))
 R1.integration_length_acq = 100
 
