@@ -21,10 +21,12 @@ from ..lang.exceptions import (
 
 logger = logging.getLogger(__name__)
 
+
 def _int_u32(value):
     if value < 0:
         return value + (1<<32)
     return value
+
 
 def _float_to_f16(value):
     if value < -1.0 or value > 1.0:
@@ -32,11 +34,12 @@ def _float_to_f16(value):
     _f2i16 = (1 << 15) - 0.1
     return math.floor(value * _f2i16)
 
+
 def _float_to_f32(value):
     if value < -1.0 or value > 1.0:
         raise Q1ValueError(f'Fixed point value out of range: {value}')
-    _f2i30 = (1 << 31) - 0.1
-    return _int_u32(math.floor(value * _f2i30))
+    _f2i32 = (1 << 31) - 0.1
+    return _int_u32(math.floor(value * _f2i32))
 
 
 def register_args(signature):
@@ -107,7 +110,7 @@ def register_args(signature):
             return value
 
     arg_conv = []
-    for i,atype in enumerate(signature):
+    for i, atype in enumerate(signature):
         if atype in 'to':
             # argument is time or object. Nothing to translate
             continue
@@ -118,7 +121,6 @@ def register_args(signature):
         elif atype == 'F':
             arg_conv.append((i, arg_F))
 
-
     def decorator_register_args(func):
         @wraps(func)
         def func_wrapper(self, *args, **kwargs):
@@ -128,7 +130,7 @@ def register_args(signature):
                 self._registers.enter_scope()
 
                 conversion_comments = [] if self._show_arg_conversions else None
-                for i,conv_func in arg_conv:
+                for i, conv_func in arg_conv:
                     arg = args[i]
                     args[i] = conv_func(self, i, arg, conversion_comments)
 
@@ -187,7 +189,6 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         self.add_comment('--INIT--', init_section=True)
         self._zero_reg = self.allocate_reg('_zero')
         self.move(0, self._zero_reg, init_section=True)
-
 
     @property
     def repetitions(self):
