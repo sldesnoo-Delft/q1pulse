@@ -1,15 +1,21 @@
+import logging
+import numpy as np
+
 from .sequencer import SequenceBuilder
 from .sequencer_data import Wave, WaveCollection
-from ..lang.exceptions import Q1ValueError, Q1TypeError
-from ..lang.math_expressions import Expression
-from ..lang.register import Register
-from ..lang.timed_statements import (
+from q1pulse.lang.exceptions import Q1ValueError, Q1TypeError
+from q1pulse.lang.math_expressions import Expression
+from q1pulse.lang.register import Register
+from q1pulse.lang.timed_statements import (
         SetMarkersStatement,
         AwgDcOffsetStatement, AwgGainStatement,
         ShiftPhaseStatement, SetPhaseStatement,
         ResetPhaseStatement,
         PlayWaveStatement, SetFrequencyStatement,
         )
+
+
+logger = logging.getLogger(__name__)
 
 
 class ControlBuilder(SequenceBuilder):
@@ -48,6 +54,9 @@ class ControlBuilder(SequenceBuilder):
         self._mixer_phase_offset_degree = value
 
     def add_wave(self, name, data):
+        if np.any((data > 1.0) | (data < -1.0)):
+            logger.error(f"Invalid data: {data}")
+            raise Q1ValueError(f"channel {name} wave amplitude out of range: ({np.min(data), np.max(data)}")
         return self._waves.add_wave(name, data)
 
     def set_markers(self, value, t_offset=0):
@@ -170,7 +179,7 @@ class ControlBuilder(SequenceBuilder):
             raise Q1TypeError('Ramp duration cannot be a variable or expression; '
                               'Unroll loop using Python for-loop.')
 
-        ramp_loop_time = 100
+        ramp_loop_time = 100 # @@@ make argument with default.
         self.add_comment(f'ramp({duration}, {v_start}, {v_end})')
         with self._local_timeline(t_offset=t_offset, duration=duration):
             if duration <= ramp_loop_time:
@@ -215,6 +224,8 @@ class ControlBuilder(SequenceBuilder):
                         w_ramp = self._waves.get_ramp(ramp_loop_time)
                     # divmod, but with rem [1,100], and n > 1
                     n, rem = divmod(duration-1, ramp_loop_time)
+                    #  @@@if n <= (5 if rem > 0 else 6): unroll loop!
+
                     rem += 1
                     self.Rs._ramp_offset = v_start
                     self.set_gain(gain)
@@ -223,6 +234,7 @@ class ControlBuilder(SequenceBuilder):
                         self.play(w_ramp)
                         self.Rs._ramp_offset += step
                         self.wait(ramp_loop_time)
+                    # @@@ do no use register
                     self.set_offset(self.Rs._ramp_offset)
                     self.play(w_ramp)
                     self.wait(rem)
