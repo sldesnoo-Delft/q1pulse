@@ -4,7 +4,7 @@ packages = ['q1pulse']
 print('packages: {}'.format(packages))
 
 setup(name="q1pulse",
-	version="0.14.2",
+	version="0.14.3",
     author="Sander de Snoo",
 	packages = find_packages(),
     python_requires=">=3.10",
