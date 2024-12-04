@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.14.3] - 2024-12-04
+
+- Corrected error message waveform out of range.
+
 ## \[0.14.2] - 2024-12-04
 
 - Check waveform data when it is added to sequencer.

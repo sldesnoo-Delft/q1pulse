@@ -56,7 +56,7 @@ class ControlBuilder(SequenceBuilder):
     def add_wave(self, name, data):
         if np.any((data > 1.0) | (data < -1.0)):
             logger.error(f"Invalid data: {data}")
-            raise Q1ValueError(f"channel {name} wave amplitude out of range: ({np.min(data), np.max(data)}")
+            raise Q1ValueError(f"channel {self.name} amplitude of wave {name} out of range: ({np.min(data), np.max(data)}")
         return self._waves.add_wave(name, data)
 
     def set_markers(self, value, t_offset=0):
