@@ -37,11 +37,11 @@ class Q1Instrument:
         if path:
             self.path = path
         else:
-            q1dir = Path.home() / '.q1'
+            q1dir = Path.home() / ".q1"
             q1dir.mkdir(exist_ok=True)
             self.temp_dir = TemporaryDirectory(dir=q1dir)
             self.path = self.temp_dir.name
-            logger.info('Instrument upload temp dir: ' + self.path)
+            logger.info("Instrument upload temp dir: " + self.path)
         self.root_instruments = set()
         self.modules = {}
         self.controllers = {}
@@ -55,15 +55,15 @@ class Q1Instrument:
         elif pulsar.instrument_type == InstrumentType.QRM:
             self.add_qrm(pulsar)
         else:
-            raise Exception(f'Unknown instrument type: {pulsar.instrument_type}')
+            raise Exception(f"Unknown instrument type: {pulsar.instrument_type}")
 
     def add_qcm(self, pulsar):
-        logger.info(f'Add {pulsar.name}')
+        logger.info(f"Add {pulsar.name}")
         self.modules[pulsar.name] = QcmModule(pulsar)
         self._add_root_instrument(pulsar.root_instrument)
 
     def add_qrm(self, pulsar):
-        logger.info(f'Add {pulsar.name}')
+        logger.info(f"Add {pulsar.name}")
         self.modules[pulsar.name] = QrmModule(pulsar)
         self._add_root_instrument(pulsar.root_instrument)
 
@@ -74,10 +74,10 @@ class Q1Instrument:
         self.controllers[name] = sequencer
 
     def add_readout(self, name, module_name, out_channels=[],
-                    nco_frequency=None, in_channels=[0,1]):
+                    nco_frequency=None, in_channels=[0, 1]):
         module = self.modules[module_name]
         if not isinstance(module, QrmModule):
-            raise Exception('Module {module_name} is not a QRM')
+            raise Exception(f"Module {module_name} is not a QRM")
         sequencer = module.get_sequencer(out_channels)
         sequencer.nco_frequency = nco_frequency
         sequencer.in_channels = in_channels
@@ -113,7 +113,7 @@ class Q1Instrument:
         for instrument in self.root_instruments:
             with DelayedKeyboardInterrupt():
                 check_instrument_status(instrument)
-                if Q1Instrument._i_feel_lucky and hasattr(instrument, '_debug'):
+                if Q1Instrument._i_feel_lucky and hasattr(instrument, "_debug"):
                     # Change the debug level to speed up communication.
                     # Errors will be checked before start of the sequence.
                     instrument._debug = 2
@@ -131,20 +131,20 @@ class Q1Instrument:
                 if q1asm is None:
                     module.disable_seq(seq)
                     module.set_awg_offsets(seq.seq_nr, 0.0, 0.0)
-                    logger.debug(f'Sequencer {name} no sequence')
+                    logger.debug(f"Sequencer {name} no sequence")
                     continue
                 n_configured += 1
                 instruments_with_sequence.add(module.pulsar.root_instrument)
                 module.set_label(seq.seq_nr, name)
                 module.upload(seq.seq_nr, q1asm)
 
-                module.invalidate_cache(seq.seq_nr, 'offset_awg_path0')
-                module.invalidate_cache(seq.seq_nr, 'offset_awg_path1')
+                module.invalidate_cache(seq.seq_nr, "offset_awg_path0")
+                module.invalidate_cache(seq.seq_nr, "offset_awg_path1")
                 module.enable_seq(seq)
                 prog_seq = program[name]
                 module.set_nco(seq.seq_nr, prog_seq.nco_frequency)
                 if prog_seq.modifies_frequency:
-                    module.invalidate_cache(seq.seq_nr, 'nco_freq')
+                    module.invalidate_cache(seq.seq_nr, "nco_freq")
                 if prog_seq.mixer_gain_ratio is not None:
                     module.set_mixer_gain_ratio(seq.seq_nr, prog_seq.mixer_gain_ratio)
                 if prog_seq.mixer_phase_offset_degree is not None:
@@ -196,47 +196,47 @@ class Q1Instrument:
                 instrument.start_sequencer()
 
         t = (time.perf_counter() - t_start) * 1000
-        logger.info(f'Duration upload/start: ({t:5.3f}ms)')
+        logger.info(f"Duration upload/start: ({t:5.3f}ms)")
 
     def wait_stopped(self, timeout_minutes=1):
         try:
             # Wait for completion
             errors = {}
             msg_level = 0
-            sequencers = { **self.controllers, **self.readouts }
-            for name,seq in sequencers.items():
+            sequencers = {**self.controllers, **self.readouts}
+            for name, seq in sequencers.items():
                 with DelayedKeyboardInterrupt():
                     module = self.modules[seq.module_name]
                     if not module.enabled(seq.seq_nr):
                         continue
                     status = module.get_sequencer_status(seq.seq_nr, timeout_minutes)
                     logger.log(status.level,
-                               f'Status {name} ({module.pulsar.name}:{seq.seq_nr}): {status}')
+                               f"Status {name} ({module.pulsar.name}:{seq.seq_nr}): {status}")
                     msg_level = max(msg_level, status.level)
-                    if status.status != 'OKAY' or status.state != 'STOPPED' or status.level >= logging.WARNING:
+                    if status.status != "OKAY" or status.state != "STOPPED" or status.level >= logging.WARNING:
                         errors[name] = str(status)
                         # reset awg offsets in case of any error.
                         module.set_awg_offsets(seq.seq_nr, 0.0, 0.0)
                     if status.input_overloaded:
                         if Q1Instrument._exception_on_overload:
                             raise Q1InputOverloaded(
-                                    f'INPUT OVERLOAD on {name}.'
-                                    '\nException can be suppressed with q1pulse.set_exception_on_overload(False)')
+                                    f"INPUT OVERLOAD on {name}."
+                                    "\nException can be suppressed with q1pulse.set_exception_on_overload(False)")
                         else:
-                            print(f'WARNING: input overload on {name}')
+                            print(f"WARNING: input overload on {name}")
 
             if msg_level == logging.ERROR:
-                logger.error('*** Program errors ***')
-                for name,state in errors.items():
-                    logger.error(f'  {name}: {state}')
-                raise Exception(f'Q1 failures (see logging):\n {errors}')
+                logger.error("*** Program errors ***")
+                for name, state in errors.items():
+                    logger.error(f"  {name}: {state}")
+                raise Exception(f"Q1 failures (see logging):\n {errors}")
         except Exception:
             logger.error("Exception", exc_info=True)
             raise
         finally:
             with DelayedKeyboardInterrupt():
                 for instrument in self.root_instruments:
-                    logger.info('Stop sequencers')
+                    logger.info("Stop sequencers")
                     instrument.stop_sequencer()
 
     def check_system_errors(self):
@@ -261,7 +261,7 @@ class Q1Instrument:
         seq = self.readouts[sequencer_name]
         q1asm = self._loaded_q1asm[sequencer_name]
         if q1asm is None or len(q1asm['acquisitions']) == 0:
-            logger.warning(f'No acquisitions for {sequencer_name}')
+            logger.warning(f"No acquisitions for {sequencer_name}")
             return None
         module = self.modules[seq.module_name]
         with DelayedKeyboardInterrupt():
@@ -269,9 +269,9 @@ class Q1Instrument:
                 completed = module.pulsar.get_acquisition_status(seq.seq_nr, 1)
             else:
                 completed = module.pulsar.get_acquisition_state(seq.seq_nr, 1)
-            logger.info(f'Acquisition status {sequencer_name} ({module.pulsar.name}:'
-                         f'{seq.seq_nr}): {completed}')
-            return module.pulsar.get_acquisitions(seq.seq_nr)[bins]['acquisition']['bins']
+            logger.info(f"Acquisition status {sequencer_name} ({module.pulsar.name}:"
+                        f"{seq.seq_nr}): {completed}")
+            return module.pulsar.get_acquisitions(seq.seq_nr)[bins]["acquisition"]["bins"]
 
     def get_input_ranges(self, sequencer_name):
         ''' Returns input range for both channels of sequencer.
@@ -292,7 +292,7 @@ class Q1Instrument:
         return in_range
 
 
-def set_exception_on_overload(enable:bool):
+def set_exception_on_overload(enable: bool):
     '''
     Setting set_exception_on_overload to False suppresses Exception
     when the QRM input is overloaded.
@@ -302,7 +302,7 @@ def set_exception_on_overload(enable:bool):
 
 def check_instrument_status(instrument, print_status=False):
     t = time.perf_counter()
-    if qblox_version >= Version('0.12.0'):
+    if qblox_version >= Version("0.12.0"):
         sys_state = instrument.get_system_status()
     else:
         sys_state = instrument.get_system_state()
@@ -310,11 +310,11 @@ def check_instrument_status(instrument, print_status=False):
         d = time.perf_counter() - t
         logger.debug(f"Status {sys_state.status} {d*1000:.1f} ms")
 
-    if sys_state.status != 'OKAY':
-        if getattr(instrument, 'is_dummy', False):
-            print(f'Status (Dummy) {instrument.name}:', sys_state)
-        elif instrument.get_idn()['serial_number'] == 'whatever':
+    if sys_state.status != "OKAY":
+        if getattr(instrument, "is_dummy", False):
+            print(f"Status (Dummy) {instrument.name}:", sys_state)
+        elif instrument.get_idn()["serial_number"] == "whatever":
             # looks like dummy cluster
-            print(f'Status (Dummy) {instrument.name}:', sys_state)
+            print(f"Status (Dummy) {instrument.name}:", sys_state)
         else:
-            raise Exception(f'{instrument.name} status not OKAY: {sys_state}')
+            raise Exception(f"{instrument.name} status not OKAY: {sys_state}")

@@ -17,12 +17,13 @@ from .assembler.generator import Q1asmGenerator
 
 logger = logging.getLogger(__name__)
 
+
 class Program:
     verbose = False
 
     def __init__(self, path=None):
         self.sequence_builders = {}
-        self.path = path if path is not None else os.path.join('q1','_prog')
+        self.path = path if path is not None else os.path.join("q1", "_prog")
         self.R = Registers(self, local=False)
         self.repetitions = 1
         self._q1asm = {}
@@ -39,7 +40,7 @@ class Program:
 
     def __getitem__(self, item):
         if item not in self.sequence_builders:
-            raise Exception(f'no sequencer named {item}')
+            raise Exception(f"no sequencer named {item}")
         return self.sequence_builders[item]
 
     def describe(self):
@@ -48,7 +49,7 @@ class Program:
 
     def seq_filename(self, name):
         os.makedirs(self.path, exist_ok=True)
-        return os.path.join(self.path, f'q1seq_{name}.json')
+        return os.path.join(self.path, f"q1seq_{name}.json")
 
     def compile(self, annotate=False, add_comments=True,
                 listing=False, json=True, optimize=1):
@@ -71,16 +72,16 @@ class Program:
             end = time.perf_counter()
             d2 = (end-start)*1000
             if Program.verbose:
-                logger.debug(f'compile {builder.name} {d1:5.2f} {d2:5.2f} ms')
+                logger.debug(f"compile {builder.name} {d1:5.2f} {d2:5.2f} ms")
         duration = time.perf_counter() - start_compile
-        logger.debug(f'Total compilation {duration*1000:5.2f} ms')
+        logger.debug(f"Total compilation {duration*1000:5.2f} ms")
 
     def q1asm(self, name):
         return self._q1asm[name]
 
     def _add_statement(self, statement, init_section=False):
         if not isinstance(statement, RegisterAssignment):
-            raise Q1InternalError(f'Illegal statement for program {statement}')
+            raise Q1InternalError(f"Illegal statement for program {statement}")
         for builder in self.sequence_builders.values():
             builder._add_statement(statement, init_section=init_section)
 
@@ -158,7 +159,7 @@ class Program:
     def wait(self, t):
         if isinstance(t, Number):
             if t < 0:
-                raise Q1ValueError('Wait time must be positive')
+                raise Q1ValueError("Wait time must be positive")
             self._timeline.set_pulse_end(self._timeline.current_time + t)
         else:
             for s in self.sequence_builders.values():
@@ -174,7 +175,7 @@ class Program:
             self._timeline.enable_update()
         else:
             if not self._timeline.is_running:
-                raise Q1ValueError('Variable pulse length not possible in parallel section')
+                raise Q1ValueError("Variable pulse length not possible in parallel section")
             self.set_offsets(sequencers, amplitudes, t_offset=t_offset)
             self.wait(duration)
             self.set_offsets(sequencers, [0.0]*len(sequencers), t_offset=0)
@@ -194,4 +195,3 @@ class Program:
                 s = self[s]
             s.set_offset(offset, t_offset=t_offset)
         self._timeline.enable_update()
-
