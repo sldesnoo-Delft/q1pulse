@@ -2,9 +2,9 @@ from .control import ControlBuilder
 from ..lang.exceptions import Q1ValueError, Q1TypeError
 from ..lang.timed_statements import AcquireStatement, AcquireWeighedStatement
 from .sequencer_data import (
-        AcquisitionWeight, WeightCollection,
-        AcquisitionBins, AcquisitionBinsCollection
-        )
+    AcquisitionWeight, WeightCollection,
+    AcquisitionBins, AcquisitionBinsCollection
+)
 
 
 class ReadoutBuilder(ControlBuilder):
@@ -119,7 +119,9 @@ class ReadoutBuilder(ControlBuilder):
                                 f_start, f_stop,
                                 bins, bin_index='increment',
                                 acq_delay=0,
-                                t_offset=0):
+                                weight0: str | AcquisitionWeight | None = None,
+                                weight1: str | AcquisitionWeight | None = None,
+                                t_offset: int = 0):
         """
         Aquire `n` values with interval `period` while stepping frequency from `f_start` till `f_stop`.
 
@@ -129,7 +131,8 @@ class ReadoutBuilder(ControlBuilder):
             f_start: start frequency
             f_stop: stop frequency, inclusive
             acq_delay: delay between changing frequency and starting acquisition
-
+            weight0: if not None use weighed accquisition with specified weight for path 0.
+            weight1: if not None use weighed accquisition with specified weight for path 1.
         Note:
             Experimentally it is determined that the nco_prop_delay should be 146 ns + delay in lines (~ 4 ns/m),
             and acq_delay should be nco_prop_delay + 4 ns.
@@ -140,6 +143,7 @@ class ReadoutBuilder(ControlBuilder):
                                f'Minimum is {ReadoutBuilder.MIN_ACQUISITION_INTERVAL} ns')
         if acq_delay > period - 20:
             raise Q1ValueError(f"acq_delay ({acq_delay}) too big. It should be less than period ({period}) - 20")
+
         with self._local_timeline(t_offset=t_offset, duration=(n-1)*period):
             # Repeat only n-1 times to avoid wait after last acquire.
             # A wait after the last acquire could create unwanted waits in the
@@ -150,12 +154,18 @@ class ReadoutBuilder(ControlBuilder):
             self.wait(acq_delay)
             if n > 1:
                 with self._seq_repeat(n-1):
-                    self.acquire(bins, bin_index)
+                    if weight0 is not None or weight1 is not None:
+                        self.acquire_weighed(bins, bin_index, weight0, weight1)
+                    else:
+                        self.acquire(bins, bin_index)
                     self.Rs.frequency += int(f_step)
                     self.wait(period - acq_delay)
                     self.set_frequency(self.Rs.frequency)
                     self.wait(acq_delay)
-            self.acquire(bins, bin_index)
+            if weight0 is not None or weight1 is not None:
+                self.acquire_weighed(bins, bin_index, weight0, weight1)
+            else:
+                self.acquire(bins, bin_index)
 
     def repeated_acquire_weighed(self, n, period, bins, bin_index,
                                  weight0, weight1=None, t_offset=0):
@@ -199,4 +209,3 @@ class ReadoutBuilder(ControlBuilder):
         if isinstance(weight, AcquisitionWeight):
             return weight
         raise Q1TypeError(f'Illegal type {weight}')
-
