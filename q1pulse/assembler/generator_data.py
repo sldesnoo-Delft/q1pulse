@@ -1,6 +1,8 @@
+import numpy as np
 
-from ..sequencer.sequencer_data import Wave, AcquisitionBins, AcquisitionWeight
-from ..lang.exceptions import Q1TypeError
+from q1pulse.sequencer.sequencer_data import Wave, AcquisitionBins, AcquisitionWeight
+from q1pulse.lang.exceptions import Q1TypeError
+
 
 class GeneratorData:
     def __init__(self):
@@ -8,7 +10,7 @@ class GeneratorData:
         self.weights = {}
         self.acquisitions = {}
 
-    def translate_wave(self, wave):
+    def translate_wave(self, wave: Wave):
         if not isinstance(wave, Wave):
             raise Q1TypeError(f'Unsupported type for wave: {wave}')
 
@@ -19,8 +21,8 @@ class GeneratorData:
         except KeyError:
             index = len(waveforms)
             waveforms[wave.name] = {
-                    'data':list(wave.data),
-                    'index':index
+                    'data': list(wave.data),
+                    'index': index
                     }
             return index
 

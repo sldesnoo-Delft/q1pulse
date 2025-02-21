@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 def _int_u32(value):
     if value < 0:
-        return value + (1<<32)
+        return value + (1 << 32)
     return value
 
 
@@ -313,7 +313,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
     def add(self, lhs, rhs, destination):
         if isinstance(lhs, int):
             # swap arguments. 1st argument cannot be immediate value
-            lhs,rhs = rhs,lhs
+            lhs, rhs = rhs, lhs
         self._add_reg_instruction('add', lhs, rhs, destination)
 
     @register_args(signature='fff')
@@ -383,7 +383,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                     # actual ASR
                     self._add_reg_instruction('asr', lhs, rhs, destination)
                     # compute sign extension bits
-                    self.lsr(sign, rhs, sign) # explicit unsigned shift
+                    self.lsr(sign, rhs, sign)  # explicit unsigned shift
                     zero = self._zero_reg
                     self.sub(zero, sign, sign_extension)
                     self.bits_or(destination, sign_extension, destination)
@@ -398,21 +398,21 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
     def bits_and(self, lhs, rhs, destination):
         if isinstance(lhs, int):
             # swap arguments. 1st argument cannot be immediate value
-            lhs,rhs = rhs,lhs
+            lhs, rhs = rhs, lhs
         self._add_reg_instruction('and', lhs, rhs, destination)
 
     @register_args(signature='III')
     def bits_or(self, lhs, rhs, destination):
         if isinstance(lhs, int):
             # swap arguments. 1st argument cannot be immediate value
-            lhs,rhs = rhs,lhs
+            lhs, rhs = rhs, lhs
         self._add_reg_instruction('or', lhs, rhs, destination)
 
     @register_args(signature='III')
     def bits_xor(self, lhs, rhs, destination):
         if isinstance(lhs, int):
             # swap arguments. 1st argument cannot be immediate value
-            lhs,rhs = rhs,lhs
+            lhs, rhs = rhs, lhs
         self._add_reg_instruction('xor', lhs, rhs, destination)
 
     @register_args(signature='tI')
@@ -594,7 +594,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                 # reg,reg
                 res1 = value1
                 res2 = value2
-        return res1,res2
+        return res1, res2
 
     def _to_asm_reg(self, operand):
         if isinstance(operand, Register):
@@ -734,9 +734,9 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                 continue
             if i.overwritten:
                 if not compact:
-                    lines+= [self._format_line('# ------',
-                                               i.mnemonic, i.args, i.wait_after,
-                                               i.comment, None)]
+                    lines += [self._format_line('# ------',
+                                                i.mnemonic, i.args, i.wait_after,
+                                                i.comment, None)]
                 continue
             line_nr += 1
             line = self._format_line(line_label, i.mnemonic, i.args, i.wait_after,
@@ -747,7 +747,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
 
     def assemble(self, listing=False, json_output=False, filename=None):
         if listing:
-            self._save_prog_and_data_txt(filename.replace('.json','.q1asm'))
+            self._save_prog_and_data_txt(filename.replace('.json', '.q1asm'))
         if self._optimize > 0 and not self._contains_io_instr:
             # no RT instructions (other than reset_ph): program does nothing
             logger.debug('No RT IO statements')
@@ -769,7 +769,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
     def _pprint_data(self, data_dict, f):
         prefix = ' '*12
         f.write('{\n')
-        for name,wave in data_dict.items():
+        for name, wave in data_dict.items():
             f.write(f"    '{name}':{{\n")
             f.write(f"        'data':\n")
             f.write(prefix)
@@ -777,7 +777,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             f.write(np.array2string(np.array(wave['data']),
                                     prefix=prefix,
                                     separator=',',
-                                    formatter={'float_kind':lambda x: f'{x:9.5f}'},
+                                    formatter={'float_kind': lambda x: f'{x:9.5f}'},
                                     threshold=1000_000))
             f.write(f",\n")
             f.write(f"        'index':{wave['index']},\n")

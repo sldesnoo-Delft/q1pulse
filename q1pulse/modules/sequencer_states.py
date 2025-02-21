@@ -86,6 +86,7 @@ def translate_seq_state(seq_state):
 
     return status
 
+
 def translate_seq_status(seq_status):
     status = SequencerStatus(seq_status.state, seq_status.status)
     status.add_flags(seq_status.info_flags)
