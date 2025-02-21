@@ -30,6 +30,10 @@ class ControlBuilder(SequenceBuilder):
         self._mixer_phase_offset_degree = None
 
     @property
+    def enabled_paths(self):
+        return self._enabled_paths
+
+    @property
     def nco_frequency(self):
         return self._nco_frequency
 

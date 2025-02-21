@@ -1,3 +1,4 @@
+import json
 import os
 import time
 import logging
@@ -8,7 +9,7 @@ from qblox_instruments import InstrumentType
 from qcodes.utils import DelayedKeyboardInterrupt
 
 from q1pulse.program import Program
-from q1pulse.lang.exceptions import Q1InputOverloaded
+from q1pulse.lang.exceptions import Q1InputOverloaded, Q1InternalError
 from q1pulse.sequencer.sequencer import SequenceBuilder
 from q1pulse.sequencer.control import ControlBuilder
 from q1pulse.sequencer.readout import ReadoutBuilder
@@ -102,6 +103,49 @@ class Q1Instrument:
             program.add_sequence_builder(seq_builder)
 
         return program
+
+    def save_program(self, program: Program, path: str):
+        """Stores program including current settings of the sequence builders,
+        like nco_frequency.
+
+        Args:
+            program: program to save.
+            path: path to store the program.
+        """
+        os.makedirs(path, exist_ok=True)
+        config = {}
+        for builder in program.sequence_builders.values():
+            name = builder.name
+            q1asm = program.q1asm(name)
+            if q1asm is not None:
+                filename = f"q1seq_{name}.json"
+                with open(os.path.join(path, filename), 'w', encoding='utf-8') as f:
+                    json.dump(q1asm, f, indent=1, separators=(',', ':'))
+            else:
+                filename = None
+            sequencer = self.controllers.get(name)
+            if sequencer is not None:
+                seq_type = "controller"
+            else:
+                sequencer = self.readouts.get(name)
+                seq_type = "readout"
+                if sequencer is None:
+                    raise Q1InternalError(f"Sequencer {name} not found in instrument")
+            builder_config = {
+                "module": sequencer.module_name,
+                "seq_nr": sequencer.seq_nr,
+                "seq_type": seq_type,
+                "out_channels": sequencer.channels,
+                "nco": builder.nco_frequency,
+                "paths": builder.enabled_paths,
+                "sequence": filename,
+                "duration": builder.end_time if q1asm is not None else None,
+                }
+            if seq_type == "readout":
+                builder_config["in_channels"] = sequencer.in_channels
+            config[name] = builder_config
+        with open(os.path.join(path, "q1program.json"), 'w', encoding='utf-8') as f:
+            json.dump(config, f, indent=2)
 
     def run_program(self, program):
         self.start_program(program)

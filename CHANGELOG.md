@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.15.2] - 2025-02-21
+
+- Added save_program to Q1Instrument to write program to disk.
+
 ## \[0.15.1] - 2025-01-22
 
 - Added weighed acquisition to acquire_frequency_sweep.
