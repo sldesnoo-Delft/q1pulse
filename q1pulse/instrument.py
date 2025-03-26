@@ -249,25 +249,25 @@ class Q1Instrument:
             msg_level = 0
             sequencers = {**self.controllers, **self.readouts}
             for name, seq in sequencers.items():
-                with DelayedKeyboardInterrupt():
-                    module = self.modules[seq.module_name]
-                    if not module.enabled(seq.seq_nr):
-                        continue
-                    status = module.get_sequencer_status(seq.seq_nr, timeout_minutes)
-                    logger.log(status.level,
-                               f"Status {name} ({module.pulsar.name}:{seq.seq_nr}): {status}")
-                    msg_level = max(msg_level, status.level)
-                    if status.status != "OKAY" or status.state != "STOPPED" or status.level >= logging.WARNING:
-                        errors[name] = str(status)
-                        # reset awg offsets in case of any error.
+                module = self.modules[seq.module_name]
+                if not module.enabled(seq.seq_nr):
+                    continue
+                status = self._get_sequencer_status(module, seq.seq_nr, timeout_minutes)
+                logger.log(status.level,
+                           f"Status {name} ({module.pulsar.name}:{seq.seq_nr}): {status}")
+                msg_level = max(msg_level, status.level)
+                if status.status != "OKAY" or status.state != "STOPPED" or status.level >= logging.WARNING:
+                    errors[name] = str(status)
+                    # reset awg offsets in case of any error.
+                    with DelayedKeyboardInterrupt():
                         module.set_awg_offsets(seq.seq_nr, 0.0, 0.0)
-                    if status.input_overloaded:
-                        if Q1Instrument._exception_on_overload:
-                            raise Q1InputOverloaded(
-                                    f"INPUT OVERLOAD on {name}."
-                                    "\nException can be suppressed with q1pulse.set_exception_on_overload(False)")
-                        else:
-                            print(f"WARNING: input overload on {name}")
+                if status.input_overloaded:
+                    if Q1Instrument._exception_on_overload:
+                        raise Q1InputOverloaded(
+                                f"INPUT OVERLOAD on {name}."
+                                "\nException can be suppressed with q1pulse.set_exception_on_overload(False)")
+                    else:
+                        print(f"WARNING: input overload on {name}")
 
             if msg_level == logging.ERROR:
                 logger.error("*** Program errors ***")
@@ -282,6 +282,24 @@ class Q1Instrument:
                 for instrument in self.root_instruments:
                     logger.info("Stop sequencers")
                     instrument.stop_sequencer()
+
+    def _get_sequencer_status(self, module, seq_nr, timeout_minutes):
+        """Get sequencer status in a interrupt safe way.
+        Only intercept the keyboard interrupt during communication,
+        not when sleeping.
+        """
+        expiration_time = time.perf_counter() + timeout_minutes*60.0
+        timeout_poll_res = 0.01
+        with DelayedKeyboardInterrupt():
+            status = module.get_sequencer_status(seq_nr, 0.0)
+
+        while (status.state == "RUNNING"
+                or status.state == "Q1_STOPPED"
+               ) and time.perf_counter() < expiration_time:
+            time.sleep(timeout_poll_res)
+            with DelayedKeyboardInterrupt():
+                status = module.get_sequencer_status(seq_nr, 0.0)
+        return status
 
     def check_system_errors(self):
         t_start_check = time.perf_counter()
