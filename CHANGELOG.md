@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.15.3] - 2025-03-26
+
+- Better handling of keyboard interrupt when sequencer is running.
+
 ## \[0.15.2] - 2025-02-21
 
 - Added save_program to Q1Instrument to write program to disk.
