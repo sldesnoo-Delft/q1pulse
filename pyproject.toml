@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Q1Pulse"
+version = "0.15.3" # tbump: version
+authors = [
+  { name="Sander de Snoo", email="s.l.desnoo@tudelft.nl" },
+]
+description = """
+Pulse sequence builder and compiler for Q1ASM.
+Q1Pulse is a simple library to compile pulse sequence to Q1ASM, the assembly language of Qblox instruments.
+"""
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy >= 1.24",
+    "qblox_instruments",
+]
+
+[project.urls]
+# Homepage = "https://example.com"
+Documentation = "https://github.com/sldesnoo-Delft/q1pulse/blob/main/README.md"
+Repository = "https://github.com/sldesnoo-Delft/q1pulse"
+# Issues = "https://github.com/me/spam/issues"
+Changelog = "https://github.com/sldesnoo-Delft/q1pulse/blob/main/CHANGELOG.md"
+
+[tool.tbump]
+# Uncomment this if your project is hosted on GitHub:
+# github_url = "https://github.com/<user or organization>/<project>/"
+
+[tool.tbump.version]
+current = "0.15.3"
+
+# Example of a semver regexp.
+# Make sure this matches current_version before
+# using tbump
+regex = '''
+  (?P<major>\d+)
+  \.
+  (?P<minor>\d+)
+  \.
+  (?P<patch>\d+)
+  '''
+
+[tool.tbump.git]
+message_template = "Bump to {new_version}"
+tag_template = "v{new_version}"
+
+# For each file to patch, add a [[tool.tbump.file]] config
+# section containing the path of the file, relative to the
+# tbump.toml location.
+[[tool.tbump.file]]
+src = "pyproject.toml"
+search = 'version = "{current_version}" # tbump: version'
+
+[[tool.tbump.file]]
+src = "q1pulse/__init__.py"
+search = '__version__ = "{current_version}"'
+
+# You can specify a list of commands to
+# run after the files have been patched
+# and before the git commit is made
+
+#  [[tool.tbump.before_commit]]
+#  name = "check changelog"
+#  cmd = "grep -q {new_version} Changelog.rst"
+
+# Or run some commands after the git tag and the branch
+# have been pushed:
+#  [[tool.tbump.after_push]]
+#  name = "publish"
+#  cmd = "./publish.sh"
