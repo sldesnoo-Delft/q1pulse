@@ -13,6 +13,7 @@ from q1pulse.lang.timed_statements import (
         ResetPhaseStatement,
         PlayWaveStatement, SetFrequencyStatement,
         )
+from q1pulse.util.qblox_version import qblox_version, Version
 
 
 logger = logging.getLogger(__name__)
@@ -60,7 +61,8 @@ class ControlBuilder(SequenceBuilder):
     def add_wave(self, name, data):
         if np.any((data > 1.0) | (data < -1.0)):
             logger.error(f"Invalid data: {data}")
-            raise Q1ValueError(f"channel {self.name} amplitude of wave {name} out of range: ({np.min(data), np.max(data)}")
+            raise Q1ValueError(
+                f"channel {self.name} amplitude of wave {name} out of range: ({np.min(data), np.max(data)}")
         return self._waves.add_wave(name, data)
 
     def set_markers(self, value, t_offset=0):
@@ -102,7 +104,6 @@ class ControlBuilder(SequenceBuilder):
         self.set_pulse_end(t1)
         self._add_statement(ResetPhaseStatement(t1))
 
-
     def shift_phase(self, delta, t_offset=0, hires_reg=True):
         '''
         Args:
@@ -120,10 +121,11 @@ class ControlBuilder(SequenceBuilder):
         '''
         t1 = self.current_time + t_offset
         self.set_pulse_end(t1)
-        # WORKAROUND: Qblox sequencer inverts phase delta when frequency is negative
-        # TODO: remove workaround when fixed in firmware
-        if self._nco_frequency and self._nco_frequency < 0:
-            delta = -delta
+
+        if qblox_version < Version('0.16.0'):
+            # WORKAROUND: Qblox sequencer inverts phase delta when frequency is negative
+            if self._nco_frequency and self._nco_frequency < 0:
+                delta = -delta
         self._add_statement(ShiftPhaseStatement(t1, delta, hires_reg))
 
     def set_phase(self, phase, t_offset=0, hires_reg=True):
@@ -199,7 +201,7 @@ class ControlBuilder(SequenceBuilder):
                 shift = 0
                 wave_duration = duration
                 while wave_duration > 200 and wave_duration % 8 == 0:
-                    wave_duration >>=1
+                    wave_duration >>= 1
                     shift += 1
                 self.Rs._ramp_step = (v_end - v_start)
                 if shift >= 1:
@@ -279,7 +281,7 @@ class ControlBuilder(SequenceBuilder):
             raise Q1TypeError('Chirp duration cannot be a variable or expression; '
                               'Unroll loop using Python for-loop.')
         if (isinstance(f_start, (Register, Expression))
-            or isinstance(f_end, (Register, Expression))):
+                or isinstance(f_end, (Register, Expression))):
             raise Q1TypeError('Chirp frequency cannot be a variable or expression; '
                               'Unroll loop using Python for-loop.')
 
@@ -362,4 +364,3 @@ class ControlBuilder(SequenceBuilder):
         if isinstance(wave, Wave):
             return wave
         raise Q1TypeError(f'Illegal type {wave}')
-

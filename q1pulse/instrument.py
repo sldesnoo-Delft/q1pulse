@@ -27,8 +27,9 @@ class Q1Instrument:
     verbose = False
 
     # Postpone error checking till the end to save communication overhead.
-    # System errors are only reported for SCPI errors. It's almost impossible to
+    # System errors are only reported for SCPI errors. It's higly unlikely to
     # get an error, because everything is already checked in qblox-instruments code.
+    # Note on v0.16: Default cluster behavior is like _i_feel_lucky = True.
     _i_feel_lucky = True
 
     _exception_on_overload = True
