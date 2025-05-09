@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.16.0] - 2025-05-09
+
+- Update for qblox_instruments v0.16.0
+- Changed NCO phase shift to match firmware 0.11 implementation.
+
 ## \[0.15.3] - 2025-03-26
 
 - Better handling of keyboard interrupt when sequencer is running.
