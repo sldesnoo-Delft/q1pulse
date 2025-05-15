@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.16.1] - 2025-05-15
+
+- Fix disable keyboard interrupts during communication with Cluster for Spyder 6.0.
+
 ## \[0.16.0] - 2025-05-09
 
 - Update for qblox_instruments v0.16.0

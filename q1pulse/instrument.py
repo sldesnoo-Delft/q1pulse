@@ -6,7 +6,6 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from qblox_instruments import InstrumentType
-from qcodes.utils import DelayedKeyboardInterrupt
 
 from q1pulse.program import Program
 from q1pulse.lang.exceptions import Q1InputOverloaded, Q1InternalError
@@ -14,6 +13,7 @@ from q1pulse.sequencer.sequencer import SequenceBuilder
 from q1pulse.sequencer.control import ControlBuilder
 from q1pulse.sequencer.readout import ReadoutBuilder
 from q1pulse.modules.modules import QcmModule, QrmModule
+from q1pulse.util.delayedkeyboardinterrupt import DelayedKeyboardInterrupt
 from q1pulse.util.qblox_version import (
     check_qblox_instrument_version,
     qblox_version,
@@ -156,7 +156,7 @@ class Q1Instrument:
         t_start = time.perf_counter()
 
         for instrument in self.root_instruments:
-            with DelayedKeyboardInterrupt():
+            with DelayedKeyboardInterrupt("check status"):
                 check_instrument_status(instrument)
                 if Q1Instrument._i_feel_lucky and hasattr(instrument, "_debug"):
                     # Change the debug level to speed up communication.
@@ -168,7 +168,7 @@ class Q1Instrument:
         n_configured = 0
         for name, seq in sequencers.items():
             t_start_seq = time.perf_counter()
-            with DelayedKeyboardInterrupt():
+            with DelayedKeyboardInterrupt("configure sequencers"):
                 module = self.modules[seq.module_name]
 
                 q1asm = program.q1asm(name)
@@ -204,7 +204,7 @@ class Q1Instrument:
 
         for name, seq in self.readouts.items():
             t_start_seq = time.perf_counter()
-            with DelayedKeyboardInterrupt():
+            with DelayedKeyboardInterrupt("configure readout"):
                 readout = program[name]
                 module = self.modules[seq.module_name]
                 if not module.enabled(seq.seq_nr):
@@ -223,7 +223,7 @@ class Q1Instrument:
                 duration = time.perf_counter() - t_start_seq
                 logger.debug(f"Configured QRM {name} in {duration*1000.0:3.1f} ms")
 
-        with DelayedKeyboardInterrupt():
+        with DelayedKeyboardInterrupt("arm and start"):
             t_start_arm = time.perf_counter()
             # Note: arm per sequencer. Arm on the cluster still gives red leds on the modules.
             for module in self.modules.values():
@@ -260,7 +260,7 @@ class Q1Instrument:
                 if status.status != "OKAY" or status.state != "STOPPED" or status.level >= logging.WARNING:
                     errors[name] = str(status)
                     # reset awg offsets in case of any error.
-                    with DelayedKeyboardInterrupt():
+                    with DelayedKeyboardInterrupt("set offsets"):
                         module.set_awg_offsets(seq.seq_nr, 0.0, 0.0)
                 if status.input_overloaded:
                     if Q1Instrument._exception_on_overload:
@@ -279,7 +279,7 @@ class Q1Instrument:
             logger.error("Exception", exc_info=True)
             raise
         finally:
-            with DelayedKeyboardInterrupt():
+            with DelayedKeyboardInterrupt("stop sequencers"):
                 for instrument in self.root_instruments:
                     logger.info("Stop sequencers")
                     instrument.stop_sequencer()
@@ -291,14 +291,14 @@ class Q1Instrument:
         """
         expiration_time = time.perf_counter() + timeout_minutes*60.0
         timeout_poll_res = 0.01
-        with DelayedKeyboardInterrupt():
+        with DelayedKeyboardInterrupt("check status"):
             status = module.get_sequencer_status(seq_nr, 0.0)
 
         while (status.state == "RUNNING"
                 or status.state == "Q1_STOPPED"
                ) and time.perf_counter() < expiration_time:
             time.sleep(timeout_poll_res)
-            with DelayedKeyboardInterrupt():
+            with DelayedKeyboardInterrupt("check status"):
                 status = module.get_sequencer_status(seq_nr, 0.0)
         return status
 
@@ -327,7 +327,7 @@ class Q1Instrument:
             logger.warning(f"No acquisitions for {sequencer_name}")
             return None
         module = self.modules[seq.module_name]
-        with DelayedKeyboardInterrupt():
+        with DelayedKeyboardInterrupt("get acquisition data"):
             if qblox_version >= Version('0.12.0'):
                 completed = module.pulsar.get_acquisition_status(seq.seq_nr, 1)
             else:
