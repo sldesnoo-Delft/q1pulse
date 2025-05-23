@@ -4,8 +4,10 @@ import time
 import logging
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from threading import Thread
 
-from qblox_instruments import InstrumentType
+from qblox_instruments import Cluster
+from qcodes import Instrument
 
 from q1pulse.program import Program
 from q1pulse.lang.exceptions import Q1InputOverloaded, Q1InternalError
@@ -25,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 class Q1Instrument:
     verbose = False
+    multi_threaded = True
 
     # Postpone error checking till the end to save communication overhead.
     # System errors are only reported for SCPI errors. It's higly unlikely to
@@ -47,27 +50,22 @@ class Q1Instrument:
         self.root_instruments = set()
         self.modules = {}
         self.controllers = {}
+        self._upload_instruments = {}
         self.readouts = {}
         self._loaded_q1asm = {}
         SequenceBuilder.add_traceback_to_instructions = add_traceback
 
-    def add_pulsar(self, pulsar):
-        if pulsar.instrument_type == InstrumentType.QCM:
-            self.add_qcm(pulsar)
-        elif pulsar.instrument_type == InstrumentType.QRM:
-            self.add_qrm(pulsar)
-        else:
-            raise Exception(f"Unknown instrument type: {pulsar.instrument_type}")
+    def add_qcm(self, module):
+        logger.info(f"Add {module.name}")
+        self.modules[module.name] = QcmModule(module)
+        for seq in range(6):
+            self._upload_instruments[(module.name, seq)] = self._get_upload_instrument(module, seq)
+        self._add_root_instrument(module.root_instrument)
 
-    def add_qcm(self, pulsar):
-        logger.info(f"Add {pulsar.name}")
-        self.modules[pulsar.name] = QcmModule(pulsar)
-        self._add_root_instrument(pulsar.root_instrument)
-
-    def add_qrm(self, pulsar):
-        logger.info(f"Add {pulsar.name}")
-        self.modules[pulsar.name] = QrmModule(pulsar)
-        self._add_root_instrument(pulsar.root_instrument)
+    def add_qrm(self, module):
+        logger.info(f"Add {module.name}")
+        self.modules[module.name] = QrmModule(module)
+        self._add_root_instrument(module.root_instrument)
 
     def add_control(self, name, module_name, channels, nco_frequency=None):
         sequencer = self.modules[module_name].get_sequencer(channels)
@@ -166,6 +164,7 @@ class Q1Instrument:
         instruments_with_sequence = set()
         sequencers = {**self.controllers, **self.readouts}
         n_configured = 0
+        threads = []
         for name, seq in sequencers.items():
             t_start_seq = time.perf_counter()
             with DelayedKeyboardInterrupt("configure sequencers"):
@@ -181,8 +180,23 @@ class Q1Instrument:
                 n_configured += 1
                 instruments_with_sequence.add(module.pulsar.root_instrument)
                 module.set_label(seq.seq_nr, name)
-                module.upload(seq.seq_nr, q1asm)
+                if Q1Instrument.multi_threaded:
+                    threads.append(self._async_upload(module.name, seq.seq_nr, q1asm))
+                else:
+                    module.upload(seq.seq_nr, q1asm)
 
+        for thread in threads:
+            thread.join()
+
+        for name, seq in sequencers.items():
+            t_start_seq = time.perf_counter()
+            with DelayedKeyboardInterrupt("configure sequencers"):
+                module = self.modules[seq.module_name]
+
+                q1asm = program.q1asm(name)
+                self._loaded_q1asm[name] = q1asm
+                if q1asm is None:
+                    continue
                 module.invalidate_cache(seq.seq_nr, "offset_awg_path0")
                 module.invalidate_cache(seq.seq_nr, "offset_awg_path1")
                 module.enable_seq(seq)
@@ -354,6 +368,30 @@ class Q1Instrument:
                     for dB in [in0_gain, in1_gain])
         return in_range
 
+    def _get_upload_instrument(self, module, seq_num):
+        cluster: Cluster = module.root_instrument
+        uploader_name = f"up_{cluster.name}_{module.slot_idx}_{seq_num}"
+        try:
+            return Instrument.find_instrument(uploader_name, Cluster)
+        except KeyError:
+            ip_addr = cluster.get_ip_config()
+            print(cluster.name, ip_addr)
+            ip_addr = ip_addr.split('/')[0]
+            return Cluster(uploader_name, ip_addr, debug=2)
+
+    def _async_upload(self, module, seq_num, sequence):
+        errors = []
+        def upload():
+            cluster = self._upload_instruments[(module.name, seq_num)]
+            cluster.sequence = sequence
+            while cluster.get_num_system_error() != 0:
+                errors.append(cluster.get_system_error())
+            if errors:
+                logger.error(errors)
+
+        thread = Thread(upload)
+        thread.start()
+        return thread
 
 def set_exception_on_overload(enable: bool):
     '''
