@@ -2,8 +2,9 @@ import logging
 from dataclasses import dataclass
 from abc import abstractmethod
 
-from .sequencer_states import translate_seq_status, translate_seq_state
 from q1pulse.util.qblox_version import qblox_version, Version
+from q1pulse.turbo_cluster import TurboCluster
+from .sequencer_states import translate_seq_status, translate_seq_state
 
 
 logger = logging.getLogger(__name__)
@@ -37,6 +38,26 @@ class QbloxModule:
         # disable all sequencers
         for seq_nr in range(0, self.n_sequencers):
             self.enable_sync(seq_nr, False)
+
+    @property
+    def slot_idx(self):
+        return self.pulsar.slot_idx
+
+    @property
+    def root_instrument(self):
+        return self.pulsar.root_instrument
+
+    def get_num_system_error(self):
+        if isinstance(self.root_instrument, TurboCluster):
+            return self.root_instrument.get_num_system_error(self.slot)
+        else:
+            return 0
+
+    def get_system_error(self):
+        if isinstance(self.root_instrument, TurboCluster):
+            return self.root_instrument.get_system_error(self.slot)
+        else:
+            raise Exception("Oops")
 
     def get_sequencer(self, channels):
         seq_nr = self._allocate_seq_number()
@@ -102,7 +123,7 @@ class QbloxModule:
     def enable_out(self, seq_nr, channel):
         # Keep old convention: I on 0 and 2, Q on 1 and 3
         # TODO: change API to allow different IQ mapping.
-        value = 'I' if channel  % 2 == 0 else 'Q'
+        value = 'I' if channel % 2 == 0 else 'Q'
         self._sset(seq_nr, f'connect_out{channel}', value)
 
     def enable_out_iq(self, seq_nr, channels):
@@ -159,7 +180,7 @@ class QbloxModule:
                 if QbloxModule.verbose:
                     logger.debug(f'# {full_name}={value} -- cached')
                 return
-        except:
+        except Exception:
             logger.debug(f'No cache value for {full_name}')
         result = param(value)
         if QbloxModule.verbose:
@@ -173,7 +194,7 @@ class QbloxModule:
 
     def set_out_offset(self, channel, offset_mV):
         if self.pulsar.is_rf_type:
-            name = f'out{channel//2}_offset_path{channel%2}'
+            name = f'out{channel//2}_offset_path{channel % 2}'
             value = offset_mV
         else:
             name = f'out{channel}_offset'
@@ -302,4 +323,3 @@ class QrmModule(QbloxModule):
         if enabled:
             self._sset(seq_nr, 'thresholded_acq_trigger_address', address)
             self._sset(seq_nr, 'thresholded_acq_trigger_invert', invert)
-
