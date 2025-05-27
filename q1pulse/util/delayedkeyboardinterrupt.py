@@ -40,8 +40,6 @@ class DelayedKeyboardInterrupt:
             is_delayed_sig_handler = handler.__self__.__class__ == DelayedKeyboardInterrupt
         except Exception:
             is_delayed_sig_handler = False
-            logger.debug("Not setting delayed keyboard interrupt. "
-                         f"Current handler {repr(handler)}", exc_info=True)
         if not is_delayed_sig_handler:
             self.old_handler = signal.signal(signal.SIGINT, self._handler)
 
