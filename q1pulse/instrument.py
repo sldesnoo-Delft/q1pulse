@@ -54,8 +54,6 @@ class Q1Instrument:
     def add_qcm(self, module):
         logger.info(f"Add {module.name}")
         self.modules[module.name] = QcmModule(module)
-        for seq in range(6):
-            self._upload_instruments[(module.name, seq)] = self._get_upload_instrument(module, seq)
         self._add_root_instrument(module.root_instrument)
 
     def add_qrm(self, module):
@@ -226,15 +224,15 @@ class Q1Instrument:
                 duration = time.perf_counter() - t_start_arm
                 logger.debug(f"Armed {n_configured} sequencers in {duration*1000.0:3.1f} ms")
 
-            if Q1Instrument._i_feel_lucky:
-                self.check_system_errors()
+            self.check_system_errors()
 
-            for module in self.modules.values():
-                module.start_sequencers()
-            # for instrument in instruments_with_sequence:
-            #     # t = (time.perf_counter() - t_start) * 1000
-            #     # logger.debug(f'Start  ({t:5.3f} ms)')
-            #     instrument.start_sequencer()
+            # for module in self.modules.values():
+            #     module.start_sequencers()
+            for instrument in instruments_with_sequence:
+                # t = (time.perf_counter() - t_start) * 1000
+                # logger.debug(f'Start  ({t:5.3f} ms)')
+                instrument.start_sequencer()
+            self.check_system_errors()
 
         t = (time.perf_counter() - t_start) * 1000
         logger.info(f"Duration upload/start: ({t:5.3f}ms)")
@@ -291,9 +289,9 @@ class Q1Instrument:
         timeout_poll_res = 0.01
         with DelayedKeyboardInterrupt("check status"):
             status = module.get_sequencer_status(seq_nr, 0.0)
-
         while (status.state == "RUNNING"
                 or status.state == "Q1_STOPPED"
+                or status.state == "ARMED"
                ) and time.perf_counter() < expiration_time:
             time.sleep(timeout_poll_res)
             with DelayedKeyboardInterrupt("check status"):

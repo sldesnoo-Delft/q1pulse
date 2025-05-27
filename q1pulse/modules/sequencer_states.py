@@ -56,13 +56,13 @@ class SequencerStatus:
             }
 
     def __str__(self):
-        result = f'status:{self.status}'
+        result = f'status:{self.status}, state:{self.state}'
         if len(self.errors):
-            result += f' errors:{self.errors}'
+            result += f', errors:{self.errors}'
         if len(self.warnings):
-            result += f' warnings:{self.warnings}'
+            result += f', warnings:{self.warnings}'
         if len(self.info_msgs+self.debug_msgs):
-            result += f' info:{self.info_msgs+self.debug_msgs}'
+            result += f', info:{self.info_msgs+self.debug_msgs}'
         return result
 
     def add_flags(self, flags):

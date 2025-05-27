@@ -49,13 +49,13 @@ class QbloxModule:
 
     def get_num_system_error(self):
         if isinstance(self.root_instrument, TurboCluster):
-            return self.root_instrument.get_num_system_error(self.slot)
+            return self.root_instrument.get_num_system_error(self.slot_idx)
         else:
             return 0
 
     def get_system_error(self):
         if isinstance(self.root_instrument, TurboCluster):
-            return self.root_instrument.get_system_error(self.slot)
+            return self.root_instrument.get_system_error(self.slot_idx)
         else:
             raise Exception("Oops")
 
