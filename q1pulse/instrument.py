@@ -2,6 +2,7 @@ import json
 import os
 import time
 import logging
+from collections import defaultdict
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -11,7 +12,9 @@ from q1pulse.lang.exceptions import Q1InputOverloaded, Q1InternalError
 from q1pulse.sequencer.sequencer import SequenceBuilder
 from q1pulse.sequencer.control import ControlBuilder
 from q1pulse.sequencer.readout import ReadoutBuilder
-from q1pulse.modules.modules import QcmModule, QrmModule
+from q1pulse.turbo_cluster import TurboCluster
+from q1pulse.modules.modules import QcmModule, QrmModule, QbloxModule
+from q1pulse.modules.sequencer_states import translate_seq_status, translate_seq_state
 from q1pulse.util.delayedkeyboardinterrupt import DelayedKeyboardInterrupt
 from q1pulse.util.qblox_version import (
     check_qblox_instrument_version,
@@ -24,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 class Q1Instrument:
     verbose = False
+    concurrent_communication = True
 
     # Postpone error checking till the end to save communication overhead.
     # System errors are only reported for SCPI errors. It's higly unlikely to
@@ -242,12 +246,19 @@ class Q1Instrument:
             # Wait for completion
             errors = {}
             msg_level = 0
+            # list[tuple[module, sequencer]]
+            active_sequencers: list[tuple[QbloxModule, SequenceBuilder]] = []
             sequencers = {**self.controllers, **self.readouts}
             for name, seq in sequencers.items():
                 module = self.modules[seq.module_name]
                 if not module.enabled(seq.seq_nr):
                     continue
-                status = self._get_sequencer_status(module, seq.seq_nr, timeout_minutes)
+                instrument = module.root_instrument
+                active_sequencers[instrument.name].append((module, seq))
+
+            statuses = self._get_sequencer_status_multiple(active_sequencers, timeout_minutes)
+            for (module, seq), status in zip(active_sequencers, statuses):
+                # status = self._get_sequencer_status(module, seq.seq_nr, timeout_minutes)
                 logger.log(status.level,
                            f"Status {name} ({module.pulsar.name}:{seq.seq_nr}): {status}")
                 msg_level = max(msg_level, status.level)
@@ -275,10 +286,8 @@ class Q1Instrument:
         finally:
             with DelayedKeyboardInterrupt("stop sequencers"):
                 logger.info("Stop sequencers")
-                for module in self.modules.values():
-                    module.stop_sequencers()
-                # for instrument in self.root_instruments:
-                #     instrument.stop_sequencer()
+                for instrument in self.root_instruments:
+                    instrument.stop_sequencer()
 
     def _get_sequencer_status(self, module, seq_nr, timeout_minutes):
         """Get sequencer status in a interrupt safe way.
@@ -298,16 +307,82 @@ class Q1Instrument:
                 status = module.get_sequencer_status(seq_nr, 0.0)
         return status
 
+    def _get_sequencer_status_multiple(
+            self,
+            active_sequencers: list[tuple[QbloxModule, SequenceBuilder]],
+            timeout_minutes):
+        """Get sequencer status in a interrupt safe way.
+        Only intercept the keyboard interrupt during communication,
+        not when sleeping.
+        """
+        not_ready = ["ARMED", "RUNNING", "Q1_STOPPED"]
+        statuses = []
+        expiration_time = time.perf_counter() + timeout_minutes*60.0
+        timeout_poll_res = 0.01
+        if not Q1Instrument.concurrent_communication:
+            for module, seq in active_sequencers:
+                statuses.append(self._get_sequencer_status(module, seq.seq_nr, timeout_minutes))
+        else:
+            statuses = [None]*len(active_sequencers)
+            # reverse lookup in statuses
+            index = dict[tuple[TurboCluster, int, int], int] = {}
+            turbo_sequencers: dict[TurboCluster, dict[QbloxModule, list[int]]] = {}
+            # group by instrument. Keep index in list.
+            # if not TurboCluster use normal. sequential method.
+            for idx, (module, seq) in enumerate(active_sequencers):
+                instrument = module.root_instrument
+                if not isinstance(instrument, TurboCluster):
+                    statuses[idx] = self._get_sequencer_status(module, seq.seq_nr, timeout_minutes)
+                else:
+                    module_sequencers = turbo_sequencers.get(instrument, defaultdict(list))
+                    module_sequencers[module].append(seq.seq_nr)
+                    index[(instrument, module.slot_idx, seq.seq_nr)] = idx
+
+            while any(status is None or status.state in not_ready for status in statuses):
+                for instrument, mod_seqs in turbo_sequencers.items():
+                    # collect sequencers that are not yet ready
+                    sequencers = {}
+                    for module, seqs in mod_seqs.items():
+                        seq_nums = []
+                        slot = module.slot_idx
+                        for seq_num in seqs:
+                            status = statuses[index[(instrument, slot, seq_num)]]
+                            if status is None or status.state in not_ready:
+                                seq_nums.append(seq_num)
+                        sequencers[slot] = seq_nums
+
+                    with DelayedKeyboardInterrupt("check status"):
+                        res = instrument.get_sequencer_status_multiple(sequencers)
+
+                    for slot, seq_num, status in res:
+                        if qblox_version >= Version('0.12.0'):
+                            status = translate_seq_status(status)
+                        else:
+                            status = translate_seq_state(status)
+                        statuses[index[(instrument, slot, seq_num)]] = status
+
+                if time.perf_counter() > expiration_time:
+                    break
+                if any(status.state in not_ready for status in statuses):
+                    time.sleep(timeout_poll_res)
+
+        return statuses
+
     def check_system_errors(self):
         t_start_check = time.perf_counter()
         errors = []
-        for instrument in self.root_instruments:
-            while instrument.get_num_system_error() != 0:
-                errors.append(instrument.get_system_error())
 
-        for module in self.modules.values():
-            while module.get_num_system_error() != 0:
-                errors.append(module.get_system_error())
+        for instrument in self.root_instruments:
+            if Q1Instrument.concurrent_communication and isinstance(instrument, TurboCluster):
+                errors += instrument.get_system_errors()
+            else:
+                while instrument.get_num_system_error() != 0:
+                    errors.append(instrument.get_system_error())
+
+        if not Q1Instrument.concurrent_communication:
+            for module in self.modules.values():
+                while module.get_num_system_error() != 0:
+                    errors.append(module.get_system_error())
 
         if len(errors) > 0:
             if Q1Instrument._i_feel_lucky:
