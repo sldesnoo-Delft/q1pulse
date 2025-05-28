@@ -1,3 +1,5 @@
+import io
+import logging
 import re
 
 from qblox_instruments import Cluster
@@ -14,6 +16,9 @@ else:
     from qblox_instruments import SequencerState
 
 from qblox_instruments import SequencerStatus, SequencerStatusFlags
+
+
+logger = logging.getLogger(__name__)
 
 
 class TurboCluster(Cluster):
@@ -37,7 +42,7 @@ class TurboCluster(Cluster):
         self._needs_check: dict[int, bool] = {}
         for slot in range(1, 21):
             ip_config = resolve(f"{self._ip_address}/{slot}")
-            transport = IpTransport(ip_config.address, ip_config.scpi_port)
+            transport = IpTransport(ip_config.address, ip_config.scpi_port, timeout=5.0)
             self._connections[slot] = Ieee488_2(transport)
         super().__init__(name, identifier, port, debug=2)
 
@@ -62,13 +67,78 @@ class TurboCluster(Cluster):
     def _get_connection_and_remove_slot(self, cmd: str) -> tuple[Ieee488_2, str]:
         if cmd.startswith("SLOT"):
             slot_str, module_cmd = cmd.split(":", maxsplit=1)
-            try:
-                slot = int(slot_str[4:])
-            except ValueError:
-                raise Exception(f"Connect extract slot index from '{cmd}'")
-            self._needs_check[slot] = True
-            return self._connections[slot], module_cmd
+            if slot_str != "":
+                try:
+                    slot = int(slot_str[4:])
+                except ValueError:
+                    raise Exception(f"Connect extract slot index from '{cmd}'")
+                self._needs_check[slot] = True
+                return self._connections[slot], module_cmd
         return super(), cmd
+
+    def arm_sequencer(self, slot: int | None = None, sequencer: int | None = None) -> None:
+        """
+        Prepare the indexed sequencer to start by putting it in the armed state.
+        If no sequencer index is given, all sequencers are armed. Any sequencer
+        that was already running is stopped and rearmed. If an invalid sequencer
+        index is given, an error is set in system error.
+
+        Parameters
+        ----------
+        slot : Optional[int]
+            Slot number
+        sequencer : Optional[int]
+            Sequencer index.
+
+        Returns
+        ----------
+
+        Raises
+        ----------
+        RuntimeError
+            An error is reported in system error and debug <= 1.
+            All errors are read from system error and listed in the exception.
+        """
+        if slot is None:
+            slot = ""  # Arm sequencers across all modules
+
+        if sequencer is None:
+            sequencer = ""  # Arm all sequencers within a module
+
+        return self._write(f"SLOT{slot}:SEQuencer{sequencer}:ARM")
+
+    def start_sequencer(self, slot: int | None = None, sequencer: int | None = None) -> None:
+        """
+        Start the indexed sequencer, thereby putting it in the running state.
+        If an invalid sequencer index is given or the indexed sequencer was not
+        yet armed, an error is set in system error. If no sequencer index is
+        given, all armed sequencers are started and any sequencer not in the armed
+        state is ignored. However, if no sequencer index is given and no
+        sequencers are armed, and error is set in system error.
+
+        Parameters
+        ----------
+        slot : Optional[int]
+            Slot number
+        sequencer : Optional[int]
+            Sequencer index.
+
+        Returns
+        ----------
+
+        Raises
+        ----------
+        RuntimeError
+            An error is reported in system error and debug <= 1.
+            All errors are read from system error and listed in the exception.
+        """
+        if slot is None:
+            slot = ""  # Arm sequencers across all modules
+
+        if sequencer is None:
+            sequencer = ""  # Arm all sequencers within a module
+
+        return self._write(f"SLOT{slot}:SEQuencer{sequencer}:START")
 
     def get_system_error(self, slot: int | None = None) -> str:
         """
@@ -119,7 +189,10 @@ class TurboCluster(Cluster):
         """
         Returns all the system errors for all connections.
         Error counts are requested simultaneously on all connections to speed up communication.
-        Error messages are requested sequentially, because there is not need to hurry when there are errors.
+        Error messages are requested sequentially, because there is no need to hurry when there are errors.
+
+        Note:
+            The simultaneous requests save ~1 ms per module
         """
         errors = []
         # use 0 for CMM. (bit hacky)
@@ -152,20 +225,23 @@ class TurboCluster(Cluster):
         ----------
         sequencers : dict[int, list[int]]
             Per slot a list with sequencers to request status from.
+
+        Note:
+            The simultaneous requests save ~1 ms per sequencer
         """
+        results = []
         # write all requests
         for slot, seq_nums in sequencers.items():
             conn = self._connections[slot]
             for sequencer in seq_nums:
                 conn._write(f"SEQuencer{sequencer}:STATE?")
 
-        results = []
         # read all responses
         for slot, seq_nums in sequencers.items():
-            conn = self._connections.get[slot]
+            conn = self._connections[slot]
             for sequencer in seq_nums:
                 # read without writing command.
-                status_str = conn._transport.readline().rstrip()
+                status_str = readline(conn)
                 if qblox_version >= Version('0.12'):
                     status = _convert_sequencer_status(status_str)
                 else:
@@ -174,8 +250,19 @@ class TurboCluster(Cluster):
         return results
 
 
+def readline(conn) -> str:
+    socket = conn._transport._socket
+    buffer = io.BytesIO()
+    b = None
+    while True:
+        b = socket.recv(1)
+        buffer.write(b)
+        if b == b'\n':
+            break
+    return buffer.getvalue().decode().rstrip()
+
 if qblox_version >= Version('0.12'):
-    def _convert_sequencer_status(self, state_str: str):
+    def _convert_sequencer_status(state_str: str):
         status, state, info_flags, warn_flags, err_flags, log = _parse_sequencer_status(state_str)
 
         state_tuple = SequencerStatus(

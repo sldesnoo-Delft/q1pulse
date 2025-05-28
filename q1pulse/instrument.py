@@ -230,12 +230,12 @@ class Q1Instrument:
 
             self.check_system_errors()
 
-            # for module in self.modules.values():
-            #     module.start_sequencers()
-            for instrument in instruments_with_sequence:
-                # t = (time.perf_counter() - t_start) * 1000
-                # logger.debug(f'Start  ({t:5.3f} ms)')
-                instrument.start_sequencer()
+            for module in self.modules.values():
+                module.start_sequencers()
+            # for instrument in instruments_with_sequence:
+            #     # t = (time.perf_counter() - t_start) * 1000
+            #     # logger.debug(f'Start  ({t:5.3f} ms)')
+            #     instrument.start_sequencer()
             self.check_system_errors()
 
         t = (time.perf_counter() - t_start) * 1000
@@ -254,13 +254,13 @@ class Q1Instrument:
                 if not module.enabled(seq.seq_nr):
                     continue
                 instrument = module.root_instrument
-                active_sequencers[instrument.name].append((module, seq))
+                active_sequencers.append((module, seq))
 
             statuses = self._get_sequencer_status_multiple(active_sequencers, timeout_minutes)
             for (module, seq), status in zip(active_sequencers, statuses):
                 # status = self._get_sequencer_status(module, seq.seq_nr, timeout_minutes)
                 logger.log(status.level,
-                           f"Status {name} ({module.pulsar.name}:{seq.seq_nr}): {status}")
+                           f"Status {module.slot_idx}:{seq.seq_nr} ({module.pulsar.name}:{seq.seq_nr}): {status}")
                 msg_level = max(msg_level, status.level)
                 if status.status != "OKAY" or status.state != "STOPPED" or status.level >= logging.WARNING:
                     errors[name] = str(status)
@@ -325,7 +325,7 @@ class Q1Instrument:
         else:
             statuses = [None]*len(active_sequencers)
             # reverse lookup in statuses
-            index = dict[tuple[TurboCluster, int, int], int] = {}
+            index: dict[tuple[TurboCluster, int, int], int] = {}
             turbo_sequencers: dict[TurboCluster, dict[QbloxModule, list[int]]] = {}
             # group by instrument. Keep index in list.
             # if not TurboCluster use normal. sequential method.
@@ -334,7 +334,7 @@ class Q1Instrument:
                 if not isinstance(instrument, TurboCluster):
                     statuses[idx] = self._get_sequencer_status(module, seq.seq_nr, timeout_minutes)
                 else:
-                    module_sequencers = turbo_sequencers.get(instrument, defaultdict(list))
+                    module_sequencers = turbo_sequencers.setdefault(instrument, defaultdict(list))
                     module_sequencers[module].append(seq.seq_nr)
                     index[(instrument, module.slot_idx, seq.seq_nr)] = idx
 
@@ -360,7 +360,6 @@ class Q1Instrument:
                         else:
                             status = translate_seq_state(status)
                         statuses[index[(instrument, slot, seq_num)]] = status
-
                 if time.perf_counter() > expiration_time:
                     break
                 if any(status.state in not_ready for status in statuses):
