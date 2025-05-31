@@ -1,8 +1,12 @@
 import io
+import json
 import logging
 import re
+from functools import partial
+from typing import Any
 
 from qblox_instruments import Cluster
+from qblox_instruments.scpi import Cluster as ClusterScpi
 from qblox_instruments.ieee488_2 import Ieee488_2, IpTransport
 from qblox_instruments.pnp import resolve
 from q1pulse.util.qblox_version import qblox_version, Version
@@ -22,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class TurboCluster(Cluster):
+    use_configuration_cache = True
 
     def __init__(
             self,
@@ -40,28 +45,50 @@ class TurboCluster(Cluster):
         self._ip_address = addr_info.address
         self._connections: dict[int, Ieee488_2] = {}
         self._needs_check: dict[int, bool] = {}
+        self._init_cache()
         for slot in range(1, 21):
             ip_config = resolve(f"{self._ip_address}/{slot}")
             transport = IpTransport(ip_config.address, ip_config.scpi_port, timeout=5.0)
             self._connections[slot] = Ieee488_2(transport)
         super().__init__(name, identifier, port, debug=2)
+        if TurboCluster.use_configuration_cache:
+            attr_names = [
+                "_get_sequencer_config",
+                "_set_sequencer_config",
+                "_get_sequencer_channel_map",
+                "_set_sequencer_channel_map",
+                "_get_pre_distortion_config",
+                "_set_pre_distortion_config",
+                ]
+            mod_handles = self._mod_handles
+            for slot_id in range(1, 21):
+                if slot_id in mod_handles and "func_refs" in mod_handles[slot_id]:
+                    func_refs = self._mod_handles[slot_id]["func_refs"]
+                    for name in attr_names:
+                        if name in func_refs._funcs:
+                            func_refs.register(partial(getattr(self, name), slot_id), name)
+                            # logger.debug(f"Registered {slot_id}: {name}")
 
     def _write(self, cmd_str):
         conn, cmd = self._get_connection_and_remove_slot(cmd_str)
         conn._write(cmd)
+        # logger.debug(f"write {cmd_str}")
 
     def _write_bin(self, cmd_str, bin_block):
         conn, cmd = self._get_connection_and_remove_slot(cmd_str)
         conn._write_bin(cmd, bin_block)
+        # logger.debug(f"write_bin {cmd_str}")
 
     def _read_bin(self, cmd_str, flush_line_end=True):
         conn, cmd = self._get_connection_and_remove_slot(cmd_str)
         res = conn._read_bin(cmd, flush_line_end)
+        # logger.debug(f"read_bin {cmd_str}")
         return res
 
     def _read(self, cmd_str: str) -> str:
         conn, cmd = self._get_connection_and_remove_slot(cmd_str)
         res = conn._read(cmd)
+        # logger.debug(f"read {cmd_str}")
         return res
 
     def _get_connection_and_remove_slot(self, cmd: str) -> tuple[Ieee488_2, str]:
@@ -248,6 +275,214 @@ class TurboCluster(Cluster):
                     status = _convert_sequencer_state_v11(status_str)
                 results.append((slot, sequencer, status))
         return results
+
+    def reset(self):
+        self._init_cache()
+        super().reset()
+
+    def _init_cache(self):
+        self._channel_map_cache: dict[tuple[int, int], str] = {}
+        self._sequencer_config_cache: dict[tuple[int, int], str] = {}
+        self._slot_predistortion_cache: dict[int, str] = {}
+
+    def _set_sequencer_channel_map(
+        self, slot: int, sequencer: int, sequencer_channel_map: Any
+    ) -> None:
+        """
+        Set channel map of the indexed sequencer. The channel map consists of a list with two elements representing the components of the complex signal to be acquired, each mapping to a list of DAC indices. Index i maps to output i+1. If an invalid sequencer index is given or the channel map is not valid, an error is set in system error.
+
+        Parameters
+        ----------
+        slot : int
+            slot index.
+        sequencer : int
+            Sequencer index.
+        sequencer_channel_map : Any
+            Current Sequencer index Any.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        Exception
+            Invalid input parameter type.
+        Exception
+            An error is reported in system error and debug <= 1.
+            All errors are read from system error and listed in the exception.
+        """
+        if TurboCluster.use_configuration_cache:
+            self._channel_map_cache[(slot, sequencer)] = json.dumps(sequencer_channel_map)
+        ClusterScpi._set_sequencer_channel_map(self, slot, sequencer, sequencer_channel_map)
+
+    def _get_sequencer_channel_map(self, slot: int, sequencer: int) -> Any:
+        """
+        Get channel map of the indexed sequencer. The channel map consists of a list with two elements representing the components of the complex signal to be acquired, each mapping to a list of DAC indices. Index i maps to output i+1. If an invalid sequencer index is given or the channel map is not valid, an error is set in system error.
+
+        Parameters
+        ----------
+        slot : int
+            slot index.
+        sequencer : int
+            Sequencer index.
+
+        Returns
+        -------
+        Any
+            Current Sequencer index.
+
+        Raises
+        ------
+        Exception
+            Invalid input parameter type.
+        Exception
+            An error is reported in system error and debug <= 1.
+            All errors are read from system error and listed in the exception.
+        """
+        if TurboCluster.use_configuration_cache:
+            try:
+                cached_str = self._channel_map_cache[(slot, sequencer)]
+                return json.loads(cached_str)
+            except KeyError:
+                logger.info(f"cache mis channel_map {slot}, {sequencer}")
+                pass
+            result = ClusterScpi._get_sequencer_channel_map(self, slot, sequencer)
+            self._channel_map_cache[(slot, sequencer)] = json.dumps(result)
+            return result
+        else:
+            return ClusterScpi._get_sequencer_channel_map(self, slot, sequencer)
+
+    def _set_sequencer_config(
+        self, slot: int, sequencer: int, sequencer_config: Any
+    ) -> None:
+        """
+        Set configuration of the indexed sequencer. The configuration consists of multiple parameters in a JSON format. If an invalid sequencer index is given, an error is set in system error.
+
+        Parameters
+        ----------
+        slot : int
+            slot index.
+        sequencer : int
+            Sequencer index.
+        sequencer_config : Any
+            Current Configuration struct Any.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        Exception
+            Invalid input parameter type.
+        Exception
+            An error is reported in system error and debug <= 1.
+            All errors are read from system error and listed in the exception.
+        """
+
+        if TurboCluster.use_configuration_cache:
+            self._sequencer_config_cache[(slot, sequencer)] = json.dumps(sequencer_config)
+        ClusterScpi._set_sequencer_config(self, slot, sequencer, sequencer_config)
+
+    def _get_sequencer_config(self, slot: int, sequencer: int) -> Any:
+        """
+        Get configuration of the indexed sequencer. The configuration consists of multiple parameters in a JSON format. If an invalid sequencer index is given, an error is set in system error.
+
+        Parameters
+        ----------
+        slot : int
+            slot index.
+        sequencer : int
+            Sequencer index.
+
+        Returns
+        -------
+        Any
+            Current Configuration struct.
+
+        Raises
+        ------
+        Exception
+            Invalid input parameter type.
+        Exception
+            An error is reported in system error and debug <= 1.
+            All errors are read from system error and listed in the exception.
+        """
+        if TurboCluster.use_configuration_cache:
+            try:
+                cached_str = self._sequencer_config_cache[(slot, sequencer)]
+                return json.loads(cached_str)
+            except KeyError:
+                logger.info(f"cache mis sequencer_config {slot}, {sequencer}")
+                pass
+            result = ClusterScpi._get_sequencer_config(self, slot, sequencer)
+            self._sequencer_config_cache[(slot, sequencer)] = json.dumps(result)
+            return result
+        else:
+            return ClusterScpi._get_sequencer_config(self, slot, sequencer)
+
+    def _set_pre_distortion_config(self, slot: int, pre_distortion_config: Any) -> None:
+        """
+        Set pre-distortion configuration. The configuration consists of multiple parameters in a JSON format. If the configation does not have the correct format, an error is set in system error..
+
+        Parameters
+        ----------
+        slot : int
+            slot index.
+        pre_distortion_config : Any
+            Current pre-distortion config Any.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        Exception
+            Invalid input parameter type.
+        Exception
+            An error is reported in system error and debug <= 1.
+            All errors are read from system error and listed in the exception.
+        """
+        if TurboCluster.use_configuration_cache:
+            self._slot_predistortion_cache[slot] = json.dumps(pre_distortion_config)
+        ClusterScpi._set_pre_distortion_config(self, slot, pre_distortion_config)
+
+    def _get_pre_distortion_config(self, slot: int) -> Any:
+        """
+        Get pre-distortion configuration. The configuration consists of multiple parameters in a JSON format. If the configation does not have the correct format, an error is set in system error..
+
+        Parameters
+        ----------
+        slot : int
+            slot index.
+
+        Returns
+        -------
+        Any
+            Current pre-distortion config.
+
+        Raises
+        ------
+        Exception
+            Invalid input parameter type.
+        Exception
+            An error is reported in system error and debug <= 1.
+            All errors are read from system error and listed in the exception.
+        """
+        if TurboCluster.use_configuration_cache:
+            try:
+                cached_str = self._slot_predistortion_cache[slot]
+                return json.loads(cached_str)
+            except KeyError:
+                logger.info(f"cache mis predistortion {slot}")
+                pass
+            result = ClusterScpi._get_pre_distortion_config(self, slot)
+            self._slot_predistortion_cache[slot] = json.dumps(result)
+            return result
+        else:
+            return ClusterScpi._get_pre_distortion_config(self, slot)
 
 
 def readline(conn) -> str:
