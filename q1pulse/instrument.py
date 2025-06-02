@@ -253,7 +253,6 @@ class Q1Instrument:
                 module = self.modules[seq.module_name]
                 if not module.enabled(seq.seq_nr):
                     continue
-                instrument = module.root_instrument
                 active_sequencers.append((module, seq))
 
             statuses = self._get_sequencer_status_multiple(active_sequencers, timeout_minutes)
@@ -286,8 +285,10 @@ class Q1Instrument:
         finally:
             with DelayedKeyboardInterrupt("stop sequencers"):
                 logger.info("Stop sequencers")
-                for instrument in self.root_instruments:
-                    instrument.stop_sequencer()
+                # for instrument in self.root_instruments:
+                #     instrument.stop_sequencer()
+                for module in self.modules.values():
+                    module.stop_sequencers()
 
     def _get_sequencer_status(self, module, seq_nr, timeout_minutes):
         """Get sequencer status in a interrupt safe way.

@@ -273,11 +273,11 @@ class TurboCluster(Cluster):
 
         # write all requests
         for slot in slots:
-            conn = self._connections.get(slot, super())
+            conn = self._connections.get(slot, self)
             conn._write(err_count_request)
         # read all responses
         for slot in slots:
-            conn = self._connections.get(slot, super())
+            conn = self._connections.get(slot, self)
             # read without writing command.
             response = conn._transport.readline().rstrip()
             num_err = int(response)
