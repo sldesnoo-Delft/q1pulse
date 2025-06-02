@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.16.3] - 2025-06-02
+
+- Improved TurboCluster for faster uploads
+
 ## \[0.16.2] - 2025-05-27
 
 - Added TurboCluster for faster uploads (Experimental!)
