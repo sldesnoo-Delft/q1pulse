@@ -99,7 +99,7 @@ class TurboCluster(Cluster):
     def _get_connection_and_remove_slot(self, cmd: str) -> tuple[Ieee488_2, str]:
         if cmd.startswith("SLOT"):
             slot_str, module_cmd = cmd.split(":", maxsplit=1)
-            if slot_str != "":
+            if len(slot_str) > 4:
                 try:
                     slot = int(slot_str[4:])
                 except ValueError:
