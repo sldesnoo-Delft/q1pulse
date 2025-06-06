@@ -163,6 +163,10 @@ class Q1Instrument:
         sequencers = {**self.controllers, **self.readouts}
         n_configured = 0
 
+        # sort on (seq_num, slot)
+        sequencers = dict(sorted(sequencers.items(),
+                                  key=lambda kv: (kv[1].seq_nr, self.modules[kv[1].module_name].slot_idx)))
+
         for name, seq in sequencers.items():
             t_start_seq = time.perf_counter()
             with DelayedKeyboardInterrupt("configure sequencers"):
