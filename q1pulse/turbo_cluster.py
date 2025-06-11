@@ -644,7 +644,7 @@ if qblox_version >= Version('0.12'):
         return status, state, info_flag_list, warn_flag_list, err_flag_list, log
 
 else:
-    def _convert_sequencer_state_v11(self, state_str: str):
+    def _convert_sequencer_state_v11(state_str: str):
         state_elem_list = re.sub(" |-", "_", state_str).split(";")
         if state_elem_list[-1] != "":
             state_flag_list = state_elem_list[-1].split(",")[:-1]
