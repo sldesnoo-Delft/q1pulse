@@ -67,11 +67,14 @@ class TurboCluster(Cluster):
         self._ip_address = addr_info.address
         self._connections: dict[int, Ieee488_2] = {}
         self._needs_check: dict[int, bool] = {}
+        self._clear_cache()
         for slot in range(1, 21):
             ip_config = resolve(f"{self._ip_address}/{slot}")
             transport = IpTransport(ip_config.address, ip_config.scpi_port, timeout=5.0)
             self._connections[slot] = Ieee488_2(transport)
-        super().__init__(name, identifier, port, debug=2)
+        super().__init__(name, identifier, port, debug=debug)
+        # Disable continuous error checking
+        self._debug = 2
         self._init_configuration_cache()
 
     def _write(self, cmd_str):
