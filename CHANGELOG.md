@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.17.1] - 2025-06-13
+
+- Sort sequencers for faster upload.
+- Fixed TurboCluster for qblox-instruments v0.11
+
 ## \[0.17.0] - 2025-06-04
 
 - Update to qblox-instruments v0.17
