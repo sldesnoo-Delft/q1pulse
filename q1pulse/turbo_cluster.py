@@ -259,7 +259,7 @@ class TurboCluster(Cluster):
                 self._needs_check[slot] = False
             return cnt
 
-    def get_system_errors(self) -> list[str]:
+    def get_system_errors(self, exclude: list[int] = []) -> list[str]:
         """
         Returns all the system errors for all connections.
         Error counts are requested simultaneously on all connections to speed up communication.
@@ -271,6 +271,11 @@ class TurboCluster(Cluster):
         errors = []
         # use 0 for CMM. (bit hacky)
         slots = [0] + [slot for slot, check in self._needs_check.items() if check]
+        for slot in exclude:
+            try:
+                slots.remove(slot)
+            except:
+                pass
         err_count_request = "SYSTem:ERRor:COUNt?"
         get_error = "SYSTem:ERRor:NEXT?"
 
@@ -296,8 +301,10 @@ class TurboCluster(Cluster):
     # Polling the sequencer status for every sequencer in a sequential way takes a lot of time.
     # The method below sends all the status requests for all the sequencers and
     # then reads all the responses.
-    # Note that the implementation uses a new implementation of `readline` that can
-    # read a sequence of response in a safe way without losing data.
+    # Note that the implementation uses a local implementation of `readline` that can
+    # read a sequence of responses in a safe way without losing data.
+    # socket.makefile creates a buffer. So all responses should be read using the
+    # same buffer.
     # ----------------------------------------------------------------
 
     def get_sequencer_status_multiple(self, sequencers: dict[int, list[int]]) -> tuple[int, int, object]:
@@ -314,6 +321,8 @@ class TurboCluster(Cluster):
         results = []
         # write all requests
         for slot, seq_nums in sequencers.items():
+            if len(seq_nums) == 0:
+                continue
             conn = self._connections[slot]
             for sequencer in seq_nums:
                 conn._write(f"SEQuencer{sequencer}:STATE?")
@@ -321,14 +330,16 @@ class TurboCluster(Cluster):
         # read all responses
         for slot, seq_nums in sequencers.items():
             conn = self._connections[slot]
+            filereader = conn._transport._socket.makefile()
+
             for sequencer in seq_nums:
-                # read without writing command.
-                status_str = readline(conn)
+                status_str = filereader.readline()
                 if qblox_version >= Version('0.12'):
                     status = _convert_sequencer_status(status_str)
                 else:
                     status = _convert_sequencer_state_v11(status_str)
                 results.append((slot, sequencer, status))
+            filereader.close()
         return results
 
     # --------------------------------------------------------------------------------

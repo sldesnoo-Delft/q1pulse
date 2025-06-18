@@ -1,9 +1,11 @@
 import logging
+import time
 from dataclasses import dataclass
 from abc import abstractmethod
 
 from q1pulse.util.qblox_version import qblox_version, Version
 from q1pulse.turbo_cluster import TurboCluster
+from q1pulse.util.delayedkeyboardinterrupt import DelayedKeyboardInterrupt
 from .sequencer_states import translate_seq_status, translate_seq_state
 
 
@@ -256,6 +258,7 @@ class QrmModule(QbloxModule):
         super().__init__(pulsar)
         self.max_output_voltage = 0.5 if not pulsar.is_rf_type else 3.3
         self.disable_all_inputs()
+        self._acq_ready = []
 
     def _get_seq_paths(self, channels):
         for channel in channels:
@@ -323,3 +326,35 @@ class QrmModule(QbloxModule):
         if enabled:
             self._sset(seq_nr, 'thresholded_acq_trigger_address', address)
             self._sset(seq_nr, 'thresholded_acq_trigger_invert', invert)
+
+    def arm_sequencers(self):
+        self._acq_ready = []
+        super().arm_sequencers()
+
+    def start_sequencers(self):
+        self._acq_ready = []
+        super().start_sequencers()
+
+    def mark_acq_ready(self, seq_nr):
+        self._acq_ready.append(seq_nr)
+
+    def get_acquisition_status(self, seq_nr: int, timeout_minutes: float = 1) -> bool:
+        if seq_nr in self._acq_ready:
+            return True
+        logger.info(f"Acquisitions of {self.slot_idx}:{seq_nr} not ready when sequencer stopped")
+        expiration_time = time.perf_counter() + timeout_minutes*60.0
+
+        completed = False
+        while not completed and time.perf_counter() < expiration_time:
+            with DelayedKeyboardInterrupt("get acquisition status"):
+                if qblox_version >= Version('0.12.0'):
+                    completed = self.pulsar.get_acquisition_status(seq_nr, 0)
+                else:
+                    completed = self.pulsar.get_acquisition_state(seq_nr, 0)
+                logger.debug(f"Acquisition status {self.pulsar.name}:{seq_nr} ready={completed}")
+                if not completed:
+                    time.sleep(0.001)
+        return completed
+
+    def get_acquisitions(self, seq_nr: int, bin_name: str):
+        return self.pulsar.get_acquisitions(seq_nr)[bin_name]["acquisition"]["bins"]

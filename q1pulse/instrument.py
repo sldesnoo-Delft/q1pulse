@@ -232,7 +232,9 @@ class Q1Instrument:
                 duration = time.perf_counter() - t_start_arm
                 logger.debug(f"Armed {n_configured} sequencers in {duration*1000.0:3.1f} ms")
 
-            self.check_system_errors()
+            # Error check implicitly waits for the module to process all previous commands.
+            # Exclude CMM (slot=0)
+            self.check_system_errors(exclude=[0])
 
             for module in self.modules.values():
                 module.start_sequencers()
@@ -241,6 +243,7 @@ class Q1Instrument:
             #     # logger.debug(f'Start  ({t:5.3f} ms)')
             #     instrument.start_sequencer()
             self.check_system_errors()
+            self._t_start = time.perf_counter()
 
         t = (time.perf_counter() - t_start) * 1000
         logger.info(f"Duration upload/start: ({t:5.3f}ms)")
@@ -262,6 +265,8 @@ class Q1Instrument:
             statuses = self._get_sequencer_status_multiple(active_sequencers, timeout_minutes)
             for (module, seq), status in zip(active_sequencers, statuses):
                 # status = self._get_sequencer_status(module, seq.seq_nr, timeout_minutes)
+                if "ACQ BINNING DONE" in status.debug_msgs:
+                    module.mark_acq_ready(seq.seq_nr)
                 logger.log(status.level,
                            f"Status {module.slot_idx}:{seq.seq_nr} ({module.pulsar.name}:{seq.seq_nr}): {status}")
                 msg_level = max(msg_level, status.level)
@@ -283,6 +288,8 @@ class Q1Instrument:
                 for name, state in errors.items():
                     logger.error(f"  {name}: {state}")
                 raise Exception(f"Q1 failures (see logging):\n {errors}")
+            duration = time.perf_counter() - self._t_start
+            logger.debug(f"Ready after {duration*1000:.1f} ms")
         except Exception:
             logger.error("Exception", exc_info=True)
             raise
@@ -323,7 +330,7 @@ class Q1Instrument:
         not_ready = ["ARMED", "RUNNING", "Q1_STOPPED"]
         statuses = []
         expiration_time = time.perf_counter() + timeout_minutes*60.0
-        timeout_poll_res = 0.01
+        timeout_poll_res = 0.001
         if not Q1Instrument.concurrent_communication:
             for module, seq in active_sequencers:
                 statuses.append(self._get_sequencer_status(module, seq.seq_nr, timeout_minutes))
@@ -372,13 +379,13 @@ class Q1Instrument:
 
         return statuses
 
-    def check_system_errors(self):
+    def check_system_errors(self, exclude: list[int] = []):
         t_start_check = time.perf_counter()
         errors = []
 
         for instrument in self.root_instruments:
             if Q1Instrument.concurrent_communication and isinstance(instrument, TurboCluster):
-                errors += instrument.get_system_errors()
+                errors += instrument.get_system_errors(exclude)
             else:
                 while instrument.get_num_system_error() != 0:
                     errors.append(instrument.get_system_error())
@@ -399,21 +406,16 @@ class Q1Instrument:
             duration = time.perf_counter() - t_start_check
             logger.debug(f"Checked errors in {duration*1000.0:3.1f} ms")
 
-    def get_acquisition_bins(self, sequencer_name, bins):
+    def get_acquisition_bins(self, sequencer_name, bin_name):
         seq = self.readouts[sequencer_name]
         q1asm = self._loaded_q1asm[sequencer_name]
         if q1asm is None or len(q1asm['acquisitions']) == 0:
             logger.warning(f"No acquisitions for {sequencer_name}")
             return None
         module = self.modules[seq.module_name]
-        with DelayedKeyboardInterrupt("get acquisition data"):
-            if qblox_version >= Version('0.12.0'):
-                completed = module.pulsar.get_acquisition_status(seq.seq_nr, 1)
-            else:
-                completed = module.pulsar.get_acquisition_state(seq.seq_nr, 1)
-            logger.info(f"Acquisition status {sequencer_name} ({module.pulsar.name}:"
-                        f"{seq.seq_nr}): {completed}")
-            return module.pulsar.get_acquisitions(seq.seq_nr)[bins]["acquisition"]["bins"]
+        # first check if module is ready.
+        module.get_acquisition_status(seq.seq_nr, 1)
+        return module.get_acquisitions(seq.seq_nr, bin_name)
 
     def get_input_ranges(self, sequencer_name):
         ''' Returns input range for both channels of sequencer.
