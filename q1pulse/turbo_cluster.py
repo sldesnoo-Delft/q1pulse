@@ -73,10 +73,11 @@ class TurboCluster(Cluster):
             transport = IpTransport(ip_config.address, ip_config.scpi_port, timeout=5.0)
             self._connections[slot] = Ieee488_2(transport)
         super().__init__(name, identifier, port, debug=debug)
-        for slot in range(1, 20):
-            if self.modules[slot].present():
+        for slot in range(1, 21):
+            module = self.modules[slot-1]
+            if module.present():
                 for seq_nr in range(6):
-                    seq = self.modules[slot].sequencers[seq_nr]
+                    seq = module.sequencers[seq_nr]
                     # disable slow validators
                     seq.sequence._vals = []
         # Disable continuous error checking
@@ -275,12 +276,12 @@ class TurboCluster(Cluster):
             The simultaneous requests save ~1 ms per module
         """
         errors = []
-        # use 0 for CMM. (bit hacky)
+        # use 0 for CMM. (actually it is in slot 0)
         slots = [0] + [slot for slot, check in self._needs_check.items() if check]
         for slot in exclude:
             try:
                 slots.remove(slot)
-            except:
+            except Exception:
                 pass
         err_count_request = "SYSTem:ERRor:COUNt?"
         get_error = "SYSTem:ERRor:NEXT?"

@@ -165,7 +165,7 @@ class Q1Instrument:
 
         # sort on (seq_num, slot)
         sequencers = dict(sorted(sequencers.items(),
-                                  key=lambda kv: (kv[1].seq_nr, self.modules[kv[1].module_name].slot_idx)))
+                                 key=lambda kv: (kv[1].seq_nr, self.modules[kv[1].module_name].slot_idx)))
 
         for name, seq in sequencers.items():
             t_start_seq = time.perf_counter()
@@ -295,7 +295,7 @@ class Q1Instrument:
             raise
         finally:
             with DelayedKeyboardInterrupt("stop sequencers"):
-                logger.info("Stop sequencers")
+                logger.debug("Stop sequencers")
                 # for instrument in self.root_instruments:
                 #     instrument.stop_sequencer()
                 for module in self.modules.values():
