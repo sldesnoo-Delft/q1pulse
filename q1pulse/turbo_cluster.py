@@ -73,6 +73,12 @@ class TurboCluster(Cluster):
             transport = IpTransport(ip_config.address, ip_config.scpi_port, timeout=5.0)
             self._connections[slot] = Ieee488_2(transport)
         super().__init__(name, identifier, port, debug=debug)
+        for slot in range(1, 20):
+            if self.modules[slot].present():
+                for seq_nr in range(6):
+                    seq = self.modules[slot].sequencers[seq_nr]
+                    # disable slow validators
+                    seq.sequence._vals = []
         # Disable continuous error checking
         self._debug = 2
         self._init_configuration_cache()
@@ -294,6 +300,7 @@ class TurboCluster(Cluster):
                 if slot:
                     error = f"slot {slot}: " + error
                 errors.append(error)
+            self._needs_check[slot] = False
 
         return errors
 
