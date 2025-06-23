@@ -55,6 +55,17 @@ the time is set after the end of all the instructions in the parallel section.
 
 ### Example program and sequences
 This simple program shows the use of program object and sequence objects.
+```python
+    qcm1 = cluster.module1
+    qrm2 = cluster.module2
+
+    instrument = Q1Instrument('cluster1')
+    instrument.add_qcm(qcm1)
+    instrument.add_qrm(qrm2)
+    # create named control and readout channels
+    instrument.add_control('P1', qcm1.name, [0])
+    instrument.add_control('P2', qcm1.name, [1])
+    instrument.add_readout('R1', qrm2.name, [], in_channels=[0,1])
 
     p = instrument.new_program('ramp')
 
@@ -65,7 +76,7 @@ This simple program shows the use of program object and sequence objects.
     # sequencer R1 (readout)
     R1 = p.R1
 
-    R1.add_acquisition_bins('default', 10)
+    R1.add_acquisition_bins('default', 100)
     # 60 ns acquisition
     R1.integration_length_acq = 60
 
@@ -89,6 +100,14 @@ This simple program shows the use of program object and sequence objects.
         P2.ramp(60, 0.05, 0.40, t_offset=20)
         R1.acquire('default', 'increment')
         p.wait(100)
+
+    p.repetitions = 100
+    p.compile(listing=True, annotate=True)
+
+    instrument.run_program(p)
+
+    data = instrument.get_acquisition_bins('R1', 'default')
+```
 
 ### Output channels and sequencer instructions
 Sequencers can be configured to control 1 or 2 outputs.
@@ -190,6 +209,7 @@ would take more than 1 microsecond.
 
 ### Example
 
+```python
     # integers:
     p.R.a = 0
     p.R.b = p.R.a + 1
@@ -212,7 +232,7 @@ would take more than 1 microsecond.
     # use of variables and expressions in instruction arguments
     p.wait(p.R.c + 10)
     P1.block_pulse(p.R.d, P1.Rs.amplitude)
-
+```
 ## Loops
 Loops can be created on program level and will be executed on all sequences in parallel to
 ensure synchronized execution of all sequences.
@@ -227,7 +247,7 @@ The loops should be used with a `with` statement. The statements return a global
 be used as such.
 
 ### Example
-
+```python
     # initialize, varying wait, readout.
     with p.loop_range(100, 1000, 10) as t_wait:
         p.block_pulse(200, gates, v_init)
@@ -237,7 +257,7 @@ be used as such.
     # create a staircase
     with p.loop_linspace(-0.5, 0.5, 20) as v1:
         P1.block_pulse(200, v1)
-
+```
 
 ## Conditional statements
 
@@ -290,6 +310,7 @@ that take 4 ns to evaluate.
 
 ### Example
 
+```python
     p = instrument.new_program('feedback')
     p.repetitions = 2
 
@@ -317,11 +338,11 @@ that take 4 ns to evaluate.
             P1.ramp(60, 0.25, 0.25)
         with flags.none_set():
             P1.ramp(60, 0.25, 0.0)
-
+```
 
 ## Instrument
 
-
+```python
     instrument = Q1Instrument()
     instrument.add_qcm(qcm0)
     instrument.add_qrm(qrm1)
@@ -332,23 +353,24 @@ that take 4 ns to evaluate.
     instrument.add_readout('R1', qrm1.name, \[1])
 
     p = instrument.new_program('my_q1_program')
-
+```
 
 ## Logging with Q1Simulator
 The `log` command can be used in combinator with [Q1Simulator](https://github.com/sldesnoo-Delft/q1simulator).
 This will output log messages on the console and can be useful when debugging the code.
 The log instruction is added in a comment line and will be ignored by the Pulsar.
 
+```python
     with p.loop_array([0.1, -0.2, 0.3, -0.4, 0.5, -0.6, 0.7]) as v:
         P2.log('amplitude', v, time=True)
         P2.block_pulse(80, v)
-
+```
 output:
-
+```
     amplitude:  0.100000 (0CCCCCCC) q1:  -148 rt:   244 ns
     amplitude: -0.200000 (E6666666) q1:   -56 rt:   324 ns
     ...
-
+```
 Note: the q1 core has a head start of 200 ns. It starts at t = -200 ns.
 This accounts for the time the real-time executor waits in wait_sync.
 
