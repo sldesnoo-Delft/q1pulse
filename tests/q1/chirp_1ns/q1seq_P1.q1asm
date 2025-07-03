@@ -1,0 +1,46 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           0,R0       # L0001 R0: _zero
+           wait_sync      100        # L0002 t=0
+# --START-- (t=0) 
+_start:    reset_ph                  # L0003 @ 0
+# block_pulse(7, 0.2, None) 
+# awg_offset = 0.2, None t=0 
+           set_awg_offs   6553,0     # L0004 @ 0
+           upd_param      7          # L0005 t=0
+# awg_offset = 0.0, None t=7 
+           set_awg_offs   0,0        # L0006 @ 7
+           upd_param      1000       # L0007 t=7
+# block_pulse(7, 0.2, None) 
+# awg_offset = 0.2, None t=1007 
+           set_awg_offs   6553,0     # L0008 @ 1007
+           upd_param      7          # L0009 t=1007
+# awg_offset = 0.0, None t=1014 
+           set_awg_offs   0,0        # L0010 @ 1014
+           upd_param      999        # L0011 t=1014
+# block_pulse(7, 0.2, None) 
+# awg_offset = 0.2, None t=2013 
+           set_awg_offs   6553,0     # L0012 @ 2013
+           upd_param      7          # L0013 t=2013
+# awg_offset = 0.0, None t=2020 
+           set_awg_offs   0,0        # L0014 @ 2020
+           upd_param      998        # L0015 t=2020
+# block_pulse(7, 0.2, None) 
+# awg_offset = 0.2, None t=3018 
+           set_awg_offs   6553,0     # L0016 @ 3018
+           upd_param      7          # L0017 t=3018
+# awg_offset = 0.0, None t=3025 
+           set_awg_offs   0,0        # L0018 @ 3025
+           upd_param      4          # L0019 t=3025
+# --END-- 
+           stop                      # L0020 
+"""
+
