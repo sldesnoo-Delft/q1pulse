@@ -9,17 +9,14 @@ from qblox_instruments import Cluster
 from qblox_instruments.scpi import Cluster as ClusterScpi
 from qblox_instruments.ieee488_2 import Ieee488_2, IpTransport
 from qblox_instruments.pnp import resolve
-from q1pulse.util.qblox_version import qblox_version, Version
+from q1pulse.util.qblox_version import check_qblox_instrument_version
 
-if qblox_version >= Version('0.12'):
-    from qblox_instruments import (
-        SequencerStatuses,
-        SequencerStates,
-        )
-else:
-    from qblox_instruments import SequencerState
-
-from qblox_instruments import SequencerStatus, SequencerStatusFlags
+from qblox_instruments import (
+    SequencerStatus,
+    SequencerStatuses,
+    SequencerStates,
+    SequencerStatusFlags,
+    )
 
 
 logger = logging.getLogger(__name__)
@@ -57,6 +54,7 @@ class TurboCluster(Cluster):
             port: int | None = None,
             debug: int | None = None,
     ):
+        check_qblox_instrument_version()
         self._identifier = identifier
         addr_info = resolve(identifier)
         if addr_info.protocol != "ip":
@@ -342,10 +340,7 @@ class TurboCluster(Cluster):
 
             for sequencer in seq_nums:
                 status_str = filereader.readline()
-                if qblox_version >= Version('0.12'):
-                    status = _convert_sequencer_status(status_str)
-                else:
-                    status = _convert_sequencer_state_v11(status_str)
+                status = _convert_sequencer_status(status_str)
                 results.append((slot, sequencer, status))
             filereader.close()
         return results
@@ -622,59 +617,44 @@ def readline(conn) -> str:
     return buffer.getvalue().decode().rstrip()
 
 
-if qblox_version >= Version('0.12'):
-    def _convert_sequencer_status(state_str: str):
-        status, state, info_flags, warn_flags, err_flags, log = _parse_sequencer_status(state_str)
+def _convert_sequencer_status(state_str: str):
+    status, state, info_flags, warn_flags, err_flags, log = _parse_sequencer_status(state_str)
 
-        state_tuple = SequencerStatus(
-            SequencerStatuses[status],
-            SequencerStates[state],
-            [SequencerStatusFlags[flag] for flag in info_flags],
-            [SequencerStatusFlags[flag] for flag in warn_flags],
-            [SequencerStatusFlags[flag] for flag in err_flags],
-            log,
-        )
-        return state_tuple
+    state_tuple = SequencerStatus(
+        SequencerStatuses[status],
+        SequencerStates[state],
+        [SequencerStatusFlags[flag] for flag in info_flags],
+        [SequencerStatusFlags[flag] for flag in warn_flags],
+        [SequencerStatusFlags[flag] for flag in err_flags],
+        log,
+    )
+    return state_tuple
 
-    def _parse_sequencer_status(full_status_str: str) -> tuple([list, list, list, list]):
-        full_status_list = re.sub(" |-", "_", full_status_str).split(";")
+def _parse_sequencer_status(full_status_str: str) -> tuple([list, list, list, list]):
+    full_status_list = re.sub(" |-", "_", full_status_str).split(";")
 
-        # STATUS;STATE;INFO_FLAGS;WARN_FLAGS;ERR_FLAGS;LOG
-        status = full_status_list[0]  # They are always present
-        state = full_status_list[1]  # They are always present
+    # STATUS;STATE;INFO_FLAGS;WARN_FLAGS;ERR_FLAGS;LOG
+    status = full_status_list[0]  # They are always present
+    state = full_status_list[1]  # They are always present
 
-        if full_status_list[2] != "":
-            info_flag_list = full_status_list[2].split(",")[:-1]
-        else:
-            info_flag_list = []
+    if full_status_list[2] != "":
+        info_flag_list = full_status_list[2].split(",")[:-1]
+    else:
+        info_flag_list = []
 
-        if full_status_list[3] != "":
-            warn_flag_list = full_status_list[3].split(",")[:-1]
-        else:
-            warn_flag_list = []
+    if full_status_list[3] != "":
+        warn_flag_list = full_status_list[3].split(",")[:-1]
+    else:
+        warn_flag_list = []
 
-        if full_status_list[4] != "":
-            err_flag_list = full_status_list[4].split(",")[:-1]
-        else:
-            err_flag_list = []
+    if full_status_list[4] != "":
+        err_flag_list = full_status_list[4].split(",")[:-1]
+    else:
+        err_flag_list = []
 
-        if full_status_list[5] != "":
-            log = full_status_list[5]
-        else:
-            log = []
+    if full_status_list[5] != "":
+        log = full_status_list[5]
+    else:
+        log = []
 
-        return status, state, info_flag_list, warn_flag_list, err_flag_list, log
-
-else:
-    def _convert_sequencer_state_v11(state_str: str):
-        state_elem_list = re.sub(" |-", "_", state_str).split(";")
-        if state_elem_list[-1] != "":
-            state_flag_list = state_elem_list[-1].split(",")[:-1]
-        else:
-            state_flag_list = []
-
-        state_tuple = SequencerState(
-            SequencerStatus[state_elem_list[0]],
-            [SequencerStatusFlags[flag] for flag in state_flag_list],
-        )
-        return state_tuple
+    return status, state, info_flag_list, warn_flag_list, err_flag_list, log

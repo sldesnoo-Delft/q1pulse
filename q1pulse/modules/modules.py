@@ -3,10 +3,9 @@ import time
 from dataclasses import dataclass
 from abc import abstractmethod
 
-from q1pulse.util.qblox_version import qblox_version, Version
 from q1pulse.turbo_cluster import TurboCluster
 from q1pulse.util.delayedkeyboardinterrupt import DelayedKeyboardInterrupt
-from .sequencer_states import translate_seq_status, translate_seq_state
+from .sequencer_states import translate_seq_status
 
 
 logger = logging.getLogger(__name__)
@@ -112,12 +111,8 @@ class QbloxModule:
         self.pulsar.stop_sequencer()
 
     def get_sequencer_status(self, seq_nr, timeout=0):
-        if qblox_version >= Version('0.12.0'):
-            status = self.pulsar.get_sequencer_status(seq_nr, timeout)
-            return translate_seq_status(status)
-        else:
-            state = self.pulsar.get_sequencer_state(seq_nr, timeout)
-            return translate_seq_state(state)
+        status = self.pulsar.get_sequencer_status(seq_nr, timeout)
+        return translate_seq_status(status)
 
     def enable_sync(self, seq_nr, enable):
         self._sset(seq_nr, 'sync_en', enable)
@@ -347,10 +342,7 @@ class QrmModule(QbloxModule):
         completed = False
         while not completed and time.perf_counter() < expiration_time:
             with DelayedKeyboardInterrupt("get acquisition status"):
-                if qblox_version >= Version('0.12.0'):
-                    completed = self.pulsar.get_acquisition_status(seq_nr, 0)
-                else:
-                    completed = self.pulsar.get_acquisition_state(seq_nr, 0)
+                completed = self.pulsar.get_acquisition_status(seq_nr, 0)
                 logger.debug(f"Acquisition status {self.pulsar.name}:{seq_nr} ready={completed}")
                 if not completed:
                     time.sleep(0.001)

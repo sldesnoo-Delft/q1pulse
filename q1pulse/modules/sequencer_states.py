@@ -80,13 +80,6 @@ class SequencerStatus:
                 self.msg_list[level].append(flag_str)
 
 
-def translate_seq_state(seq_state):
-    status = SequencerStatus(state=seq_state.status)
-    status.add_flags(seq_state.flags)
-
-    return status
-
-
 def translate_seq_status(seq_status):
     status = SequencerStatus(seq_status.state, seq_status.status)
     status.add_flags(seq_status.info_flags)

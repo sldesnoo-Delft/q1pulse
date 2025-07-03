@@ -14,13 +14,9 @@ from q1pulse.sequencer.control import ControlBuilder
 from q1pulse.sequencer.readout import ReadoutBuilder
 from q1pulse.turbo_cluster import TurboCluster
 from q1pulse.modules.modules import QcmModule, QrmModule, QbloxModule
-from q1pulse.modules.sequencer_states import translate_seq_status, translate_seq_state
+from q1pulse.modules.sequencer_states import translate_seq_status
 from q1pulse.util.delayedkeyboardinterrupt import DelayedKeyboardInterrupt
-from q1pulse.util.qblox_version import (
-    check_qblox_instrument_version,
-    qblox_version,
-    Version,
-    )
+from q1pulse.util.qblox_version import check_qblox_instrument_version
 
 logger = logging.getLogger(__name__)
 
@@ -367,10 +363,7 @@ class Q1Instrument:
                         res = instrument.get_sequencer_status_multiple(sequencers)
 
                     for slot, seq_num, status in res:
-                        if qblox_version >= Version('0.12.0'):
-                            status = translate_seq_status(status)
-                        else:
-                            status = translate_seq_state(status)
+                        status = translate_seq_status(status)
                         statuses[index[(instrument, slot, seq_num)]] = status
                 if time.perf_counter() > expiration_time:
                     break
@@ -446,10 +439,7 @@ def set_exception_on_overload(enable: bool):
 
 def check_instrument_status(instrument, print_status=False):
     t = time.perf_counter()
-    if qblox_version >= Version("0.12.0"):
-        sys_state = instrument.get_system_status()
-    else:
-        sys_state = instrument.get_system_state()
+    sys_state = instrument.get_system_status()
     if Q1Instrument.verbose:
         d = time.perf_counter() - t
         logger.debug(f"Status {sys_state.status} {d*1000:.1f} ms")
