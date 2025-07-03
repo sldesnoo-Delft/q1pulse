@@ -28,17 +28,15 @@ local_0:   asr            R2,16,R4   # L0007 temp R4
 # endloop t=100 
            loop           R3,@local_0 # L0012 
 #     --- loop duration: 6500 
-# awg_offset = Rs._ramp_offset, None t=6500 
-           asr            R2,16,R3   # L0013 temp R3
-           nop                       # L0014  set_awg_offs wait for R3
-           set_awg_offs   R3,R0      # L0015 @ 6500
-           upd_param      80         # L0016 t=6500
+# awg_offset = 0.0009756838905775078, None t=6500 
+           set_awg_offs   31,0       # L0013 @ 6500
+           upd_param      80         # L0014 t=6500
 # awg_offset = 0.0, None t=6580 
-           set_awg_offs   0,0        # L0017 @ 6580
-           upd_param      100        # L0018 t=6580
+           set_awg_offs   0,0        # L0015 @ 6580
+           upd_param      100        # L0016 t=6580
 # --END-- 
-           loop           R1,@_start # L0019 
-           upd_param      4          # L0020 t=6680
-           stop                      # L0021 
+           loop           R1,@_start # L0017 
+           upd_param      4          # L0018 t=6680
+           stop                      # L0019 
 """
 

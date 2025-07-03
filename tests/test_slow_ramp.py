@@ -10,6 +10,8 @@ instrument.add_control('P1', qcm0.name, [0])
 instrument.add_control('P2', qcm0.name, [1])
 instrument.add_control('P3', qcm0.name, [2])
 
+# %%
+
 p = instrument.new_program('ramp_slow')
 p.repetitions = 2
 

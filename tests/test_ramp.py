@@ -9,6 +9,8 @@ instrument.add_qcm(qcm0)
 instrument.add_control('P1', qcm0.name, [2])
 instrument.add_control('P2', qcm0.name, [3])
 
+# %%
+
 p = instrument.new_program('ramp')
 p.repetitions = 2
 
