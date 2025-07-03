@@ -1,0 +1,43 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={'default': {'index': 0, 'num_bins': 101}}
+
+seq_prog="""
+# --INIT-- 
+           move           0,R0       # L0001 R0: _zero
+           move           0,R1       # L0002 R1: Rs._bin_default
+           wait_sync      100        # L0003 t=0
+# --START-- (t=0) 
+_start:    reset_ph                  # L0004 @ 0
+           set_awg_offs   16383,0    # L0005 @ 0
+# acquire_frequency_sweep(101, 1000, -250000000.0, 250000000.0 default, increment) 
+           move           4044967296,R2 # L0006 R2: Rs.frequency
+           nop                       # L0007  asl wait for R2
+           asl            R2,2,R3    # L0008 temp R3
+           nop                       # L0009  set_freq wait for R3
+           set_freq       R3         # L0010 @ 0
+           upd_param      152        # L0011 t=0
+           move           100,R4     # L0012 R4: Rs._cnt0
+# acquire(default, increment) 
+local_0:   acquire        0,R1,848   # L0013 t=152
+           add            R1,1,R1    # L0014 
+           add            R2,5000000,R2 # L0015 
+           nop                       # L0016  asl wait for R2
+           asl            R2,2,R5    # L0017 temp R5
+           nop                       # L0018  set_freq wait for R5
+           set_freq       R5         # L0019 @ 1000
+           upd_param      152        # L0020 t=1000
+           loop           R4,@local_0 # L0021 
+# acquire(default, increment) 
+           acquire        0,R1,848   # L0022 t=100152
+           add            R1,1,R1    # L0023 
+           set_awg_offs   0,0        # L0024 @ 101000
+           upd_param      4          # L0025 t=101000
+# --END-- 
+           stop                      # L0026 
+"""
+

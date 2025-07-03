@@ -1,0 +1,1 @@
+{"waveforms":{},"weights":{},"acquisitions":{},"program":" move 0,R0\n wait_sync 100\n_start: reset_ph \n set_awg_offs 16383,0\n upd_param 100\n set_awg_offs 0,0\n upd_param 100\n stop "}

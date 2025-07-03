@@ -11,7 +11,7 @@ instrument.add_control('q1', qcm0.name, [0, 1], nco_frequency=100e6)
 # add Q on channel 2, I on channel 3
 instrument.add_control('q2', qcm0.name, [3, 2], nco_frequency=50e6)
 
-p = instrument.new_program('baseband')
+p = instrument.new_program('iq_block')
 p.repetitions = 1
 
 q1 = p.q1

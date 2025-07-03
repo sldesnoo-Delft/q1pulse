@@ -1,0 +1,1621 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={'default': {'index': 0, 'num_bins': 10000}}
+
+seq_prog="""
+# --INIT-- 
+           move           0,R0       # L0001 R0: _zero
+# Rs._bin_default:int = 0 
+           move           0,R1       # L0002 R1: Rs._bin_default
+           wait_sync      100        # L0003 t=0
+# --START-- (t=0) 
+_start:    reset_ph                  # L0004 @ 0
+           upd_param      500        # L0005 t=0
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=500 
+           move           99,R2      # L0006 R2: Rs._cnt0
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=500 
+local_0:   acquire        0,R1,10500 # L0007 t=500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0008 
+# endloop t=11000 
+           loop           R2,@local_0 # L0009 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=1040000 
+           acquire        0,R1,10500 # L0010 t=1040000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0011 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=1050500 
+           move           99,R2      # L0012 R2: Rs._cnt1
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=1050500 
+local_1:   acquire        0,R1,10500 # L0013 t=1050500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0014 
+# endloop t=1061000 
+           loop           R2,@local_1 # L0015 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=2090000 
+           acquire        0,R1,10500 # L0016 t=2090000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0017 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=2100500 
+           move           99,R2      # L0018 R2: Rs._cnt2
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=2100500 
+local_2:   acquire        0,R1,10500 # L0019 t=2100500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0020 
+# endloop t=2111000 
+           loop           R2,@local_2 # L0021 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=3140000 
+           acquire        0,R1,10500 # L0022 t=3140000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0023 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=3150500 
+           move           99,R2      # L0024 R2: Rs._cnt3
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=3150500 
+local_3:   acquire        0,R1,10500 # L0025 t=3150500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0026 
+# endloop t=3161000 
+           loop           R2,@local_3 # L0027 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=4190000 
+           acquire        0,R1,10500 # L0028 t=4190000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0029 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=4200500 
+           move           99,R2      # L0030 R2: Rs._cnt4
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=4200500 
+local_4:   acquire        0,R1,10500 # L0031 t=4200500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0032 
+# endloop t=4211000 
+           loop           R2,@local_4 # L0033 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=5240000 
+           acquire        0,R1,10500 # L0034 t=5240000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0035 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=5250500 
+           move           99,R2      # L0036 R2: Rs._cnt5
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=5250500 
+local_5:   acquire        0,R1,10500 # L0037 t=5250500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0038 
+# endloop t=5261000 
+           loop           R2,@local_5 # L0039 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=6290000 
+           acquire        0,R1,10500 # L0040 t=6290000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0041 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=6300500 
+           move           99,R2      # L0042 R2: Rs._cnt6
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=6300500 
+local_6:   acquire        0,R1,10500 # L0043 t=6300500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0044 
+# endloop t=6311000 
+           loop           R2,@local_6 # L0045 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=7340000 
+           acquire        0,R1,10500 # L0046 t=7340000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0047 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=7350500 
+           move           99,R2      # L0048 R2: Rs._cnt7
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=7350500 
+local_7:   acquire        0,R1,10500 # L0049 t=7350500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0050 
+# endloop t=7361000 
+           loop           R2,@local_7 # L0051 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=8390000 
+           acquire        0,R1,10500 # L0052 t=8390000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0053 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=8400500 
+           move           99,R2      # L0054 R2: Rs._cnt8
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=8400500 
+local_8:   acquire        0,R1,10500 # L0055 t=8400500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0056 
+# endloop t=8411000 
+           loop           R2,@local_8 # L0057 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=9440000 
+           acquire        0,R1,10500 # L0058 t=9440000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0059 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=9450500 
+           move           99,R2      # L0060 R2: Rs._cnt9
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=9450500 
+local_9:   acquire        0,R1,10500 # L0061 t=9450500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0062 
+# endloop t=9461000 
+           loop           R2,@local_9 # L0063 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=10490000 
+           acquire        0,R1,10500 # L0064 t=10490000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0065 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=10500500 
+           move           99,R2      # L0066 R2: Rs._cnt10
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=10500500 
+local_10:  acquire        0,R1,10500 # L0067 t=10500500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0068 
+# endloop t=10511000 
+           loop           R2,@local_10 # L0069 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=11540000 
+           acquire        0,R1,10500 # L0070 t=11540000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0071 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=11550500 
+           move           99,R2      # L0072 R2: Rs._cnt11
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=11550500 
+local_11:  acquire        0,R1,10500 # L0073 t=11550500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0074 
+# endloop t=11561000 
+           loop           R2,@local_11 # L0075 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=12590000 
+           acquire        0,R1,10500 # L0076 t=12590000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0077 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=12600500 
+           move           99,R2      # L0078 R2: Rs._cnt12
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=12600500 
+local_12:  acquire        0,R1,10500 # L0079 t=12600500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0080 
+# endloop t=12611000 
+           loop           R2,@local_12 # L0081 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=13640000 
+           acquire        0,R1,10500 # L0082 t=13640000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0083 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=13650500 
+           move           99,R2      # L0084 R2: Rs._cnt13
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=13650500 
+local_13:  acquire        0,R1,10500 # L0085 t=13650500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0086 
+# endloop t=13661000 
+           loop           R2,@local_13 # L0087 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=14690000 
+           acquire        0,R1,10500 # L0088 t=14690000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0089 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=14700500 
+           move           99,R2      # L0090 R2: Rs._cnt14
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=14700500 
+local_14:  acquire        0,R1,10500 # L0091 t=14700500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0092 
+# endloop t=14711000 
+           loop           R2,@local_14 # L0093 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=15740000 
+           acquire        0,R1,10500 # L0094 t=15740000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0095 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=15750500 
+           move           99,R2      # L0096 R2: Rs._cnt15
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=15750500 
+local_15:  acquire        0,R1,10500 # L0097 t=15750500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0098 
+# endloop t=15761000 
+           loop           R2,@local_15 # L0099 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=16790000 
+           acquire        0,R1,10500 # L0100 t=16790000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0101 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=16800500 
+           move           99,R2      # L0102 R2: Rs._cnt16
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=16800500 
+local_16:  acquire        0,R1,10500 # L0103 t=16800500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0104 
+# endloop t=16811000 
+           loop           R2,@local_16 # L0105 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=17840000 
+           acquire        0,R1,10500 # L0106 t=17840000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0107 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=17850500 
+           move           99,R2      # L0108 R2: Rs._cnt17
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=17850500 
+local_17:  acquire        0,R1,10500 # L0109 t=17850500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0110 
+# endloop t=17861000 
+           loop           R2,@local_17 # L0111 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=18890000 
+           acquire        0,R1,10500 # L0112 t=18890000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0113 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=18900500 
+           move           99,R2      # L0114 R2: Rs._cnt18
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=18900500 
+local_18:  acquire        0,R1,10500 # L0115 t=18900500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0116 
+# endloop t=18911000 
+           loop           R2,@local_18 # L0117 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=19940000 
+           acquire        0,R1,10500 # L0118 t=19940000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0119 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=19950500 
+           move           99,R2      # L0120 R2: Rs._cnt19
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=19950500 
+local_19:  acquire        0,R1,10500 # L0121 t=19950500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0122 
+# endloop t=19961000 
+           loop           R2,@local_19 # L0123 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=20990000 
+           acquire        0,R1,10500 # L0124 t=20990000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0125 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=21000500 
+           move           99,R2      # L0126 R2: Rs._cnt20
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=21000500 
+local_20:  acquire        0,R1,10500 # L0127 t=21000500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0128 
+# endloop t=21011000 
+           loop           R2,@local_20 # L0129 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=22040000 
+           acquire        0,R1,10500 # L0130 t=22040000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0131 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=22050500 
+           move           99,R2      # L0132 R2: Rs._cnt21
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=22050500 
+local_21:  acquire        0,R1,10500 # L0133 t=22050500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0134 
+# endloop t=22061000 
+           loop           R2,@local_21 # L0135 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=23090000 
+           acquire        0,R1,10500 # L0136 t=23090000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0137 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=23100500 
+           move           99,R2      # L0138 R2: Rs._cnt22
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=23100500 
+local_22:  acquire        0,R1,10500 # L0139 t=23100500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0140 
+# endloop t=23111000 
+           loop           R2,@local_22 # L0141 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=24140000 
+           acquire        0,R1,10500 # L0142 t=24140000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0143 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=24150500 
+           move           99,R2      # L0144 R2: Rs._cnt23
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=24150500 
+local_23:  acquire        0,R1,10500 # L0145 t=24150500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0146 
+# endloop t=24161000 
+           loop           R2,@local_23 # L0147 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=25190000 
+           acquire        0,R1,10500 # L0148 t=25190000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0149 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=25200500 
+           move           99,R2      # L0150 R2: Rs._cnt24
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=25200500 
+local_24:  acquire        0,R1,10500 # L0151 t=25200500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0152 
+# endloop t=25211000 
+           loop           R2,@local_24 # L0153 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=26240000 
+           acquire        0,R1,10500 # L0154 t=26240000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0155 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=26250500 
+           move           99,R2      # L0156 R2: Rs._cnt25
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=26250500 
+local_25:  acquire        0,R1,10500 # L0157 t=26250500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0158 
+# endloop t=26261000 
+           loop           R2,@local_25 # L0159 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=27290000 
+           acquire        0,R1,10500 # L0160 t=27290000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0161 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=27300500 
+           move           99,R2      # L0162 R2: Rs._cnt26
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=27300500 
+local_26:  acquire        0,R1,10500 # L0163 t=27300500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0164 
+# endloop t=27311000 
+           loop           R2,@local_26 # L0165 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=28340000 
+           acquire        0,R1,10500 # L0166 t=28340000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0167 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=28350500 
+           move           99,R2      # L0168 R2: Rs._cnt27
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=28350500 
+local_27:  acquire        0,R1,10500 # L0169 t=28350500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0170 
+# endloop t=28361000 
+           loop           R2,@local_27 # L0171 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=29390000 
+           acquire        0,R1,10500 # L0172 t=29390000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0173 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=29400500 
+           move           99,R2      # L0174 R2: Rs._cnt28
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=29400500 
+local_28:  acquire        0,R1,10500 # L0175 t=29400500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0176 
+# endloop t=29411000 
+           loop           R2,@local_28 # L0177 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=30440000 
+           acquire        0,R1,10500 # L0178 t=30440000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0179 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=30450500 
+           move           99,R2      # L0180 R2: Rs._cnt29
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=30450500 
+local_29:  acquire        0,R1,10500 # L0181 t=30450500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0182 
+# endloop t=30461000 
+           loop           R2,@local_29 # L0183 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=31490000 
+           acquire        0,R1,10500 # L0184 t=31490000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0185 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=31500500 
+           move           99,R2      # L0186 R2: Rs._cnt30
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=31500500 
+local_30:  acquire        0,R1,10500 # L0187 t=31500500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0188 
+# endloop t=31511000 
+           loop           R2,@local_30 # L0189 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=32540000 
+           acquire        0,R1,10500 # L0190 t=32540000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0191 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=32550500 
+           move           99,R2      # L0192 R2: Rs._cnt31
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=32550500 
+local_31:  acquire        0,R1,10500 # L0193 t=32550500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0194 
+# endloop t=32561000 
+           loop           R2,@local_31 # L0195 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=33590000 
+           acquire        0,R1,10500 # L0196 t=33590000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0197 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=33600500 
+           move           99,R2      # L0198 R2: Rs._cnt32
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=33600500 
+local_32:  acquire        0,R1,10500 # L0199 t=33600500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0200 
+# endloop t=33611000 
+           loop           R2,@local_32 # L0201 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=34640000 
+           acquire        0,R1,10500 # L0202 t=34640000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0203 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=34650500 
+           move           99,R2      # L0204 R2: Rs._cnt33
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=34650500 
+local_33:  acquire        0,R1,10500 # L0205 t=34650500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0206 
+# endloop t=34661000 
+           loop           R2,@local_33 # L0207 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=35690000 
+           acquire        0,R1,10500 # L0208 t=35690000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0209 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=35700500 
+           move           99,R2      # L0210 R2: Rs._cnt34
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=35700500 
+local_34:  acquire        0,R1,10500 # L0211 t=35700500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0212 
+# endloop t=35711000 
+           loop           R2,@local_34 # L0213 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=36740000 
+           acquire        0,R1,10500 # L0214 t=36740000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0215 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=36750500 
+           move           99,R2      # L0216 R2: Rs._cnt35
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=36750500 
+local_35:  acquire        0,R1,10500 # L0217 t=36750500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0218 
+# endloop t=36761000 
+           loop           R2,@local_35 # L0219 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=37790000 
+           acquire        0,R1,10500 # L0220 t=37790000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0221 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=37800500 
+           move           99,R2      # L0222 R2: Rs._cnt36
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=37800500 
+local_36:  acquire        0,R1,10500 # L0223 t=37800500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0224 
+# endloop t=37811000 
+           loop           R2,@local_36 # L0225 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=38840000 
+           acquire        0,R1,10500 # L0226 t=38840000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0227 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=38850500 
+           move           99,R2      # L0228 R2: Rs._cnt37
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=38850500 
+local_37:  acquire        0,R1,10500 # L0229 t=38850500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0230 
+# endloop t=38861000 
+           loop           R2,@local_37 # L0231 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=39890000 
+           acquire        0,R1,10500 # L0232 t=39890000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0233 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=39900500 
+           move           99,R2      # L0234 R2: Rs._cnt38
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=39900500 
+local_38:  acquire        0,R1,10500 # L0235 t=39900500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0236 
+# endloop t=39911000 
+           loop           R2,@local_38 # L0237 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=40940000 
+           acquire        0,R1,10500 # L0238 t=40940000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0239 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=40950500 
+           move           99,R2      # L0240 R2: Rs._cnt39
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=40950500 
+local_39:  acquire        0,R1,10500 # L0241 t=40950500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0242 
+# endloop t=40961000 
+           loop           R2,@local_39 # L0243 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=41990000 
+           acquire        0,R1,10500 # L0244 t=41990000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0245 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=42000500 
+           move           99,R2      # L0246 R2: Rs._cnt40
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=42000500 
+local_40:  acquire        0,R1,10500 # L0247 t=42000500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0248 
+# endloop t=42011000 
+           loop           R2,@local_40 # L0249 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=43040000 
+           acquire        0,R1,10500 # L0250 t=43040000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0251 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=43050500 
+           move           99,R2      # L0252 R2: Rs._cnt41
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=43050500 
+local_41:  acquire        0,R1,10500 # L0253 t=43050500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0254 
+# endloop t=43061000 
+           loop           R2,@local_41 # L0255 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=44090000 
+           acquire        0,R1,10500 # L0256 t=44090000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0257 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=44100500 
+           move           99,R2      # L0258 R2: Rs._cnt42
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=44100500 
+local_42:  acquire        0,R1,10500 # L0259 t=44100500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0260 
+# endloop t=44111000 
+           loop           R2,@local_42 # L0261 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=45140000 
+           acquire        0,R1,10500 # L0262 t=45140000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0263 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=45150500 
+           move           99,R2      # L0264 R2: Rs._cnt43
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=45150500 
+local_43:  acquire        0,R1,10500 # L0265 t=45150500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0266 
+# endloop t=45161000 
+           loop           R2,@local_43 # L0267 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=46190000 
+           acquire        0,R1,10500 # L0268 t=46190000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0269 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=46200500 
+           move           99,R2      # L0270 R2: Rs._cnt44
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=46200500 
+local_44:  acquire        0,R1,10500 # L0271 t=46200500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0272 
+# endloop t=46211000 
+           loop           R2,@local_44 # L0273 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=47240000 
+           acquire        0,R1,10500 # L0274 t=47240000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0275 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=47250500 
+           move           99,R2      # L0276 R2: Rs._cnt45
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=47250500 
+local_45:  acquire        0,R1,10500 # L0277 t=47250500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0278 
+# endloop t=47261000 
+           loop           R2,@local_45 # L0279 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=48290000 
+           acquire        0,R1,10500 # L0280 t=48290000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0281 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=48300500 
+           move           99,R2      # L0282 R2: Rs._cnt46
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=48300500 
+local_46:  acquire        0,R1,10500 # L0283 t=48300500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0284 
+# endloop t=48311000 
+           loop           R2,@local_46 # L0285 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=49340000 
+           acquire        0,R1,10500 # L0286 t=49340000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0287 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=49350500 
+           move           99,R2      # L0288 R2: Rs._cnt47
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=49350500 
+local_47:  acquire        0,R1,10500 # L0289 t=49350500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0290 
+# endloop t=49361000 
+           loop           R2,@local_47 # L0291 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=50390000 
+           acquire        0,R1,10500 # L0292 t=50390000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0293 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=50400500 
+           move           99,R2      # L0294 R2: Rs._cnt48
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=50400500 
+local_48:  acquire        0,R1,10500 # L0295 t=50400500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0296 
+# endloop t=50411000 
+           loop           R2,@local_48 # L0297 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=51440000 
+           acquire        0,R1,10500 # L0298 t=51440000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0299 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=51450500 
+           move           99,R2      # L0300 R2: Rs._cnt49
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=51450500 
+local_49:  acquire        0,R1,10500 # L0301 t=51450500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0302 
+# endloop t=51461000 
+           loop           R2,@local_49 # L0303 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=52490000 
+           acquire        0,R1,10500 # L0304 t=52490000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0305 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=52500500 
+           move           99,R2      # L0306 R2: Rs._cnt50
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=52500500 
+local_50:  acquire        0,R1,10500 # L0307 t=52500500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0308 
+# endloop t=52511000 
+           loop           R2,@local_50 # L0309 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=53540000 
+           acquire        0,R1,10500 # L0310 t=53540000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0311 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=53550500 
+           move           99,R2      # L0312 R2: Rs._cnt51
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=53550500 
+local_51:  acquire        0,R1,10500 # L0313 t=53550500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0314 
+# endloop t=53561000 
+           loop           R2,@local_51 # L0315 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=54590000 
+           acquire        0,R1,10500 # L0316 t=54590000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0317 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=54600500 
+           move           99,R2      # L0318 R2: Rs._cnt52
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=54600500 
+local_52:  acquire        0,R1,10500 # L0319 t=54600500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0320 
+# endloop t=54611000 
+           loop           R2,@local_52 # L0321 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=55640000 
+           acquire        0,R1,10500 # L0322 t=55640000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0323 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=55650500 
+           move           99,R2      # L0324 R2: Rs._cnt53
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=55650500 
+local_53:  acquire        0,R1,10500 # L0325 t=55650500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0326 
+# endloop t=55661000 
+           loop           R2,@local_53 # L0327 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=56690000 
+           acquire        0,R1,10500 # L0328 t=56690000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0329 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=56700500 
+           move           99,R2      # L0330 R2: Rs._cnt54
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=56700500 
+local_54:  acquire        0,R1,10500 # L0331 t=56700500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0332 
+# endloop t=56711000 
+           loop           R2,@local_54 # L0333 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=57740000 
+           acquire        0,R1,10500 # L0334 t=57740000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0335 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=57750500 
+           move           99,R2      # L0336 R2: Rs._cnt55
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=57750500 
+local_55:  acquire        0,R1,10500 # L0337 t=57750500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0338 
+# endloop t=57761000 
+           loop           R2,@local_55 # L0339 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=58790000 
+           acquire        0,R1,10500 # L0340 t=58790000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0341 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=58800500 
+           move           99,R2      # L0342 R2: Rs._cnt56
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=58800500 
+local_56:  acquire        0,R1,10500 # L0343 t=58800500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0344 
+# endloop t=58811000 
+           loop           R2,@local_56 # L0345 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=59840000 
+           acquire        0,R1,10500 # L0346 t=59840000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0347 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=59850500 
+           move           99,R2      # L0348 R2: Rs._cnt57
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=59850500 
+local_57:  acquire        0,R1,10500 # L0349 t=59850500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0350 
+# endloop t=59861000 
+           loop           R2,@local_57 # L0351 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=60890000 
+           acquire        0,R1,10500 # L0352 t=60890000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0353 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=60900500 
+           move           99,R2      # L0354 R2: Rs._cnt58
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=60900500 
+local_58:  acquire        0,R1,10500 # L0355 t=60900500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0356 
+# endloop t=60911000 
+           loop           R2,@local_58 # L0357 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=61940000 
+           acquire        0,R1,10500 # L0358 t=61940000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0359 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=61950500 
+           move           99,R2      # L0360 R2: Rs._cnt59
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=61950500 
+local_59:  acquire        0,R1,10500 # L0361 t=61950500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0362 
+# endloop t=61961000 
+           loop           R2,@local_59 # L0363 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=62990000 
+           acquire        0,R1,10500 # L0364 t=62990000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0365 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=63000500 
+           move           99,R2      # L0366 R2: Rs._cnt60
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=63000500 
+local_60:  acquire        0,R1,10500 # L0367 t=63000500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0368 
+# endloop t=63011000 
+           loop           R2,@local_60 # L0369 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=64040000 
+           acquire        0,R1,10500 # L0370 t=64040000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0371 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=64050500 
+           move           99,R2      # L0372 R2: Rs._cnt61
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=64050500 
+local_61:  acquire        0,R1,10500 # L0373 t=64050500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0374 
+# endloop t=64061000 
+           loop           R2,@local_61 # L0375 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=65090000 
+           acquire        0,R1,10500 # L0376 t=65090000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0377 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=65100500 
+           move           99,R2      # L0378 R2: Rs._cnt62
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=65100500 
+local_62:  acquire        0,R1,10500 # L0379 t=65100500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0380 
+# endloop t=65111000 
+           loop           R2,@local_62 # L0381 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=66140000 
+           acquire        0,R1,10500 # L0382 t=66140000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0383 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=66150500 
+           move           99,R2      # L0384 R2: Rs._cnt63
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=66150500 
+local_63:  acquire        0,R1,10500 # L0385 t=66150500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0386 
+# endloop t=66161000 
+           loop           R2,@local_63 # L0387 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=67190000 
+           acquire        0,R1,10500 # L0388 t=67190000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0389 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=67200500 
+           move           99,R2      # L0390 R2: Rs._cnt64
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=67200500 
+local_64:  acquire        0,R1,10500 # L0391 t=67200500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0392 
+# endloop t=67211000 
+           loop           R2,@local_64 # L0393 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=68240000 
+           acquire        0,R1,10500 # L0394 t=68240000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0395 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=68250500 
+           move           99,R2      # L0396 R2: Rs._cnt65
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=68250500 
+local_65:  acquire        0,R1,10500 # L0397 t=68250500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0398 
+# endloop t=68261000 
+           loop           R2,@local_65 # L0399 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=69290000 
+           acquire        0,R1,10500 # L0400 t=69290000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0401 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=69300500 
+           move           99,R2      # L0402 R2: Rs._cnt66
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=69300500 
+local_66:  acquire        0,R1,10500 # L0403 t=69300500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0404 
+# endloop t=69311000 
+           loop           R2,@local_66 # L0405 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=70340000 
+           acquire        0,R1,10500 # L0406 t=70340000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0407 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=70350500 
+           move           99,R2      # L0408 R2: Rs._cnt67
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=70350500 
+local_67:  acquire        0,R1,10500 # L0409 t=70350500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0410 
+# endloop t=70361000 
+           loop           R2,@local_67 # L0411 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=71390000 
+           acquire        0,R1,10500 # L0412 t=71390000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0413 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=71400500 
+           move           99,R2      # L0414 R2: Rs._cnt68
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=71400500 
+local_68:  acquire        0,R1,10500 # L0415 t=71400500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0416 
+# endloop t=71411000 
+           loop           R2,@local_68 # L0417 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=72440000 
+           acquire        0,R1,10500 # L0418 t=72440000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0419 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=72450500 
+           move           99,R2      # L0420 R2: Rs._cnt69
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=72450500 
+local_69:  acquire        0,R1,10500 # L0421 t=72450500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0422 
+# endloop t=72461000 
+           loop           R2,@local_69 # L0423 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=73490000 
+           acquire        0,R1,10500 # L0424 t=73490000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0425 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=73500500 
+           move           99,R2      # L0426 R2: Rs._cnt70
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=73500500 
+local_70:  acquire        0,R1,10500 # L0427 t=73500500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0428 
+# endloop t=73511000 
+           loop           R2,@local_70 # L0429 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=74540000 
+           acquire        0,R1,10500 # L0430 t=74540000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0431 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=74550500 
+           move           99,R2      # L0432 R2: Rs._cnt71
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=74550500 
+local_71:  acquire        0,R1,10500 # L0433 t=74550500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0434 
+# endloop t=74561000 
+           loop           R2,@local_71 # L0435 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=75590000 
+           acquire        0,R1,10500 # L0436 t=75590000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0437 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=75600500 
+           move           99,R2      # L0438 R2: Rs._cnt72
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=75600500 
+local_72:  acquire        0,R1,10500 # L0439 t=75600500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0440 
+# endloop t=75611000 
+           loop           R2,@local_72 # L0441 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=76640000 
+           acquire        0,R1,10500 # L0442 t=76640000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0443 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=76650500 
+           move           99,R2      # L0444 R2: Rs._cnt73
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=76650500 
+local_73:  acquire        0,R1,10500 # L0445 t=76650500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0446 
+# endloop t=76661000 
+           loop           R2,@local_73 # L0447 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=77690000 
+           acquire        0,R1,10500 # L0448 t=77690000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0449 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=77700500 
+           move           99,R2      # L0450 R2: Rs._cnt74
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=77700500 
+local_74:  acquire        0,R1,10500 # L0451 t=77700500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0452 
+# endloop t=77711000 
+           loop           R2,@local_74 # L0453 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=78740000 
+           acquire        0,R1,10500 # L0454 t=78740000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0455 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=78750500 
+           move           99,R2      # L0456 R2: Rs._cnt75
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=78750500 
+local_75:  acquire        0,R1,10500 # L0457 t=78750500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0458 
+# endloop t=78761000 
+           loop           R2,@local_75 # L0459 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=79790000 
+           acquire        0,R1,10500 # L0460 t=79790000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0461 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=79800500 
+           move           99,R2      # L0462 R2: Rs._cnt76
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=79800500 
+local_76:  acquire        0,R1,10500 # L0463 t=79800500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0464 
+# endloop t=79811000 
+           loop           R2,@local_76 # L0465 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=80840000 
+           acquire        0,R1,10500 # L0466 t=80840000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0467 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=80850500 
+           move           99,R2      # L0468 R2: Rs._cnt77
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=80850500 
+local_77:  acquire        0,R1,10500 # L0469 t=80850500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0470 
+# endloop t=80861000 
+           loop           R2,@local_77 # L0471 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=81890000 
+           acquire        0,R1,10500 # L0472 t=81890000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0473 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=81900500 
+           move           99,R2      # L0474 R2: Rs._cnt78
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=81900500 
+local_78:  acquire        0,R1,10500 # L0475 t=81900500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0476 
+# endloop t=81911000 
+           loop           R2,@local_78 # L0477 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=82940000 
+           acquire        0,R1,10500 # L0478 t=82940000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0479 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=82950500 
+           move           99,R2      # L0480 R2: Rs._cnt79
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=82950500 
+local_79:  acquire        0,R1,10500 # L0481 t=82950500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0482 
+# endloop t=82961000 
+           loop           R2,@local_79 # L0483 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=83990000 
+           acquire        0,R1,10500 # L0484 t=83990000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0485 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=84000500 
+           move           99,R2      # L0486 R2: Rs._cnt80
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=84000500 
+local_80:  acquire        0,R1,10500 # L0487 t=84000500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0488 
+# endloop t=84011000 
+           loop           R2,@local_80 # L0489 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=85040000 
+           acquire        0,R1,10500 # L0490 t=85040000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0491 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=85050500 
+           move           99,R2      # L0492 R2: Rs._cnt81
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=85050500 
+local_81:  acquire        0,R1,10500 # L0493 t=85050500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0494 
+# endloop t=85061000 
+           loop           R2,@local_81 # L0495 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=86090000 
+           acquire        0,R1,10500 # L0496 t=86090000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0497 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=86100500 
+           move           99,R2      # L0498 R2: Rs._cnt82
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=86100500 
+local_82:  acquire        0,R1,10500 # L0499 t=86100500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0500 
+# endloop t=86111000 
+           loop           R2,@local_82 # L0501 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=87140000 
+           acquire        0,R1,10500 # L0502 t=87140000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0503 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=87150500 
+           move           99,R2      # L0504 R2: Rs._cnt83
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=87150500 
+local_83:  acquire        0,R1,10500 # L0505 t=87150500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0506 
+# endloop t=87161000 
+           loop           R2,@local_83 # L0507 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=88190000 
+           acquire        0,R1,10500 # L0508 t=88190000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0509 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=88200500 
+           move           99,R2      # L0510 R2: Rs._cnt84
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=88200500 
+local_84:  acquire        0,R1,10500 # L0511 t=88200500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0512 
+# endloop t=88211000 
+           loop           R2,@local_84 # L0513 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=89240000 
+           acquire        0,R1,10500 # L0514 t=89240000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0515 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=89250500 
+           move           99,R2      # L0516 R2: Rs._cnt85
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=89250500 
+local_85:  acquire        0,R1,10500 # L0517 t=89250500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0518 
+# endloop t=89261000 
+           loop           R2,@local_85 # L0519 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=90290000 
+           acquire        0,R1,10500 # L0520 t=90290000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0521 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=90300500 
+           move           99,R2      # L0522 R2: Rs._cnt86
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=90300500 
+local_86:  acquire        0,R1,10500 # L0523 t=90300500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0524 
+# endloop t=90311000 
+           loop           R2,@local_86 # L0525 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=91340000 
+           acquire        0,R1,10500 # L0526 t=91340000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0527 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=91350500 
+           move           99,R2      # L0528 R2: Rs._cnt87
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=91350500 
+local_87:  acquire        0,R1,10500 # L0529 t=91350500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0530 
+# endloop t=91361000 
+           loop           R2,@local_87 # L0531 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=92390000 
+           acquire        0,R1,10500 # L0532 t=92390000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0533 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=92400500 
+           move           99,R2      # L0534 R2: Rs._cnt88
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=92400500 
+local_88:  acquire        0,R1,10500 # L0535 t=92400500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0536 
+# endloop t=92411000 
+           loop           R2,@local_88 # L0537 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=93440000 
+           acquire        0,R1,10500 # L0538 t=93440000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0539 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=93450500 
+           move           99,R2      # L0540 R2: Rs._cnt89
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=93450500 
+local_89:  acquire        0,R1,10500 # L0541 t=93450500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0542 
+# endloop t=93461000 
+           loop           R2,@local_89 # L0543 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=94490000 
+           acquire        0,R1,10500 # L0544 t=94490000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0545 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=94500500 
+           move           99,R2      # L0546 R2: Rs._cnt90
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=94500500 
+local_90:  acquire        0,R1,10500 # L0547 t=94500500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0548 
+# endloop t=94511000 
+           loop           R2,@local_90 # L0549 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=95540000 
+           acquire        0,R1,10500 # L0550 t=95540000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0551 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=95550500 
+           move           99,R2      # L0552 R2: Rs._cnt91
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=95550500 
+local_91:  acquire        0,R1,10500 # L0553 t=95550500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0554 
+# endloop t=95561000 
+           loop           R2,@local_91 # L0555 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=96590000 
+           acquire        0,R1,10500 # L0556 t=96590000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0557 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=96600500 
+           move           99,R2      # L0558 R2: Rs._cnt92
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=96600500 
+local_92:  acquire        0,R1,10500 # L0559 t=96600500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0560 
+# endloop t=96611000 
+           loop           R2,@local_92 # L0561 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=97640000 
+           acquire        0,R1,10500 # L0562 t=97640000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0563 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=97650500 
+           move           99,R2      # L0564 R2: Rs._cnt93
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=97650500 
+local_93:  acquire        0,R1,10500 # L0565 t=97650500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0566 
+# endloop t=97661000 
+           loop           R2,@local_93 # L0567 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=98690000 
+           acquire        0,R1,10500 # L0568 t=98690000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0569 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=98700500 
+           move           99,R2      # L0570 R2: Rs._cnt94
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=98700500 
+local_94:  acquire        0,R1,10500 # L0571 t=98700500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0572 
+# endloop t=98711000 
+           loop           R2,@local_94 # L0573 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=99740000 
+           acquire        0,R1,10500 # L0574 t=99740000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0575 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=99750500 
+           move           99,R2      # L0576 R2: Rs._cnt95
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=99750500 
+local_95:  acquire        0,R1,10500 # L0577 t=99750500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0578 
+# endloop t=99761000 
+           loop           R2,@local_95 # L0579 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=100790000 
+           acquire        0,R1,10500 # L0580 t=100790000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0581 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=100800500 
+           move           99,R2      # L0582 R2: Rs._cnt96
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=100800500 
+local_96:  acquire        0,R1,10500 # L0583 t=100800500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0584 
+# endloop t=100811000 
+           loop           R2,@local_96 # L0585 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=101840000 
+           acquire        0,R1,10500 # L0586 t=101840000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0587 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=101850500 
+           move           99,R2      # L0588 R2: Rs._cnt97
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=101850500 
+local_97:  acquire        0,R1,10500 # L0589 t=101850500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0590 
+# endloop t=101861000 
+           loop           R2,@local_97 # L0591 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=102890000 
+           acquire        0,R1,10500 # L0592 t=102890000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0593 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=102900500 
+           move           99,R2      # L0594 R2: Rs._cnt98
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=102900500 
+local_98:  acquire        0,R1,10500 # L0595 t=102900500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0596 
+# endloop t=102911000 
+           loop           R2,@local_98 # L0597 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=103940000 
+           acquire        0,R1,10500 # L0598 t=103940000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0599 
+# repeated_acquire(100, 10500, default, increment) 
+# repeat(99): t=103950500 
+           move           99,R2      # L0600 R2: Rs._cnt99
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=103950500 
+local_99:  acquire        0,R1,10500 # L0601 t=103950500
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0602 
+# endloop t=103961000 
+           loop           R2,@local_99 # L0603 
+#     --- loop duration: 1039500 
+# acquire(default, increment) 
+# acquire(bins=default, bin=Rs._bin_default) t=104990000 
+           acquire        0,R1,10000 # L0604 t=104990000
+# Rs._bin_default:int = Rs._bin_default + 1 
+           add            R1,1,R1    # L0605 
+# --END-- 
+           stop                      # L0606 
+"""
+

@@ -1,0 +1,2340 @@
+waveforms={
+    '_ramp_104_0_1562':{
+        'data':
+            [  0.00000,  0.00015,  0.00030,  0.00045,  0.00060,  0.00075,
+               0.00090,  0.00105,  0.00120,  0.00135,  0.00150,  0.00165,
+               0.00180,  0.00195,  0.00210,  0.00225,  0.00240,  0.00255,
+               0.00270,  0.00285,  0.00300,  0.00316,  0.00331,  0.00346,
+               0.00361,  0.00376,  0.00391,  0.00406,  0.00421,  0.00436,
+               0.00451,  0.00466,  0.00481,  0.00496,  0.00511,  0.00526,
+               0.00541,  0.00556,  0.00571,  0.00586,  0.00601,  0.00616,
+               0.00631,  0.00646,  0.00661,  0.00676,  0.00691,  0.00706,
+               0.00721,  0.00736,  0.00751,  0.00766,  0.00781,  0.00796,
+               0.00811,  0.00826,  0.00841,  0.00856,  0.00871,  0.00886,
+               0.00901,  0.00916,  0.00931,  0.00947,  0.00962,  0.00977,
+               0.00992,  0.01007,  0.01022,  0.01037,  0.01052,  0.01067,
+               0.01082,  0.01097,  0.01112,  0.01127,  0.01142,  0.01157,
+               0.01172,  0.01187,  0.01202,  0.01217,  0.01232,  0.01247,
+               0.01262,  0.01277,  0.01292,  0.01307,  0.01322,  0.01337,
+               0.01352,  0.01367,  0.01382,  0.01397,  0.01412,  0.01427,
+               0.01442,  0.01457,  0.01472,  0.01487,  0.01502,  0.01517,
+               0.01532,  0.01547],
+        'index':0,
+        },
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           0,R0       # L0001 R0: _zero
+           wait_sync      100        # L0002 t=0
+# --START-- (t=0) 
+_start:    reset_ph                  # L0003 @ 0
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0004 R1: Rs._ramp_offset
+# awg_gain = 0.00633904761904762, None t=0 
+           set_awg_gain   207,0      # L0005 @ 0
+# repeat(10500): t=0 
+           move           10500,R2   # L0006 R2: Rs._cnt0
+# awg_offset = Rs._ramp_offset, None t=0 
+local_0:   asr            R1,16,R3   # L0007 temp R3
+           nop                       # L0008  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0009 @ 0
+# play _ramp_104_0_1562 None t=0 
+           play           0,0,100    # L0010 t=0
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0011 
+# endloop t=100 
+           loop           R2,@local_0 # L0012 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=1050000 
+# ------:  set_awg_gain   0,0        # @ 1050000 = overwritten =
+# awg_offset = 0.0, None t=1050000 
+           set_awg_offs   0,0        # L0013 @ 1050000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0014 
+# awg_gain = 0.00633904761904762, None t=1050000 
+# -- Overwrites set_awg_gain at 1050000 -- 
+           set_awg_gain   207,0      # L0015 @ 1050000
+# repeat(10500): t=1050000 
+           move           10500,R2   # L0016 R2: Rs._cnt1
+# awg_offset = Rs._ramp_offset, None t=1050000 
+local_1:   asr            R1,16,R3   # L0017 temp R3
+           nop                       # L0018  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0019 @ 1050000
+# play _ramp_104_0_1562 None t=1050000 
+           play           0,0,100    # L0020 t=1050000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0021 
+# endloop t=1050100 
+           loop           R2,@local_1 # L0022 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=2100000 
+# ------:  set_awg_gain   0,0        # @ 2100000 = overwritten =
+# awg_offset = 0.0, None t=2100000 
+           set_awg_offs   0,0        # L0023 @ 2100000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0024 
+# awg_gain = 0.00633904761904762, None t=2100000 
+# -- Overwrites set_awg_gain at 2100000 -- 
+           set_awg_gain   207,0      # L0025 @ 2100000
+# repeat(10500): t=2100000 
+           move           10500,R2   # L0026 R2: Rs._cnt2
+# awg_offset = Rs._ramp_offset, None t=2100000 
+local_2:   asr            R1,16,R3   # L0027 temp R3
+           nop                       # L0028  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0029 @ 2100000
+# play _ramp_104_0_1562 None t=2100000 
+           play           0,0,100    # L0030 t=2100000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0031 
+# endloop t=2100100 
+           loop           R2,@local_2 # L0032 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=3150000 
+# ------:  set_awg_gain   0,0        # @ 3150000 = overwritten =
+# awg_offset = 0.0, None t=3150000 
+           set_awg_offs   0,0        # L0033 @ 3150000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0034 
+# awg_gain = 0.00633904761904762, None t=3150000 
+# -- Overwrites set_awg_gain at 3150000 -- 
+           set_awg_gain   207,0      # L0035 @ 3150000
+# repeat(10500): t=3150000 
+           move           10500,R2   # L0036 R2: Rs._cnt3
+# awg_offset = Rs._ramp_offset, None t=3150000 
+local_3:   asr            R1,16,R3   # L0037 temp R3
+           nop                       # L0038  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0039 @ 3150000
+# play _ramp_104_0_1562 None t=3150000 
+           play           0,0,100    # L0040 t=3150000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0041 
+# endloop t=3150100 
+           loop           R2,@local_3 # L0042 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=4200000 
+# ------:  set_awg_gain   0,0        # @ 4200000 = overwritten =
+# awg_offset = 0.0, None t=4200000 
+           set_awg_offs   0,0        # L0043 @ 4200000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0044 
+# awg_gain = 0.00633904761904762, None t=4200000 
+# -- Overwrites set_awg_gain at 4200000 -- 
+           set_awg_gain   207,0      # L0045 @ 4200000
+# repeat(10500): t=4200000 
+           move           10500,R2   # L0046 R2: Rs._cnt4
+# awg_offset = Rs._ramp_offset, None t=4200000 
+local_4:   asr            R1,16,R3   # L0047 temp R3
+           nop                       # L0048  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0049 @ 4200000
+# play _ramp_104_0_1562 None t=4200000 
+           play           0,0,100    # L0050 t=4200000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0051 
+# endloop t=4200100 
+           loop           R2,@local_4 # L0052 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=5250000 
+# ------:  set_awg_gain   0,0        # @ 5250000 = overwritten =
+# awg_offset = 0.0, None t=5250000 
+           set_awg_offs   0,0        # L0053 @ 5250000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0054 
+# awg_gain = 0.00633904761904762, None t=5250000 
+# -- Overwrites set_awg_gain at 5250000 -- 
+           set_awg_gain   207,0      # L0055 @ 5250000
+# repeat(10500): t=5250000 
+           move           10500,R2   # L0056 R2: Rs._cnt5
+# awg_offset = Rs._ramp_offset, None t=5250000 
+local_5:   asr            R1,16,R3   # L0057 temp R3
+           nop                       # L0058  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0059 @ 5250000
+# play _ramp_104_0_1562 None t=5250000 
+           play           0,0,100    # L0060 t=5250000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0061 
+# endloop t=5250100 
+           loop           R2,@local_5 # L0062 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=6300000 
+# ------:  set_awg_gain   0,0        # @ 6300000 = overwritten =
+# awg_offset = 0.0, None t=6300000 
+           set_awg_offs   0,0        # L0063 @ 6300000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0064 
+# awg_gain = 0.00633904761904762, None t=6300000 
+# -- Overwrites set_awg_gain at 6300000 -- 
+           set_awg_gain   207,0      # L0065 @ 6300000
+# repeat(10500): t=6300000 
+           move           10500,R2   # L0066 R2: Rs._cnt6
+# awg_offset = Rs._ramp_offset, None t=6300000 
+local_6:   asr            R1,16,R3   # L0067 temp R3
+           nop                       # L0068  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0069 @ 6300000
+# play _ramp_104_0_1562 None t=6300000 
+           play           0,0,100    # L0070 t=6300000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0071 
+# endloop t=6300100 
+           loop           R2,@local_6 # L0072 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=7350000 
+# ------:  set_awg_gain   0,0        # @ 7350000 = overwritten =
+# awg_offset = 0.0, None t=7350000 
+           set_awg_offs   0,0        # L0073 @ 7350000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0074 
+# awg_gain = 0.00633904761904762, None t=7350000 
+# -- Overwrites set_awg_gain at 7350000 -- 
+           set_awg_gain   207,0      # L0075 @ 7350000
+# repeat(10500): t=7350000 
+           move           10500,R2   # L0076 R2: Rs._cnt7
+# awg_offset = Rs._ramp_offset, None t=7350000 
+local_7:   asr            R1,16,R3   # L0077 temp R3
+           nop                       # L0078  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0079 @ 7350000
+# play _ramp_104_0_1562 None t=7350000 
+           play           0,0,100    # L0080 t=7350000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0081 
+# endloop t=7350100 
+           loop           R2,@local_7 # L0082 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=8400000 
+# ------:  set_awg_gain   0,0        # @ 8400000 = overwritten =
+# awg_offset = 0.0, None t=8400000 
+           set_awg_offs   0,0        # L0083 @ 8400000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0084 
+# awg_gain = 0.00633904761904762, None t=8400000 
+# -- Overwrites set_awg_gain at 8400000 -- 
+           set_awg_gain   207,0      # L0085 @ 8400000
+# repeat(10500): t=8400000 
+           move           10500,R2   # L0086 R2: Rs._cnt8
+# awg_offset = Rs._ramp_offset, None t=8400000 
+local_8:   asr            R1,16,R3   # L0087 temp R3
+           nop                       # L0088  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0089 @ 8400000
+# play _ramp_104_0_1562 None t=8400000 
+           play           0,0,100    # L0090 t=8400000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0091 
+# endloop t=8400100 
+           loop           R2,@local_8 # L0092 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=9450000 
+# ------:  set_awg_gain   0,0        # @ 9450000 = overwritten =
+# awg_offset = 0.0, None t=9450000 
+           set_awg_offs   0,0        # L0093 @ 9450000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0094 
+# awg_gain = 0.00633904761904762, None t=9450000 
+# -- Overwrites set_awg_gain at 9450000 -- 
+           set_awg_gain   207,0      # L0095 @ 9450000
+# repeat(10500): t=9450000 
+           move           10500,R2   # L0096 R2: Rs._cnt9
+# awg_offset = Rs._ramp_offset, None t=9450000 
+local_9:   asr            R1,16,R3   # L0097 temp R3
+           nop                       # L0098  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0099 @ 9450000
+# play _ramp_104_0_1562 None t=9450000 
+           play           0,0,100    # L0100 t=9450000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0101 
+# endloop t=9450100 
+           loop           R2,@local_9 # L0102 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=10500000 
+# ------:  set_awg_gain   0,0        # @ 10500000 = overwritten =
+# awg_offset = 0.0, None t=10500000 
+           set_awg_offs   0,0        # L0103 @ 10500000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0104 
+# awg_gain = 0.00633904761904762, None t=10500000 
+# -- Overwrites set_awg_gain at 10500000 -- 
+           set_awg_gain   207,0      # L0105 @ 10500000
+# repeat(10500): t=10500000 
+           move           10500,R2   # L0106 R2: Rs._cnt10
+# awg_offset = Rs._ramp_offset, None t=10500000 
+local_10:  asr            R1,16,R3   # L0107 temp R3
+           nop                       # L0108  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0109 @ 10500000
+# play _ramp_104_0_1562 None t=10500000 
+           play           0,0,100    # L0110 t=10500000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0111 
+# endloop t=10500100 
+           loop           R2,@local_10 # L0112 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=11550000 
+# ------:  set_awg_gain   0,0        # @ 11550000 = overwritten =
+# awg_offset = 0.0, None t=11550000 
+           set_awg_offs   0,0        # L0113 @ 11550000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0114 
+# awg_gain = 0.00633904761904762, None t=11550000 
+# -- Overwrites set_awg_gain at 11550000 -- 
+           set_awg_gain   207,0      # L0115 @ 11550000
+# repeat(10500): t=11550000 
+           move           10500,R2   # L0116 R2: Rs._cnt11
+# awg_offset = Rs._ramp_offset, None t=11550000 
+local_11:  asr            R1,16,R3   # L0117 temp R3
+           nop                       # L0118  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0119 @ 11550000
+# play _ramp_104_0_1562 None t=11550000 
+           play           0,0,100    # L0120 t=11550000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0121 
+# endloop t=11550100 
+           loop           R2,@local_11 # L0122 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=12600000 
+# ------:  set_awg_gain   0,0        # @ 12600000 = overwritten =
+# awg_offset = 0.0, None t=12600000 
+           set_awg_offs   0,0        # L0123 @ 12600000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0124 
+# awg_gain = 0.00633904761904762, None t=12600000 
+# -- Overwrites set_awg_gain at 12600000 -- 
+           set_awg_gain   207,0      # L0125 @ 12600000
+# repeat(10500): t=12600000 
+           move           10500,R2   # L0126 R2: Rs._cnt12
+# awg_offset = Rs._ramp_offset, None t=12600000 
+local_12:  asr            R1,16,R3   # L0127 temp R3
+           nop                       # L0128  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0129 @ 12600000
+# play _ramp_104_0_1562 None t=12600000 
+           play           0,0,100    # L0130 t=12600000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0131 
+# endloop t=12600100 
+           loop           R2,@local_12 # L0132 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=13650000 
+# ------:  set_awg_gain   0,0        # @ 13650000 = overwritten =
+# awg_offset = 0.0, None t=13650000 
+           set_awg_offs   0,0        # L0133 @ 13650000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0134 
+# awg_gain = 0.00633904761904762, None t=13650000 
+# -- Overwrites set_awg_gain at 13650000 -- 
+           set_awg_gain   207,0      # L0135 @ 13650000
+# repeat(10500): t=13650000 
+           move           10500,R2   # L0136 R2: Rs._cnt13
+# awg_offset = Rs._ramp_offset, None t=13650000 
+local_13:  asr            R1,16,R3   # L0137 temp R3
+           nop                       # L0138  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0139 @ 13650000
+# play _ramp_104_0_1562 None t=13650000 
+           play           0,0,100    # L0140 t=13650000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0141 
+# endloop t=13650100 
+           loop           R2,@local_13 # L0142 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=14700000 
+# ------:  set_awg_gain   0,0        # @ 14700000 = overwritten =
+# awg_offset = 0.0, None t=14700000 
+           set_awg_offs   0,0        # L0143 @ 14700000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0144 
+# awg_gain = 0.00633904761904762, None t=14700000 
+# -- Overwrites set_awg_gain at 14700000 -- 
+           set_awg_gain   207,0      # L0145 @ 14700000
+# repeat(10500): t=14700000 
+           move           10500,R2   # L0146 R2: Rs._cnt14
+# awg_offset = Rs._ramp_offset, None t=14700000 
+local_14:  asr            R1,16,R3   # L0147 temp R3
+           nop                       # L0148  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0149 @ 14700000
+# play _ramp_104_0_1562 None t=14700000 
+           play           0,0,100    # L0150 t=14700000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0151 
+# endloop t=14700100 
+           loop           R2,@local_14 # L0152 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=15750000 
+# ------:  set_awg_gain   0,0        # @ 15750000 = overwritten =
+# awg_offset = 0.0, None t=15750000 
+           set_awg_offs   0,0        # L0153 @ 15750000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0154 
+# awg_gain = 0.00633904761904762, None t=15750000 
+# -- Overwrites set_awg_gain at 15750000 -- 
+           set_awg_gain   207,0      # L0155 @ 15750000
+# repeat(10500): t=15750000 
+           move           10500,R2   # L0156 R2: Rs._cnt15
+# awg_offset = Rs._ramp_offset, None t=15750000 
+local_15:  asr            R1,16,R3   # L0157 temp R3
+           nop                       # L0158  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0159 @ 15750000
+# play _ramp_104_0_1562 None t=15750000 
+           play           0,0,100    # L0160 t=15750000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0161 
+# endloop t=15750100 
+           loop           R2,@local_15 # L0162 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=16800000 
+# ------:  set_awg_gain   0,0        # @ 16800000 = overwritten =
+# awg_offset = 0.0, None t=16800000 
+           set_awg_offs   0,0        # L0163 @ 16800000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0164 
+# awg_gain = 0.00633904761904762, None t=16800000 
+# -- Overwrites set_awg_gain at 16800000 -- 
+           set_awg_gain   207,0      # L0165 @ 16800000
+# repeat(10500): t=16800000 
+           move           10500,R2   # L0166 R2: Rs._cnt16
+# awg_offset = Rs._ramp_offset, None t=16800000 
+local_16:  asr            R1,16,R3   # L0167 temp R3
+           nop                       # L0168  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0169 @ 16800000
+# play _ramp_104_0_1562 None t=16800000 
+           play           0,0,100    # L0170 t=16800000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0171 
+# endloop t=16800100 
+           loop           R2,@local_16 # L0172 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=17850000 
+# ------:  set_awg_gain   0,0        # @ 17850000 = overwritten =
+# awg_offset = 0.0, None t=17850000 
+           set_awg_offs   0,0        # L0173 @ 17850000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0174 
+# awg_gain = 0.00633904761904762, None t=17850000 
+# -- Overwrites set_awg_gain at 17850000 -- 
+           set_awg_gain   207,0      # L0175 @ 17850000
+# repeat(10500): t=17850000 
+           move           10500,R2   # L0176 R2: Rs._cnt17
+# awg_offset = Rs._ramp_offset, None t=17850000 
+local_17:  asr            R1,16,R3   # L0177 temp R3
+           nop                       # L0178  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0179 @ 17850000
+# play _ramp_104_0_1562 None t=17850000 
+           play           0,0,100    # L0180 t=17850000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0181 
+# endloop t=17850100 
+           loop           R2,@local_17 # L0182 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=18900000 
+# ------:  set_awg_gain   0,0        # @ 18900000 = overwritten =
+# awg_offset = 0.0, None t=18900000 
+           set_awg_offs   0,0        # L0183 @ 18900000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0184 
+# awg_gain = 0.00633904761904762, None t=18900000 
+# -- Overwrites set_awg_gain at 18900000 -- 
+           set_awg_gain   207,0      # L0185 @ 18900000
+# repeat(10500): t=18900000 
+           move           10500,R2   # L0186 R2: Rs._cnt18
+# awg_offset = Rs._ramp_offset, None t=18900000 
+local_18:  asr            R1,16,R3   # L0187 temp R3
+           nop                       # L0188  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0189 @ 18900000
+# play _ramp_104_0_1562 None t=18900000 
+           play           0,0,100    # L0190 t=18900000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0191 
+# endloop t=18900100 
+           loop           R2,@local_18 # L0192 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=19950000 
+# ------:  set_awg_gain   0,0        # @ 19950000 = overwritten =
+# awg_offset = 0.0, None t=19950000 
+           set_awg_offs   0,0        # L0193 @ 19950000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0194 
+# awg_gain = 0.00633904761904762, None t=19950000 
+# -- Overwrites set_awg_gain at 19950000 -- 
+           set_awg_gain   207,0      # L0195 @ 19950000
+# repeat(10500): t=19950000 
+           move           10500,R2   # L0196 R2: Rs._cnt19
+# awg_offset = Rs._ramp_offset, None t=19950000 
+local_19:  asr            R1,16,R3   # L0197 temp R3
+           nop                       # L0198  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0199 @ 19950000
+# play _ramp_104_0_1562 None t=19950000 
+           play           0,0,100    # L0200 t=19950000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0201 
+# endloop t=19950100 
+           loop           R2,@local_19 # L0202 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=21000000 
+# ------:  set_awg_gain   0,0        # @ 21000000 = overwritten =
+# awg_offset = 0.0, None t=21000000 
+           set_awg_offs   0,0        # L0203 @ 21000000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0204 
+# awg_gain = 0.00633904761904762, None t=21000000 
+# -- Overwrites set_awg_gain at 21000000 -- 
+           set_awg_gain   207,0      # L0205 @ 21000000
+# repeat(10500): t=21000000 
+           move           10500,R2   # L0206 R2: Rs._cnt20
+# awg_offset = Rs._ramp_offset, None t=21000000 
+local_20:  asr            R1,16,R3   # L0207 temp R3
+           nop                       # L0208  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0209 @ 21000000
+# play _ramp_104_0_1562 None t=21000000 
+           play           0,0,100    # L0210 t=21000000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0211 
+# endloop t=21000100 
+           loop           R2,@local_20 # L0212 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=22050000 
+# ------:  set_awg_gain   0,0        # @ 22050000 = overwritten =
+# awg_offset = 0.0, None t=22050000 
+           set_awg_offs   0,0        # L0213 @ 22050000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0214 
+# awg_gain = 0.00633904761904762, None t=22050000 
+# -- Overwrites set_awg_gain at 22050000 -- 
+           set_awg_gain   207,0      # L0215 @ 22050000
+# repeat(10500): t=22050000 
+           move           10500,R2   # L0216 R2: Rs._cnt21
+# awg_offset = Rs._ramp_offset, None t=22050000 
+local_21:  asr            R1,16,R3   # L0217 temp R3
+           nop                       # L0218  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0219 @ 22050000
+# play _ramp_104_0_1562 None t=22050000 
+           play           0,0,100    # L0220 t=22050000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0221 
+# endloop t=22050100 
+           loop           R2,@local_21 # L0222 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=23100000 
+# ------:  set_awg_gain   0,0        # @ 23100000 = overwritten =
+# awg_offset = 0.0, None t=23100000 
+           set_awg_offs   0,0        # L0223 @ 23100000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0224 
+# awg_gain = 0.00633904761904762, None t=23100000 
+# -- Overwrites set_awg_gain at 23100000 -- 
+           set_awg_gain   207,0      # L0225 @ 23100000
+# repeat(10500): t=23100000 
+           move           10500,R2   # L0226 R2: Rs._cnt22
+# awg_offset = Rs._ramp_offset, None t=23100000 
+local_22:  asr            R1,16,R3   # L0227 temp R3
+           nop                       # L0228  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0229 @ 23100000
+# play _ramp_104_0_1562 None t=23100000 
+           play           0,0,100    # L0230 t=23100000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0231 
+# endloop t=23100100 
+           loop           R2,@local_22 # L0232 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=24150000 
+# ------:  set_awg_gain   0,0        # @ 24150000 = overwritten =
+# awg_offset = 0.0, None t=24150000 
+           set_awg_offs   0,0        # L0233 @ 24150000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0234 
+# awg_gain = 0.00633904761904762, None t=24150000 
+# -- Overwrites set_awg_gain at 24150000 -- 
+           set_awg_gain   207,0      # L0235 @ 24150000
+# repeat(10500): t=24150000 
+           move           10500,R2   # L0236 R2: Rs._cnt23
+# awg_offset = Rs._ramp_offset, None t=24150000 
+local_23:  asr            R1,16,R3   # L0237 temp R3
+           nop                       # L0238  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0239 @ 24150000
+# play _ramp_104_0_1562 None t=24150000 
+           play           0,0,100    # L0240 t=24150000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0241 
+# endloop t=24150100 
+           loop           R2,@local_23 # L0242 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=25200000 
+# ------:  set_awg_gain   0,0        # @ 25200000 = overwritten =
+# awg_offset = 0.0, None t=25200000 
+           set_awg_offs   0,0        # L0243 @ 25200000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0244 
+# awg_gain = 0.00633904761904762, None t=25200000 
+# -- Overwrites set_awg_gain at 25200000 -- 
+           set_awg_gain   207,0      # L0245 @ 25200000
+# repeat(10500): t=25200000 
+           move           10500,R2   # L0246 R2: Rs._cnt24
+# awg_offset = Rs._ramp_offset, None t=25200000 
+local_24:  asr            R1,16,R3   # L0247 temp R3
+           nop                       # L0248  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0249 @ 25200000
+# play _ramp_104_0_1562 None t=25200000 
+           play           0,0,100    # L0250 t=25200000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0251 
+# endloop t=25200100 
+           loop           R2,@local_24 # L0252 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=26250000 
+# ------:  set_awg_gain   0,0        # @ 26250000 = overwritten =
+# awg_offset = 0.0, None t=26250000 
+           set_awg_offs   0,0        # L0253 @ 26250000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0254 
+# awg_gain = 0.00633904761904762, None t=26250000 
+# -- Overwrites set_awg_gain at 26250000 -- 
+           set_awg_gain   207,0      # L0255 @ 26250000
+# repeat(10500): t=26250000 
+           move           10500,R2   # L0256 R2: Rs._cnt25
+# awg_offset = Rs._ramp_offset, None t=26250000 
+local_25:  asr            R1,16,R3   # L0257 temp R3
+           nop                       # L0258  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0259 @ 26250000
+# play _ramp_104_0_1562 None t=26250000 
+           play           0,0,100    # L0260 t=26250000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0261 
+# endloop t=26250100 
+           loop           R2,@local_25 # L0262 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=27300000 
+# ------:  set_awg_gain   0,0        # @ 27300000 = overwritten =
+# awg_offset = 0.0, None t=27300000 
+           set_awg_offs   0,0        # L0263 @ 27300000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0264 
+# awg_gain = 0.00633904761904762, None t=27300000 
+# -- Overwrites set_awg_gain at 27300000 -- 
+           set_awg_gain   207,0      # L0265 @ 27300000
+# repeat(10500): t=27300000 
+           move           10500,R2   # L0266 R2: Rs._cnt26
+# awg_offset = Rs._ramp_offset, None t=27300000 
+local_26:  asr            R1,16,R3   # L0267 temp R3
+           nop                       # L0268  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0269 @ 27300000
+# play _ramp_104_0_1562 None t=27300000 
+           play           0,0,100    # L0270 t=27300000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0271 
+# endloop t=27300100 
+           loop           R2,@local_26 # L0272 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=28350000 
+# ------:  set_awg_gain   0,0        # @ 28350000 = overwritten =
+# awg_offset = 0.0, None t=28350000 
+           set_awg_offs   0,0        # L0273 @ 28350000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0274 
+# awg_gain = 0.00633904761904762, None t=28350000 
+# -- Overwrites set_awg_gain at 28350000 -- 
+           set_awg_gain   207,0      # L0275 @ 28350000
+# repeat(10500): t=28350000 
+           move           10500,R2   # L0276 R2: Rs._cnt27
+# awg_offset = Rs._ramp_offset, None t=28350000 
+local_27:  asr            R1,16,R3   # L0277 temp R3
+           nop                       # L0278  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0279 @ 28350000
+# play _ramp_104_0_1562 None t=28350000 
+           play           0,0,100    # L0280 t=28350000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0281 
+# endloop t=28350100 
+           loop           R2,@local_27 # L0282 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=29400000 
+# ------:  set_awg_gain   0,0        # @ 29400000 = overwritten =
+# awg_offset = 0.0, None t=29400000 
+           set_awg_offs   0,0        # L0283 @ 29400000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0284 
+# awg_gain = 0.00633904761904762, None t=29400000 
+# -- Overwrites set_awg_gain at 29400000 -- 
+           set_awg_gain   207,0      # L0285 @ 29400000
+# repeat(10500): t=29400000 
+           move           10500,R2   # L0286 R2: Rs._cnt28
+# awg_offset = Rs._ramp_offset, None t=29400000 
+local_28:  asr            R1,16,R3   # L0287 temp R3
+           nop                       # L0288  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0289 @ 29400000
+# play _ramp_104_0_1562 None t=29400000 
+           play           0,0,100    # L0290 t=29400000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0291 
+# endloop t=29400100 
+           loop           R2,@local_28 # L0292 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=30450000 
+# ------:  set_awg_gain   0,0        # @ 30450000 = overwritten =
+# awg_offset = 0.0, None t=30450000 
+           set_awg_offs   0,0        # L0293 @ 30450000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0294 
+# awg_gain = 0.00633904761904762, None t=30450000 
+# -- Overwrites set_awg_gain at 30450000 -- 
+           set_awg_gain   207,0      # L0295 @ 30450000
+# repeat(10500): t=30450000 
+           move           10500,R2   # L0296 R2: Rs._cnt29
+# awg_offset = Rs._ramp_offset, None t=30450000 
+local_29:  asr            R1,16,R3   # L0297 temp R3
+           nop                       # L0298  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0299 @ 30450000
+# play _ramp_104_0_1562 None t=30450000 
+           play           0,0,100    # L0300 t=30450000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0301 
+# endloop t=30450100 
+           loop           R2,@local_29 # L0302 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=31500000 
+# ------:  set_awg_gain   0,0        # @ 31500000 = overwritten =
+# awg_offset = 0.0, None t=31500000 
+           set_awg_offs   0,0        # L0303 @ 31500000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0304 
+# awg_gain = 0.00633904761904762, None t=31500000 
+# -- Overwrites set_awg_gain at 31500000 -- 
+           set_awg_gain   207,0      # L0305 @ 31500000
+# repeat(10500): t=31500000 
+           move           10500,R2   # L0306 R2: Rs._cnt30
+# awg_offset = Rs._ramp_offset, None t=31500000 
+local_30:  asr            R1,16,R3   # L0307 temp R3
+           nop                       # L0308  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0309 @ 31500000
+# play _ramp_104_0_1562 None t=31500000 
+           play           0,0,100    # L0310 t=31500000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0311 
+# endloop t=31500100 
+           loop           R2,@local_30 # L0312 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=32550000 
+# ------:  set_awg_gain   0,0        # @ 32550000 = overwritten =
+# awg_offset = 0.0, None t=32550000 
+           set_awg_offs   0,0        # L0313 @ 32550000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0314 
+# awg_gain = 0.00633904761904762, None t=32550000 
+# -- Overwrites set_awg_gain at 32550000 -- 
+           set_awg_gain   207,0      # L0315 @ 32550000
+# repeat(10500): t=32550000 
+           move           10500,R2   # L0316 R2: Rs._cnt31
+# awg_offset = Rs._ramp_offset, None t=32550000 
+local_31:  asr            R1,16,R3   # L0317 temp R3
+           nop                       # L0318  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0319 @ 32550000
+# play _ramp_104_0_1562 None t=32550000 
+           play           0,0,100    # L0320 t=32550000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0321 
+# endloop t=32550100 
+           loop           R2,@local_31 # L0322 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=33600000 
+# ------:  set_awg_gain   0,0        # @ 33600000 = overwritten =
+# awg_offset = 0.0, None t=33600000 
+           set_awg_offs   0,0        # L0323 @ 33600000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0324 
+# awg_gain = 0.00633904761904762, None t=33600000 
+# -- Overwrites set_awg_gain at 33600000 -- 
+           set_awg_gain   207,0      # L0325 @ 33600000
+# repeat(10500): t=33600000 
+           move           10500,R2   # L0326 R2: Rs._cnt32
+# awg_offset = Rs._ramp_offset, None t=33600000 
+local_32:  asr            R1,16,R3   # L0327 temp R3
+           nop                       # L0328  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0329 @ 33600000
+# play _ramp_104_0_1562 None t=33600000 
+           play           0,0,100    # L0330 t=33600000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0331 
+# endloop t=33600100 
+           loop           R2,@local_32 # L0332 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=34650000 
+# ------:  set_awg_gain   0,0        # @ 34650000 = overwritten =
+# awg_offset = 0.0, None t=34650000 
+           set_awg_offs   0,0        # L0333 @ 34650000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0334 
+# awg_gain = 0.00633904761904762, None t=34650000 
+# -- Overwrites set_awg_gain at 34650000 -- 
+           set_awg_gain   207,0      # L0335 @ 34650000
+# repeat(10500): t=34650000 
+           move           10500,R2   # L0336 R2: Rs._cnt33
+# awg_offset = Rs._ramp_offset, None t=34650000 
+local_33:  asr            R1,16,R3   # L0337 temp R3
+           nop                       # L0338  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0339 @ 34650000
+# play _ramp_104_0_1562 None t=34650000 
+           play           0,0,100    # L0340 t=34650000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0341 
+# endloop t=34650100 
+           loop           R2,@local_33 # L0342 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=35700000 
+# ------:  set_awg_gain   0,0        # @ 35700000 = overwritten =
+# awg_offset = 0.0, None t=35700000 
+           set_awg_offs   0,0        # L0343 @ 35700000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0344 
+# awg_gain = 0.00633904761904762, None t=35700000 
+# -- Overwrites set_awg_gain at 35700000 -- 
+           set_awg_gain   207,0      # L0345 @ 35700000
+# repeat(10500): t=35700000 
+           move           10500,R2   # L0346 R2: Rs._cnt34
+# awg_offset = Rs._ramp_offset, None t=35700000 
+local_34:  asr            R1,16,R3   # L0347 temp R3
+           nop                       # L0348  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0349 @ 35700000
+# play _ramp_104_0_1562 None t=35700000 
+           play           0,0,100    # L0350 t=35700000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0351 
+# endloop t=35700100 
+           loop           R2,@local_34 # L0352 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=36750000 
+# ------:  set_awg_gain   0,0        # @ 36750000 = overwritten =
+# awg_offset = 0.0, None t=36750000 
+           set_awg_offs   0,0        # L0353 @ 36750000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0354 
+# awg_gain = 0.00633904761904762, None t=36750000 
+# -- Overwrites set_awg_gain at 36750000 -- 
+           set_awg_gain   207,0      # L0355 @ 36750000
+# repeat(10500): t=36750000 
+           move           10500,R2   # L0356 R2: Rs._cnt35
+# awg_offset = Rs._ramp_offset, None t=36750000 
+local_35:  asr            R1,16,R3   # L0357 temp R3
+           nop                       # L0358  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0359 @ 36750000
+# play _ramp_104_0_1562 None t=36750000 
+           play           0,0,100    # L0360 t=36750000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0361 
+# endloop t=36750100 
+           loop           R2,@local_35 # L0362 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=37800000 
+# ------:  set_awg_gain   0,0        # @ 37800000 = overwritten =
+# awg_offset = 0.0, None t=37800000 
+           set_awg_offs   0,0        # L0363 @ 37800000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0364 
+# awg_gain = 0.00633904761904762, None t=37800000 
+# -- Overwrites set_awg_gain at 37800000 -- 
+           set_awg_gain   207,0      # L0365 @ 37800000
+# repeat(10500): t=37800000 
+           move           10500,R2   # L0366 R2: Rs._cnt36
+# awg_offset = Rs._ramp_offset, None t=37800000 
+local_36:  asr            R1,16,R3   # L0367 temp R3
+           nop                       # L0368  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0369 @ 37800000
+# play _ramp_104_0_1562 None t=37800000 
+           play           0,0,100    # L0370 t=37800000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0371 
+# endloop t=37800100 
+           loop           R2,@local_36 # L0372 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=38850000 
+# ------:  set_awg_gain   0,0        # @ 38850000 = overwritten =
+# awg_offset = 0.0, None t=38850000 
+           set_awg_offs   0,0        # L0373 @ 38850000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0374 
+# awg_gain = 0.00633904761904762, None t=38850000 
+# -- Overwrites set_awg_gain at 38850000 -- 
+           set_awg_gain   207,0      # L0375 @ 38850000
+# repeat(10500): t=38850000 
+           move           10500,R2   # L0376 R2: Rs._cnt37
+# awg_offset = Rs._ramp_offset, None t=38850000 
+local_37:  asr            R1,16,R3   # L0377 temp R3
+           nop                       # L0378  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0379 @ 38850000
+# play _ramp_104_0_1562 None t=38850000 
+           play           0,0,100    # L0380 t=38850000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0381 
+# endloop t=38850100 
+           loop           R2,@local_37 # L0382 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=39900000 
+# ------:  set_awg_gain   0,0        # @ 39900000 = overwritten =
+# awg_offset = 0.0, None t=39900000 
+           set_awg_offs   0,0        # L0383 @ 39900000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0384 
+# awg_gain = 0.00633904761904762, None t=39900000 
+# -- Overwrites set_awg_gain at 39900000 -- 
+           set_awg_gain   207,0      # L0385 @ 39900000
+# repeat(10500): t=39900000 
+           move           10500,R2   # L0386 R2: Rs._cnt38
+# awg_offset = Rs._ramp_offset, None t=39900000 
+local_38:  asr            R1,16,R3   # L0387 temp R3
+           nop                       # L0388  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0389 @ 39900000
+# play _ramp_104_0_1562 None t=39900000 
+           play           0,0,100    # L0390 t=39900000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0391 
+# endloop t=39900100 
+           loop           R2,@local_38 # L0392 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=40950000 
+# ------:  set_awg_gain   0,0        # @ 40950000 = overwritten =
+# awg_offset = 0.0, None t=40950000 
+           set_awg_offs   0,0        # L0393 @ 40950000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0394 
+# awg_gain = 0.00633904761904762, None t=40950000 
+# -- Overwrites set_awg_gain at 40950000 -- 
+           set_awg_gain   207,0      # L0395 @ 40950000
+# repeat(10500): t=40950000 
+           move           10500,R2   # L0396 R2: Rs._cnt39
+# awg_offset = Rs._ramp_offset, None t=40950000 
+local_39:  asr            R1,16,R3   # L0397 temp R3
+           nop                       # L0398  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0399 @ 40950000
+# play _ramp_104_0_1562 None t=40950000 
+           play           0,0,100    # L0400 t=40950000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0401 
+# endloop t=40950100 
+           loop           R2,@local_39 # L0402 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=42000000 
+# ------:  set_awg_gain   0,0        # @ 42000000 = overwritten =
+# awg_offset = 0.0, None t=42000000 
+           set_awg_offs   0,0        # L0403 @ 42000000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0404 
+# awg_gain = 0.00633904761904762, None t=42000000 
+# -- Overwrites set_awg_gain at 42000000 -- 
+           set_awg_gain   207,0      # L0405 @ 42000000
+# repeat(10500): t=42000000 
+           move           10500,R2   # L0406 R2: Rs._cnt40
+# awg_offset = Rs._ramp_offset, None t=42000000 
+local_40:  asr            R1,16,R3   # L0407 temp R3
+           nop                       # L0408  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0409 @ 42000000
+# play _ramp_104_0_1562 None t=42000000 
+           play           0,0,100    # L0410 t=42000000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0411 
+# endloop t=42000100 
+           loop           R2,@local_40 # L0412 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=43050000 
+# ------:  set_awg_gain   0,0        # @ 43050000 = overwritten =
+# awg_offset = 0.0, None t=43050000 
+           set_awg_offs   0,0        # L0413 @ 43050000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0414 
+# awg_gain = 0.00633904761904762, None t=43050000 
+# -- Overwrites set_awg_gain at 43050000 -- 
+           set_awg_gain   207,0      # L0415 @ 43050000
+# repeat(10500): t=43050000 
+           move           10500,R2   # L0416 R2: Rs._cnt41
+# awg_offset = Rs._ramp_offset, None t=43050000 
+local_41:  asr            R1,16,R3   # L0417 temp R3
+           nop                       # L0418  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0419 @ 43050000
+# play _ramp_104_0_1562 None t=43050000 
+           play           0,0,100    # L0420 t=43050000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0421 
+# endloop t=43050100 
+           loop           R2,@local_41 # L0422 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=44100000 
+# ------:  set_awg_gain   0,0        # @ 44100000 = overwritten =
+# awg_offset = 0.0, None t=44100000 
+           set_awg_offs   0,0        # L0423 @ 44100000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0424 
+# awg_gain = 0.00633904761904762, None t=44100000 
+# -- Overwrites set_awg_gain at 44100000 -- 
+           set_awg_gain   207,0      # L0425 @ 44100000
+# repeat(10500): t=44100000 
+           move           10500,R2   # L0426 R2: Rs._cnt42
+# awg_offset = Rs._ramp_offset, None t=44100000 
+local_42:  asr            R1,16,R3   # L0427 temp R3
+           nop                       # L0428  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0429 @ 44100000
+# play _ramp_104_0_1562 None t=44100000 
+           play           0,0,100    # L0430 t=44100000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0431 
+# endloop t=44100100 
+           loop           R2,@local_42 # L0432 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=45150000 
+# ------:  set_awg_gain   0,0        # @ 45150000 = overwritten =
+# awg_offset = 0.0, None t=45150000 
+           set_awg_offs   0,0        # L0433 @ 45150000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0434 
+# awg_gain = 0.00633904761904762, None t=45150000 
+# -- Overwrites set_awg_gain at 45150000 -- 
+           set_awg_gain   207,0      # L0435 @ 45150000
+# repeat(10500): t=45150000 
+           move           10500,R2   # L0436 R2: Rs._cnt43
+# awg_offset = Rs._ramp_offset, None t=45150000 
+local_43:  asr            R1,16,R3   # L0437 temp R3
+           nop                       # L0438  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0439 @ 45150000
+# play _ramp_104_0_1562 None t=45150000 
+           play           0,0,100    # L0440 t=45150000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0441 
+# endloop t=45150100 
+           loop           R2,@local_43 # L0442 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=46200000 
+# ------:  set_awg_gain   0,0        # @ 46200000 = overwritten =
+# awg_offset = 0.0, None t=46200000 
+           set_awg_offs   0,0        # L0443 @ 46200000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0444 
+# awg_gain = 0.00633904761904762, None t=46200000 
+# -- Overwrites set_awg_gain at 46200000 -- 
+           set_awg_gain   207,0      # L0445 @ 46200000
+# repeat(10500): t=46200000 
+           move           10500,R2   # L0446 R2: Rs._cnt44
+# awg_offset = Rs._ramp_offset, None t=46200000 
+local_44:  asr            R1,16,R3   # L0447 temp R3
+           nop                       # L0448  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0449 @ 46200000
+# play _ramp_104_0_1562 None t=46200000 
+           play           0,0,100    # L0450 t=46200000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0451 
+# endloop t=46200100 
+           loop           R2,@local_44 # L0452 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=47250000 
+# ------:  set_awg_gain   0,0        # @ 47250000 = overwritten =
+# awg_offset = 0.0, None t=47250000 
+           set_awg_offs   0,0        # L0453 @ 47250000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0454 
+# awg_gain = 0.00633904761904762, None t=47250000 
+# -- Overwrites set_awg_gain at 47250000 -- 
+           set_awg_gain   207,0      # L0455 @ 47250000
+# repeat(10500): t=47250000 
+           move           10500,R2   # L0456 R2: Rs._cnt45
+# awg_offset = Rs._ramp_offset, None t=47250000 
+local_45:  asr            R1,16,R3   # L0457 temp R3
+           nop                       # L0458  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0459 @ 47250000
+# play _ramp_104_0_1562 None t=47250000 
+           play           0,0,100    # L0460 t=47250000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0461 
+# endloop t=47250100 
+           loop           R2,@local_45 # L0462 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=48300000 
+# ------:  set_awg_gain   0,0        # @ 48300000 = overwritten =
+# awg_offset = 0.0, None t=48300000 
+           set_awg_offs   0,0        # L0463 @ 48300000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0464 
+# awg_gain = 0.00633904761904762, None t=48300000 
+# -- Overwrites set_awg_gain at 48300000 -- 
+           set_awg_gain   207,0      # L0465 @ 48300000
+# repeat(10500): t=48300000 
+           move           10500,R2   # L0466 R2: Rs._cnt46
+# awg_offset = Rs._ramp_offset, None t=48300000 
+local_46:  asr            R1,16,R3   # L0467 temp R3
+           nop                       # L0468  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0469 @ 48300000
+# play _ramp_104_0_1562 None t=48300000 
+           play           0,0,100    # L0470 t=48300000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0471 
+# endloop t=48300100 
+           loop           R2,@local_46 # L0472 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=49350000 
+# ------:  set_awg_gain   0,0        # @ 49350000 = overwritten =
+# awg_offset = 0.0, None t=49350000 
+           set_awg_offs   0,0        # L0473 @ 49350000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0474 
+# awg_gain = 0.00633904761904762, None t=49350000 
+# -- Overwrites set_awg_gain at 49350000 -- 
+           set_awg_gain   207,0      # L0475 @ 49350000
+# repeat(10500): t=49350000 
+           move           10500,R2   # L0476 R2: Rs._cnt47
+# awg_offset = Rs._ramp_offset, None t=49350000 
+local_47:  asr            R1,16,R3   # L0477 temp R3
+           nop                       # L0478  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0479 @ 49350000
+# play _ramp_104_0_1562 None t=49350000 
+           play           0,0,100    # L0480 t=49350000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0481 
+# endloop t=49350100 
+           loop           R2,@local_47 # L0482 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=50400000 
+# ------:  set_awg_gain   0,0        # @ 50400000 = overwritten =
+# awg_offset = 0.0, None t=50400000 
+           set_awg_offs   0,0        # L0483 @ 50400000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0484 
+# awg_gain = 0.00633904761904762, None t=50400000 
+# -- Overwrites set_awg_gain at 50400000 -- 
+           set_awg_gain   207,0      # L0485 @ 50400000
+# repeat(10500): t=50400000 
+           move           10500,R2   # L0486 R2: Rs._cnt48
+# awg_offset = Rs._ramp_offset, None t=50400000 
+local_48:  asr            R1,16,R3   # L0487 temp R3
+           nop                       # L0488  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0489 @ 50400000
+# play _ramp_104_0_1562 None t=50400000 
+           play           0,0,100    # L0490 t=50400000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0491 
+# endloop t=50400100 
+           loop           R2,@local_48 # L0492 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=51450000 
+# ------:  set_awg_gain   0,0        # @ 51450000 = overwritten =
+# awg_offset = 0.0, None t=51450000 
+           set_awg_offs   0,0        # L0493 @ 51450000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0494 
+# awg_gain = 0.00633904761904762, None t=51450000 
+# -- Overwrites set_awg_gain at 51450000 -- 
+           set_awg_gain   207,0      # L0495 @ 51450000
+# repeat(10500): t=51450000 
+           move           10500,R2   # L0496 R2: Rs._cnt49
+# awg_offset = Rs._ramp_offset, None t=51450000 
+local_49:  asr            R1,16,R3   # L0497 temp R3
+           nop                       # L0498  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0499 @ 51450000
+# play _ramp_104_0_1562 None t=51450000 
+           play           0,0,100    # L0500 t=51450000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0501 
+# endloop t=51450100 
+           loop           R2,@local_49 # L0502 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=52500000 
+# ------:  set_awg_gain   0,0        # @ 52500000 = overwritten =
+# awg_offset = 0.0, None t=52500000 
+           set_awg_offs   0,0        # L0503 @ 52500000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0504 
+# awg_gain = 0.00633904761904762, None t=52500000 
+# -- Overwrites set_awg_gain at 52500000 -- 
+           set_awg_gain   207,0      # L0505 @ 52500000
+# repeat(10500): t=52500000 
+           move           10500,R2   # L0506 R2: Rs._cnt50
+# awg_offset = Rs._ramp_offset, None t=52500000 
+local_50:  asr            R1,16,R3   # L0507 temp R3
+           nop                       # L0508  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0509 @ 52500000
+# play _ramp_104_0_1562 None t=52500000 
+           play           0,0,100    # L0510 t=52500000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0511 
+# endloop t=52500100 
+           loop           R2,@local_50 # L0512 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=53550000 
+# ------:  set_awg_gain   0,0        # @ 53550000 = overwritten =
+# awg_offset = 0.0, None t=53550000 
+           set_awg_offs   0,0        # L0513 @ 53550000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0514 
+# awg_gain = 0.00633904761904762, None t=53550000 
+# -- Overwrites set_awg_gain at 53550000 -- 
+           set_awg_gain   207,0      # L0515 @ 53550000
+# repeat(10500): t=53550000 
+           move           10500,R2   # L0516 R2: Rs._cnt51
+# awg_offset = Rs._ramp_offset, None t=53550000 
+local_51:  asr            R1,16,R3   # L0517 temp R3
+           nop                       # L0518  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0519 @ 53550000
+# play _ramp_104_0_1562 None t=53550000 
+           play           0,0,100    # L0520 t=53550000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0521 
+# endloop t=53550100 
+           loop           R2,@local_51 # L0522 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=54600000 
+# ------:  set_awg_gain   0,0        # @ 54600000 = overwritten =
+# awg_offset = 0.0, None t=54600000 
+           set_awg_offs   0,0        # L0523 @ 54600000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0524 
+# awg_gain = 0.00633904761904762, None t=54600000 
+# -- Overwrites set_awg_gain at 54600000 -- 
+           set_awg_gain   207,0      # L0525 @ 54600000
+# repeat(10500): t=54600000 
+           move           10500,R2   # L0526 R2: Rs._cnt52
+# awg_offset = Rs._ramp_offset, None t=54600000 
+local_52:  asr            R1,16,R3   # L0527 temp R3
+           nop                       # L0528  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0529 @ 54600000
+# play _ramp_104_0_1562 None t=54600000 
+           play           0,0,100    # L0530 t=54600000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0531 
+# endloop t=54600100 
+           loop           R2,@local_52 # L0532 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=55650000 
+# ------:  set_awg_gain   0,0        # @ 55650000 = overwritten =
+# awg_offset = 0.0, None t=55650000 
+           set_awg_offs   0,0        # L0533 @ 55650000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0534 
+# awg_gain = 0.00633904761904762, None t=55650000 
+# -- Overwrites set_awg_gain at 55650000 -- 
+           set_awg_gain   207,0      # L0535 @ 55650000
+# repeat(10500): t=55650000 
+           move           10500,R2   # L0536 R2: Rs._cnt53
+# awg_offset = Rs._ramp_offset, None t=55650000 
+local_53:  asr            R1,16,R3   # L0537 temp R3
+           nop                       # L0538  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0539 @ 55650000
+# play _ramp_104_0_1562 None t=55650000 
+           play           0,0,100    # L0540 t=55650000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0541 
+# endloop t=55650100 
+           loop           R2,@local_53 # L0542 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=56700000 
+# ------:  set_awg_gain   0,0        # @ 56700000 = overwritten =
+# awg_offset = 0.0, None t=56700000 
+           set_awg_offs   0,0        # L0543 @ 56700000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0544 
+# awg_gain = 0.00633904761904762, None t=56700000 
+# -- Overwrites set_awg_gain at 56700000 -- 
+           set_awg_gain   207,0      # L0545 @ 56700000
+# repeat(10500): t=56700000 
+           move           10500,R2   # L0546 R2: Rs._cnt54
+# awg_offset = Rs._ramp_offset, None t=56700000 
+local_54:  asr            R1,16,R3   # L0547 temp R3
+           nop                       # L0548  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0549 @ 56700000
+# play _ramp_104_0_1562 None t=56700000 
+           play           0,0,100    # L0550 t=56700000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0551 
+# endloop t=56700100 
+           loop           R2,@local_54 # L0552 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=57750000 
+# ------:  set_awg_gain   0,0        # @ 57750000 = overwritten =
+# awg_offset = 0.0, None t=57750000 
+           set_awg_offs   0,0        # L0553 @ 57750000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0554 
+# awg_gain = 0.00633904761904762, None t=57750000 
+# -- Overwrites set_awg_gain at 57750000 -- 
+           set_awg_gain   207,0      # L0555 @ 57750000
+# repeat(10500): t=57750000 
+           move           10500,R2   # L0556 R2: Rs._cnt55
+# awg_offset = Rs._ramp_offset, None t=57750000 
+local_55:  asr            R1,16,R3   # L0557 temp R3
+           nop                       # L0558  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0559 @ 57750000
+# play _ramp_104_0_1562 None t=57750000 
+           play           0,0,100    # L0560 t=57750000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0561 
+# endloop t=57750100 
+           loop           R2,@local_55 # L0562 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=58800000 
+# ------:  set_awg_gain   0,0        # @ 58800000 = overwritten =
+# awg_offset = 0.0, None t=58800000 
+           set_awg_offs   0,0        # L0563 @ 58800000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0564 
+# awg_gain = 0.00633904761904762, None t=58800000 
+# -- Overwrites set_awg_gain at 58800000 -- 
+           set_awg_gain   207,0      # L0565 @ 58800000
+# repeat(10500): t=58800000 
+           move           10500,R2   # L0566 R2: Rs._cnt56
+# awg_offset = Rs._ramp_offset, None t=58800000 
+local_56:  asr            R1,16,R3   # L0567 temp R3
+           nop                       # L0568  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0569 @ 58800000
+# play _ramp_104_0_1562 None t=58800000 
+           play           0,0,100    # L0570 t=58800000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0571 
+# endloop t=58800100 
+           loop           R2,@local_56 # L0572 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=59850000 
+# ------:  set_awg_gain   0,0        # @ 59850000 = overwritten =
+# awg_offset = 0.0, None t=59850000 
+           set_awg_offs   0,0        # L0573 @ 59850000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0574 
+# awg_gain = 0.00633904761904762, None t=59850000 
+# -- Overwrites set_awg_gain at 59850000 -- 
+           set_awg_gain   207,0      # L0575 @ 59850000
+# repeat(10500): t=59850000 
+           move           10500,R2   # L0576 R2: Rs._cnt57
+# awg_offset = Rs._ramp_offset, None t=59850000 
+local_57:  asr            R1,16,R3   # L0577 temp R3
+           nop                       # L0578  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0579 @ 59850000
+# play _ramp_104_0_1562 None t=59850000 
+           play           0,0,100    # L0580 t=59850000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0581 
+# endloop t=59850100 
+           loop           R2,@local_57 # L0582 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=60900000 
+# ------:  set_awg_gain   0,0        # @ 60900000 = overwritten =
+# awg_offset = 0.0, None t=60900000 
+           set_awg_offs   0,0        # L0583 @ 60900000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0584 
+# awg_gain = 0.00633904761904762, None t=60900000 
+# -- Overwrites set_awg_gain at 60900000 -- 
+           set_awg_gain   207,0      # L0585 @ 60900000
+# repeat(10500): t=60900000 
+           move           10500,R2   # L0586 R2: Rs._cnt58
+# awg_offset = Rs._ramp_offset, None t=60900000 
+local_58:  asr            R1,16,R3   # L0587 temp R3
+           nop                       # L0588  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0589 @ 60900000
+# play _ramp_104_0_1562 None t=60900000 
+           play           0,0,100    # L0590 t=60900000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0591 
+# endloop t=60900100 
+           loop           R2,@local_58 # L0592 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=61950000 
+# ------:  set_awg_gain   0,0        # @ 61950000 = overwritten =
+# awg_offset = 0.0, None t=61950000 
+           set_awg_offs   0,0        # L0593 @ 61950000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0594 
+# awg_gain = 0.00633904761904762, None t=61950000 
+# -- Overwrites set_awg_gain at 61950000 -- 
+           set_awg_gain   207,0      # L0595 @ 61950000
+# repeat(10500): t=61950000 
+           move           10500,R2   # L0596 R2: Rs._cnt59
+# awg_offset = Rs._ramp_offset, None t=61950000 
+local_59:  asr            R1,16,R3   # L0597 temp R3
+           nop                       # L0598  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0599 @ 61950000
+# play _ramp_104_0_1562 None t=61950000 
+           play           0,0,100    # L0600 t=61950000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0601 
+# endloop t=61950100 
+           loop           R2,@local_59 # L0602 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=63000000 
+# ------:  set_awg_gain   0,0        # @ 63000000 = overwritten =
+# awg_offset = 0.0, None t=63000000 
+           set_awg_offs   0,0        # L0603 @ 63000000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0604 
+# awg_gain = 0.00633904761904762, None t=63000000 
+# -- Overwrites set_awg_gain at 63000000 -- 
+           set_awg_gain   207,0      # L0605 @ 63000000
+# repeat(10500): t=63000000 
+           move           10500,R2   # L0606 R2: Rs._cnt60
+# awg_offset = Rs._ramp_offset, None t=63000000 
+local_60:  asr            R1,16,R3   # L0607 temp R3
+           nop                       # L0608  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0609 @ 63000000
+# play _ramp_104_0_1562 None t=63000000 
+           play           0,0,100    # L0610 t=63000000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0611 
+# endloop t=63000100 
+           loop           R2,@local_60 # L0612 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=64050000 
+# ------:  set_awg_gain   0,0        # @ 64050000 = overwritten =
+# awg_offset = 0.0, None t=64050000 
+           set_awg_offs   0,0        # L0613 @ 64050000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0614 
+# awg_gain = 0.00633904761904762, None t=64050000 
+# -- Overwrites set_awg_gain at 64050000 -- 
+           set_awg_gain   207,0      # L0615 @ 64050000
+# repeat(10500): t=64050000 
+           move           10500,R2   # L0616 R2: Rs._cnt61
+# awg_offset = Rs._ramp_offset, None t=64050000 
+local_61:  asr            R1,16,R3   # L0617 temp R3
+           nop                       # L0618  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0619 @ 64050000
+# play _ramp_104_0_1562 None t=64050000 
+           play           0,0,100    # L0620 t=64050000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0621 
+# endloop t=64050100 
+           loop           R2,@local_61 # L0622 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=65100000 
+# ------:  set_awg_gain   0,0        # @ 65100000 = overwritten =
+# awg_offset = 0.0, None t=65100000 
+           set_awg_offs   0,0        # L0623 @ 65100000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0624 
+# awg_gain = 0.00633904761904762, None t=65100000 
+# -- Overwrites set_awg_gain at 65100000 -- 
+           set_awg_gain   207,0      # L0625 @ 65100000
+# repeat(10500): t=65100000 
+           move           10500,R2   # L0626 R2: Rs._cnt62
+# awg_offset = Rs._ramp_offset, None t=65100000 
+local_62:  asr            R1,16,R3   # L0627 temp R3
+           nop                       # L0628  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0629 @ 65100000
+# play _ramp_104_0_1562 None t=65100000 
+           play           0,0,100    # L0630 t=65100000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0631 
+# endloop t=65100100 
+           loop           R2,@local_62 # L0632 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=66150000 
+# ------:  set_awg_gain   0,0        # @ 66150000 = overwritten =
+# awg_offset = 0.0, None t=66150000 
+           set_awg_offs   0,0        # L0633 @ 66150000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0634 
+# awg_gain = 0.00633904761904762, None t=66150000 
+# -- Overwrites set_awg_gain at 66150000 -- 
+           set_awg_gain   207,0      # L0635 @ 66150000
+# repeat(10500): t=66150000 
+           move           10500,R2   # L0636 R2: Rs._cnt63
+# awg_offset = Rs._ramp_offset, None t=66150000 
+local_63:  asr            R1,16,R3   # L0637 temp R3
+           nop                       # L0638  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0639 @ 66150000
+# play _ramp_104_0_1562 None t=66150000 
+           play           0,0,100    # L0640 t=66150000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0641 
+# endloop t=66150100 
+           loop           R2,@local_63 # L0642 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=67200000 
+# ------:  set_awg_gain   0,0        # @ 67200000 = overwritten =
+# awg_offset = 0.0, None t=67200000 
+           set_awg_offs   0,0        # L0643 @ 67200000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0644 
+# awg_gain = 0.00633904761904762, None t=67200000 
+# -- Overwrites set_awg_gain at 67200000 -- 
+           set_awg_gain   207,0      # L0645 @ 67200000
+# repeat(10500): t=67200000 
+           move           10500,R2   # L0646 R2: Rs._cnt64
+# awg_offset = Rs._ramp_offset, None t=67200000 
+local_64:  asr            R1,16,R3   # L0647 temp R3
+           nop                       # L0648  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0649 @ 67200000
+# play _ramp_104_0_1562 None t=67200000 
+           play           0,0,100    # L0650 t=67200000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0651 
+# endloop t=67200100 
+           loop           R2,@local_64 # L0652 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=68250000 
+# ------:  set_awg_gain   0,0        # @ 68250000 = overwritten =
+# awg_offset = 0.0, None t=68250000 
+           set_awg_offs   0,0        # L0653 @ 68250000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0654 
+# awg_gain = 0.00633904761904762, None t=68250000 
+# -- Overwrites set_awg_gain at 68250000 -- 
+           set_awg_gain   207,0      # L0655 @ 68250000
+# repeat(10500): t=68250000 
+           move           10500,R2   # L0656 R2: Rs._cnt65
+# awg_offset = Rs._ramp_offset, None t=68250000 
+local_65:  asr            R1,16,R3   # L0657 temp R3
+           nop                       # L0658  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0659 @ 68250000
+# play _ramp_104_0_1562 None t=68250000 
+           play           0,0,100    # L0660 t=68250000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0661 
+# endloop t=68250100 
+           loop           R2,@local_65 # L0662 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=69300000 
+# ------:  set_awg_gain   0,0        # @ 69300000 = overwritten =
+# awg_offset = 0.0, None t=69300000 
+           set_awg_offs   0,0        # L0663 @ 69300000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0664 
+# awg_gain = 0.00633904761904762, None t=69300000 
+# -- Overwrites set_awg_gain at 69300000 -- 
+           set_awg_gain   207,0      # L0665 @ 69300000
+# repeat(10500): t=69300000 
+           move           10500,R2   # L0666 R2: Rs._cnt66
+# awg_offset = Rs._ramp_offset, None t=69300000 
+local_66:  asr            R1,16,R3   # L0667 temp R3
+           nop                       # L0668  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0669 @ 69300000
+# play _ramp_104_0_1562 None t=69300000 
+           play           0,0,100    # L0670 t=69300000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0671 
+# endloop t=69300100 
+           loop           R2,@local_66 # L0672 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=70350000 
+# ------:  set_awg_gain   0,0        # @ 70350000 = overwritten =
+# awg_offset = 0.0, None t=70350000 
+           set_awg_offs   0,0        # L0673 @ 70350000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0674 
+# awg_gain = 0.00633904761904762, None t=70350000 
+# -- Overwrites set_awg_gain at 70350000 -- 
+           set_awg_gain   207,0      # L0675 @ 70350000
+# repeat(10500): t=70350000 
+           move           10500,R2   # L0676 R2: Rs._cnt67
+# awg_offset = Rs._ramp_offset, None t=70350000 
+local_67:  asr            R1,16,R3   # L0677 temp R3
+           nop                       # L0678  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0679 @ 70350000
+# play _ramp_104_0_1562 None t=70350000 
+           play           0,0,100    # L0680 t=70350000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0681 
+# endloop t=70350100 
+           loop           R2,@local_67 # L0682 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=71400000 
+# ------:  set_awg_gain   0,0        # @ 71400000 = overwritten =
+# awg_offset = 0.0, None t=71400000 
+           set_awg_offs   0,0        # L0683 @ 71400000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0684 
+# awg_gain = 0.00633904761904762, None t=71400000 
+# -- Overwrites set_awg_gain at 71400000 -- 
+           set_awg_gain   207,0      # L0685 @ 71400000
+# repeat(10500): t=71400000 
+           move           10500,R2   # L0686 R2: Rs._cnt68
+# awg_offset = Rs._ramp_offset, None t=71400000 
+local_68:  asr            R1,16,R3   # L0687 temp R3
+           nop                       # L0688  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0689 @ 71400000
+# play _ramp_104_0_1562 None t=71400000 
+           play           0,0,100    # L0690 t=71400000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0691 
+# endloop t=71400100 
+           loop           R2,@local_68 # L0692 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=72450000 
+# ------:  set_awg_gain   0,0        # @ 72450000 = overwritten =
+# awg_offset = 0.0, None t=72450000 
+           set_awg_offs   0,0        # L0693 @ 72450000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0694 
+# awg_gain = 0.00633904761904762, None t=72450000 
+# -- Overwrites set_awg_gain at 72450000 -- 
+           set_awg_gain   207,0      # L0695 @ 72450000
+# repeat(10500): t=72450000 
+           move           10500,R2   # L0696 R2: Rs._cnt69
+# awg_offset = Rs._ramp_offset, None t=72450000 
+local_69:  asr            R1,16,R3   # L0697 temp R3
+           nop                       # L0698  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0699 @ 72450000
+# play _ramp_104_0_1562 None t=72450000 
+           play           0,0,100    # L0700 t=72450000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0701 
+# endloop t=72450100 
+           loop           R2,@local_69 # L0702 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=73500000 
+# ------:  set_awg_gain   0,0        # @ 73500000 = overwritten =
+# awg_offset = 0.0, None t=73500000 
+           set_awg_offs   0,0        # L0703 @ 73500000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0704 
+# awg_gain = 0.00633904761904762, None t=73500000 
+# -- Overwrites set_awg_gain at 73500000 -- 
+           set_awg_gain   207,0      # L0705 @ 73500000
+# repeat(10500): t=73500000 
+           move           10500,R2   # L0706 R2: Rs._cnt70
+# awg_offset = Rs._ramp_offset, None t=73500000 
+local_70:  asr            R1,16,R3   # L0707 temp R3
+           nop                       # L0708  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0709 @ 73500000
+# play _ramp_104_0_1562 None t=73500000 
+           play           0,0,100    # L0710 t=73500000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0711 
+# endloop t=73500100 
+           loop           R2,@local_70 # L0712 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=74550000 
+# ------:  set_awg_gain   0,0        # @ 74550000 = overwritten =
+# awg_offset = 0.0, None t=74550000 
+           set_awg_offs   0,0        # L0713 @ 74550000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0714 
+# awg_gain = 0.00633904761904762, None t=74550000 
+# -- Overwrites set_awg_gain at 74550000 -- 
+           set_awg_gain   207,0      # L0715 @ 74550000
+# repeat(10500): t=74550000 
+           move           10500,R2   # L0716 R2: Rs._cnt71
+# awg_offset = Rs._ramp_offset, None t=74550000 
+local_71:  asr            R1,16,R3   # L0717 temp R3
+           nop                       # L0718  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0719 @ 74550000
+# play _ramp_104_0_1562 None t=74550000 
+           play           0,0,100    # L0720 t=74550000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0721 
+# endloop t=74550100 
+           loop           R2,@local_71 # L0722 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=75600000 
+# ------:  set_awg_gain   0,0        # @ 75600000 = overwritten =
+# awg_offset = 0.0, None t=75600000 
+           set_awg_offs   0,0        # L0723 @ 75600000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0724 
+# awg_gain = 0.00633904761904762, None t=75600000 
+# -- Overwrites set_awg_gain at 75600000 -- 
+           set_awg_gain   207,0      # L0725 @ 75600000
+# repeat(10500): t=75600000 
+           move           10500,R2   # L0726 R2: Rs._cnt72
+# awg_offset = Rs._ramp_offset, None t=75600000 
+local_72:  asr            R1,16,R3   # L0727 temp R3
+           nop                       # L0728  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0729 @ 75600000
+# play _ramp_104_0_1562 None t=75600000 
+           play           0,0,100    # L0730 t=75600000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0731 
+# endloop t=75600100 
+           loop           R2,@local_72 # L0732 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=76650000 
+# ------:  set_awg_gain   0,0        # @ 76650000 = overwritten =
+# awg_offset = 0.0, None t=76650000 
+           set_awg_offs   0,0        # L0733 @ 76650000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0734 
+# awg_gain = 0.00633904761904762, None t=76650000 
+# -- Overwrites set_awg_gain at 76650000 -- 
+           set_awg_gain   207,0      # L0735 @ 76650000
+# repeat(10500): t=76650000 
+           move           10500,R2   # L0736 R2: Rs._cnt73
+# awg_offset = Rs._ramp_offset, None t=76650000 
+local_73:  asr            R1,16,R3   # L0737 temp R3
+           nop                       # L0738  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0739 @ 76650000
+# play _ramp_104_0_1562 None t=76650000 
+           play           0,0,100    # L0740 t=76650000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0741 
+# endloop t=76650100 
+           loop           R2,@local_73 # L0742 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=77700000 
+# ------:  set_awg_gain   0,0        # @ 77700000 = overwritten =
+# awg_offset = 0.0, None t=77700000 
+           set_awg_offs   0,0        # L0743 @ 77700000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0744 
+# awg_gain = 0.00633904761904762, None t=77700000 
+# -- Overwrites set_awg_gain at 77700000 -- 
+           set_awg_gain   207,0      # L0745 @ 77700000
+# repeat(10500): t=77700000 
+           move           10500,R2   # L0746 R2: Rs._cnt74
+# awg_offset = Rs._ramp_offset, None t=77700000 
+local_74:  asr            R1,16,R3   # L0747 temp R3
+           nop                       # L0748  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0749 @ 77700000
+# play _ramp_104_0_1562 None t=77700000 
+           play           0,0,100    # L0750 t=77700000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0751 
+# endloop t=77700100 
+           loop           R2,@local_74 # L0752 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=78750000 
+# ------:  set_awg_gain   0,0        # @ 78750000 = overwritten =
+# awg_offset = 0.0, None t=78750000 
+           set_awg_offs   0,0        # L0753 @ 78750000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0754 
+# awg_gain = 0.00633904761904762, None t=78750000 
+# -- Overwrites set_awg_gain at 78750000 -- 
+           set_awg_gain   207,0      # L0755 @ 78750000
+# repeat(10500): t=78750000 
+           move           10500,R2   # L0756 R2: Rs._cnt75
+# awg_offset = Rs._ramp_offset, None t=78750000 
+local_75:  asr            R1,16,R3   # L0757 temp R3
+           nop                       # L0758  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0759 @ 78750000
+# play _ramp_104_0_1562 None t=78750000 
+           play           0,0,100    # L0760 t=78750000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0761 
+# endloop t=78750100 
+           loop           R2,@local_75 # L0762 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=79800000 
+# ------:  set_awg_gain   0,0        # @ 79800000 = overwritten =
+# awg_offset = 0.0, None t=79800000 
+           set_awg_offs   0,0        # L0763 @ 79800000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0764 
+# awg_gain = 0.00633904761904762, None t=79800000 
+# -- Overwrites set_awg_gain at 79800000 -- 
+           set_awg_gain   207,0      # L0765 @ 79800000
+# repeat(10500): t=79800000 
+           move           10500,R2   # L0766 R2: Rs._cnt76
+# awg_offset = Rs._ramp_offset, None t=79800000 
+local_76:  asr            R1,16,R3   # L0767 temp R3
+           nop                       # L0768  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0769 @ 79800000
+# play _ramp_104_0_1562 None t=79800000 
+           play           0,0,100    # L0770 t=79800000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0771 
+# endloop t=79800100 
+           loop           R2,@local_76 # L0772 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=80850000 
+# ------:  set_awg_gain   0,0        # @ 80850000 = overwritten =
+# awg_offset = 0.0, None t=80850000 
+           set_awg_offs   0,0        # L0773 @ 80850000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0774 
+# awg_gain = 0.00633904761904762, None t=80850000 
+# -- Overwrites set_awg_gain at 80850000 -- 
+           set_awg_gain   207,0      # L0775 @ 80850000
+# repeat(10500): t=80850000 
+           move           10500,R2   # L0776 R2: Rs._cnt77
+# awg_offset = Rs._ramp_offset, None t=80850000 
+local_77:  asr            R1,16,R3   # L0777 temp R3
+           nop                       # L0778  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0779 @ 80850000
+# play _ramp_104_0_1562 None t=80850000 
+           play           0,0,100    # L0780 t=80850000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0781 
+# endloop t=80850100 
+           loop           R2,@local_77 # L0782 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=81900000 
+# ------:  set_awg_gain   0,0        # @ 81900000 = overwritten =
+# awg_offset = 0.0, None t=81900000 
+           set_awg_offs   0,0        # L0783 @ 81900000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0784 
+# awg_gain = 0.00633904761904762, None t=81900000 
+# -- Overwrites set_awg_gain at 81900000 -- 
+           set_awg_gain   207,0      # L0785 @ 81900000
+# repeat(10500): t=81900000 
+           move           10500,R2   # L0786 R2: Rs._cnt78
+# awg_offset = Rs._ramp_offset, None t=81900000 
+local_78:  asr            R1,16,R3   # L0787 temp R3
+           nop                       # L0788  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0789 @ 81900000
+# play _ramp_104_0_1562 None t=81900000 
+           play           0,0,100    # L0790 t=81900000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0791 
+# endloop t=81900100 
+           loop           R2,@local_78 # L0792 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=82950000 
+# ------:  set_awg_gain   0,0        # @ 82950000 = overwritten =
+# awg_offset = 0.0, None t=82950000 
+           set_awg_offs   0,0        # L0793 @ 82950000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0794 
+# awg_gain = 0.00633904761904762, None t=82950000 
+# -- Overwrites set_awg_gain at 82950000 -- 
+           set_awg_gain   207,0      # L0795 @ 82950000
+# repeat(10500): t=82950000 
+           move           10500,R2   # L0796 R2: Rs._cnt79
+# awg_offset = Rs._ramp_offset, None t=82950000 
+local_79:  asr            R1,16,R3   # L0797 temp R3
+           nop                       # L0798  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0799 @ 82950000
+# play _ramp_104_0_1562 None t=82950000 
+           play           0,0,100    # L0800 t=82950000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0801 
+# endloop t=82950100 
+           loop           R2,@local_79 # L0802 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=84000000 
+# ------:  set_awg_gain   0,0        # @ 84000000 = overwritten =
+# awg_offset = 0.0, None t=84000000 
+           set_awg_offs   0,0        # L0803 @ 84000000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0804 
+# awg_gain = 0.00633904761904762, None t=84000000 
+# -- Overwrites set_awg_gain at 84000000 -- 
+           set_awg_gain   207,0      # L0805 @ 84000000
+# repeat(10500): t=84000000 
+           move           10500,R2   # L0806 R2: Rs._cnt80
+# awg_offset = Rs._ramp_offset, None t=84000000 
+local_80:  asr            R1,16,R3   # L0807 temp R3
+           nop                       # L0808  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0809 @ 84000000
+# play _ramp_104_0_1562 None t=84000000 
+           play           0,0,100    # L0810 t=84000000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0811 
+# endloop t=84000100 
+           loop           R2,@local_80 # L0812 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=85050000 
+# ------:  set_awg_gain   0,0        # @ 85050000 = overwritten =
+# awg_offset = 0.0, None t=85050000 
+           set_awg_offs   0,0        # L0813 @ 85050000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0814 
+# awg_gain = 0.00633904761904762, None t=85050000 
+# -- Overwrites set_awg_gain at 85050000 -- 
+           set_awg_gain   207,0      # L0815 @ 85050000
+# repeat(10500): t=85050000 
+           move           10500,R2   # L0816 R2: Rs._cnt81
+# awg_offset = Rs._ramp_offset, None t=85050000 
+local_81:  asr            R1,16,R3   # L0817 temp R3
+           nop                       # L0818  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0819 @ 85050000
+# play _ramp_104_0_1562 None t=85050000 
+           play           0,0,100    # L0820 t=85050000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0821 
+# endloop t=85050100 
+           loop           R2,@local_81 # L0822 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=86100000 
+# ------:  set_awg_gain   0,0        # @ 86100000 = overwritten =
+# awg_offset = 0.0, None t=86100000 
+           set_awg_offs   0,0        # L0823 @ 86100000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0824 
+# awg_gain = 0.00633904761904762, None t=86100000 
+# -- Overwrites set_awg_gain at 86100000 -- 
+           set_awg_gain   207,0      # L0825 @ 86100000
+# repeat(10500): t=86100000 
+           move           10500,R2   # L0826 R2: Rs._cnt82
+# awg_offset = Rs._ramp_offset, None t=86100000 
+local_82:  asr            R1,16,R3   # L0827 temp R3
+           nop                       # L0828  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0829 @ 86100000
+# play _ramp_104_0_1562 None t=86100000 
+           play           0,0,100    # L0830 t=86100000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0831 
+# endloop t=86100100 
+           loop           R2,@local_82 # L0832 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=87150000 
+# ------:  set_awg_gain   0,0        # @ 87150000 = overwritten =
+# awg_offset = 0.0, None t=87150000 
+           set_awg_offs   0,0        # L0833 @ 87150000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0834 
+# awg_gain = 0.00633904761904762, None t=87150000 
+# -- Overwrites set_awg_gain at 87150000 -- 
+           set_awg_gain   207,0      # L0835 @ 87150000
+# repeat(10500): t=87150000 
+           move           10500,R2   # L0836 R2: Rs._cnt83
+# awg_offset = Rs._ramp_offset, None t=87150000 
+local_83:  asr            R1,16,R3   # L0837 temp R3
+           nop                       # L0838  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0839 @ 87150000
+# play _ramp_104_0_1562 None t=87150000 
+           play           0,0,100    # L0840 t=87150000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0841 
+# endloop t=87150100 
+           loop           R2,@local_83 # L0842 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=88200000 
+# ------:  set_awg_gain   0,0        # @ 88200000 = overwritten =
+# awg_offset = 0.0, None t=88200000 
+           set_awg_offs   0,0        # L0843 @ 88200000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0844 
+# awg_gain = 0.00633904761904762, None t=88200000 
+# -- Overwrites set_awg_gain at 88200000 -- 
+           set_awg_gain   207,0      # L0845 @ 88200000
+# repeat(10500): t=88200000 
+           move           10500,R2   # L0846 R2: Rs._cnt84
+# awg_offset = Rs._ramp_offset, None t=88200000 
+local_84:  asr            R1,16,R3   # L0847 temp R3
+           nop                       # L0848  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0849 @ 88200000
+# play _ramp_104_0_1562 None t=88200000 
+           play           0,0,100    # L0850 t=88200000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0851 
+# endloop t=88200100 
+           loop           R2,@local_84 # L0852 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=89250000 
+# ------:  set_awg_gain   0,0        # @ 89250000 = overwritten =
+# awg_offset = 0.0, None t=89250000 
+           set_awg_offs   0,0        # L0853 @ 89250000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0854 
+# awg_gain = 0.00633904761904762, None t=89250000 
+# -- Overwrites set_awg_gain at 89250000 -- 
+           set_awg_gain   207,0      # L0855 @ 89250000
+# repeat(10500): t=89250000 
+           move           10500,R2   # L0856 R2: Rs._cnt85
+# awg_offset = Rs._ramp_offset, None t=89250000 
+local_85:  asr            R1,16,R3   # L0857 temp R3
+           nop                       # L0858  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0859 @ 89250000
+# play _ramp_104_0_1562 None t=89250000 
+           play           0,0,100    # L0860 t=89250000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0861 
+# endloop t=89250100 
+           loop           R2,@local_85 # L0862 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=90300000 
+# ------:  set_awg_gain   0,0        # @ 90300000 = overwritten =
+# awg_offset = 0.0, None t=90300000 
+           set_awg_offs   0,0        # L0863 @ 90300000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0864 
+# awg_gain = 0.00633904761904762, None t=90300000 
+# -- Overwrites set_awg_gain at 90300000 -- 
+           set_awg_gain   207,0      # L0865 @ 90300000
+# repeat(10500): t=90300000 
+           move           10500,R2   # L0866 R2: Rs._cnt86
+# awg_offset = Rs._ramp_offset, None t=90300000 
+local_86:  asr            R1,16,R3   # L0867 temp R3
+           nop                       # L0868  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0869 @ 90300000
+# play _ramp_104_0_1562 None t=90300000 
+           play           0,0,100    # L0870 t=90300000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0871 
+# endloop t=90300100 
+           loop           R2,@local_86 # L0872 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=91350000 
+# ------:  set_awg_gain   0,0        # @ 91350000 = overwritten =
+# awg_offset = 0.0, None t=91350000 
+           set_awg_offs   0,0        # L0873 @ 91350000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0874 
+# awg_gain = 0.00633904761904762, None t=91350000 
+# -- Overwrites set_awg_gain at 91350000 -- 
+           set_awg_gain   207,0      # L0875 @ 91350000
+# repeat(10500): t=91350000 
+           move           10500,R2   # L0876 R2: Rs._cnt87
+# awg_offset = Rs._ramp_offset, None t=91350000 
+local_87:  asr            R1,16,R3   # L0877 temp R3
+           nop                       # L0878  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0879 @ 91350000
+# play _ramp_104_0_1562 None t=91350000 
+           play           0,0,100    # L0880 t=91350000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0881 
+# endloop t=91350100 
+           loop           R2,@local_87 # L0882 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=92400000 
+# ------:  set_awg_gain   0,0        # @ 92400000 = overwritten =
+# awg_offset = 0.0, None t=92400000 
+           set_awg_offs   0,0        # L0883 @ 92400000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0884 
+# awg_gain = 0.00633904761904762, None t=92400000 
+# -- Overwrites set_awg_gain at 92400000 -- 
+           set_awg_gain   207,0      # L0885 @ 92400000
+# repeat(10500): t=92400000 
+           move           10500,R2   # L0886 R2: Rs._cnt88
+# awg_offset = Rs._ramp_offset, None t=92400000 
+local_88:  asr            R1,16,R3   # L0887 temp R3
+           nop                       # L0888  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0889 @ 92400000
+# play _ramp_104_0_1562 None t=92400000 
+           play           0,0,100    # L0890 t=92400000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0891 
+# endloop t=92400100 
+           loop           R2,@local_88 # L0892 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=93450000 
+# ------:  set_awg_gain   0,0        # @ 93450000 = overwritten =
+# awg_offset = 0.0, None t=93450000 
+           set_awg_offs   0,0        # L0893 @ 93450000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0894 
+# awg_gain = 0.00633904761904762, None t=93450000 
+# -- Overwrites set_awg_gain at 93450000 -- 
+           set_awg_gain   207,0      # L0895 @ 93450000
+# repeat(10500): t=93450000 
+           move           10500,R2   # L0896 R2: Rs._cnt89
+# awg_offset = Rs._ramp_offset, None t=93450000 
+local_89:  asr            R1,16,R3   # L0897 temp R3
+           nop                       # L0898  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0899 @ 93450000
+# play _ramp_104_0_1562 None t=93450000 
+           play           0,0,100    # L0900 t=93450000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0901 
+# endloop t=93450100 
+           loop           R2,@local_89 # L0902 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=94500000 
+# ------:  set_awg_gain   0,0        # @ 94500000 = overwritten =
+# awg_offset = 0.0, None t=94500000 
+           set_awg_offs   0,0        # L0903 @ 94500000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0904 
+# awg_gain = 0.00633904761904762, None t=94500000 
+# -- Overwrites set_awg_gain at 94500000 -- 
+           set_awg_gain   207,0      # L0905 @ 94500000
+# repeat(10500): t=94500000 
+           move           10500,R2   # L0906 R2: Rs._cnt90
+# awg_offset = Rs._ramp_offset, None t=94500000 
+local_90:  asr            R1,16,R3   # L0907 temp R3
+           nop                       # L0908  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0909 @ 94500000
+# play _ramp_104_0_1562 None t=94500000 
+           play           0,0,100    # L0910 t=94500000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0911 
+# endloop t=94500100 
+           loop           R2,@local_90 # L0912 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=95550000 
+# ------:  set_awg_gain   0,0        # @ 95550000 = overwritten =
+# awg_offset = 0.0, None t=95550000 
+           set_awg_offs   0,0        # L0913 @ 95550000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0914 
+# awg_gain = 0.00633904761904762, None t=95550000 
+# -- Overwrites set_awg_gain at 95550000 -- 
+           set_awg_gain   207,0      # L0915 @ 95550000
+# repeat(10500): t=95550000 
+           move           10500,R2   # L0916 R2: Rs._cnt91
+# awg_offset = Rs._ramp_offset, None t=95550000 
+local_91:  asr            R1,16,R3   # L0917 temp R3
+           nop                       # L0918  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0919 @ 95550000
+# play _ramp_104_0_1562 None t=95550000 
+           play           0,0,100    # L0920 t=95550000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0921 
+# endloop t=95550100 
+           loop           R2,@local_91 # L0922 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=96600000 
+# ------:  set_awg_gain   0,0        # @ 96600000 = overwritten =
+# awg_offset = 0.0, None t=96600000 
+           set_awg_offs   0,0        # L0923 @ 96600000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0924 
+# awg_gain = 0.00633904761904762, None t=96600000 
+# -- Overwrites set_awg_gain at 96600000 -- 
+           set_awg_gain   207,0      # L0925 @ 96600000
+# repeat(10500): t=96600000 
+           move           10500,R2   # L0926 R2: Rs._cnt92
+# awg_offset = Rs._ramp_offset, None t=96600000 
+local_92:  asr            R1,16,R3   # L0927 temp R3
+           nop                       # L0928  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0929 @ 96600000
+# play _ramp_104_0_1562 None t=96600000 
+           play           0,0,100    # L0930 t=96600000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0931 
+# endloop t=96600100 
+           loop           R2,@local_92 # L0932 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=97650000 
+# ------:  set_awg_gain   0,0        # @ 97650000 = overwritten =
+# awg_offset = 0.0, None t=97650000 
+           set_awg_offs   0,0        # L0933 @ 97650000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0934 
+# awg_gain = 0.00633904761904762, None t=97650000 
+# -- Overwrites set_awg_gain at 97650000 -- 
+           set_awg_gain   207,0      # L0935 @ 97650000
+# repeat(10500): t=97650000 
+           move           10500,R2   # L0936 R2: Rs._cnt93
+# awg_offset = Rs._ramp_offset, None t=97650000 
+local_93:  asr            R1,16,R3   # L0937 temp R3
+           nop                       # L0938  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0939 @ 97650000
+# play _ramp_104_0_1562 None t=97650000 
+           play           0,0,100    # L0940 t=97650000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0941 
+# endloop t=97650100 
+           loop           R2,@local_93 # L0942 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=98700000 
+# ------:  set_awg_gain   0,0        # @ 98700000 = overwritten =
+# awg_offset = 0.0, None t=98700000 
+           set_awg_offs   0,0        # L0943 @ 98700000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0944 
+# awg_gain = 0.00633904761904762, None t=98700000 
+# -- Overwrites set_awg_gain at 98700000 -- 
+           set_awg_gain   207,0      # L0945 @ 98700000
+# repeat(10500): t=98700000 
+           move           10500,R2   # L0946 R2: Rs._cnt94
+# awg_offset = Rs._ramp_offset, None t=98700000 
+local_94:  asr            R1,16,R3   # L0947 temp R3
+           nop                       # L0948  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0949 @ 98700000
+# play _ramp_104_0_1562 None t=98700000 
+           play           0,0,100    # L0950 t=98700000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0951 
+# endloop t=98700100 
+           loop           R2,@local_94 # L0952 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=99750000 
+# ------:  set_awg_gain   0,0        # @ 99750000 = overwritten =
+# awg_offset = 0.0, None t=99750000 
+           set_awg_offs   0,0        # L0953 @ 99750000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0954 
+# awg_gain = 0.00633904761904762, None t=99750000 
+# -- Overwrites set_awg_gain at 99750000 -- 
+           set_awg_gain   207,0      # L0955 @ 99750000
+# repeat(10500): t=99750000 
+           move           10500,R2   # L0956 R2: Rs._cnt95
+# awg_offset = Rs._ramp_offset, None t=99750000 
+local_95:  asr            R1,16,R3   # L0957 temp R3
+           nop                       # L0958  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0959 @ 99750000
+# play _ramp_104_0_1562 None t=99750000 
+           play           0,0,100    # L0960 t=99750000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0961 
+# endloop t=99750100 
+           loop           R2,@local_95 # L0962 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=100800000 
+# ------:  set_awg_gain   0,0        # @ 100800000 = overwritten =
+# awg_offset = 0.0, None t=100800000 
+           set_awg_offs   0,0        # L0963 @ 100800000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0964 
+# awg_gain = 0.00633904761904762, None t=100800000 
+# -- Overwrites set_awg_gain at 100800000 -- 
+           set_awg_gain   207,0      # L0965 @ 100800000
+# repeat(10500): t=100800000 
+           move           10500,R2   # L0966 R2: Rs._cnt96
+# awg_offset = Rs._ramp_offset, None t=100800000 
+local_96:  asr            R1,16,R3   # L0967 temp R3
+           nop                       # L0968  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0969 @ 100800000
+# play _ramp_104_0_1562 None t=100800000 
+           play           0,0,100    # L0970 t=100800000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0971 
+# endloop t=100800100 
+           loop           R2,@local_96 # L0972 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=101850000 
+# ------:  set_awg_gain   0,0        # @ 101850000 = overwritten =
+# awg_offset = 0.0, None t=101850000 
+           set_awg_offs   0,0        # L0973 @ 101850000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0974 
+# awg_gain = 0.00633904761904762, None t=101850000 
+# -- Overwrites set_awg_gain at 101850000 -- 
+           set_awg_gain   207,0      # L0975 @ 101850000
+# repeat(10500): t=101850000 
+           move           10500,R2   # L0976 R2: Rs._cnt97
+# awg_offset = Rs._ramp_offset, None t=101850000 
+local_97:  asr            R1,16,R3   # L0977 temp R3
+           nop                       # L0978  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0979 @ 101850000
+# play _ramp_104_0_1562 None t=101850000 
+           play           0,0,100    # L0980 t=101850000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0981 
+# endloop t=101850100 
+           loop           R2,@local_97 # L0982 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=102900000 
+# ------:  set_awg_gain   0,0        # @ 102900000 = overwritten =
+# awg_offset = 0.0, None t=102900000 
+           set_awg_offs   0,0        # L0983 @ 102900000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0984 
+# awg_gain = 0.00633904761904762, None t=102900000 
+# -- Overwrites set_awg_gain at 102900000 -- 
+           set_awg_gain   207,0      # L0985 @ 102900000
+# repeat(10500): t=102900000 
+           move           10500,R2   # L0986 R2: Rs._cnt98
+# awg_offset = Rs._ramp_offset, None t=102900000 
+local_98:  asr            R1,16,R3   # L0987 temp R3
+           nop                       # L0988  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0989 @ 102900000
+# play _ramp_104_0_1562 None t=102900000 
+           play           0,0,100    # L0990 t=102900000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L0991 
+# endloop t=102900100 
+           loop           R2,@local_98 # L0992 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=103950000 
+# ------:  set_awg_gain   0,0        # @ 103950000 = overwritten =
+# awg_offset = 0.0, None t=103950000 
+           set_awg_offs   0,0        # L0993 @ 103950000
+# ramp(1050000, -0.5, 0.5) 
+# Rs._ramp_offset:float = -0.5 
+           move           3221225472,R1 # L0994 
+# awg_gain = 0.00633904761904762, None t=103950000 
+# -- Overwrites set_awg_gain at 103950000 -- 
+           set_awg_gain   207,0      # L0995 @ 103950000
+# repeat(10500): t=103950000 
+           move           10500,R2   # L0996 R2: Rs._cnt99
+# awg_offset = Rs._ramp_offset, None t=103950000 
+local_99:  asr            R1,16,R3   # L0997 temp R3
+           nop                       # L0998  set_awg_offs wait for R3
+           set_awg_offs   R3,R0      # L0999 @ 103950000
+# play _ramp_104_0_1562 None t=103950000 
+           play           0,0,100    # L1000 t=103950000
+# Rs._ramp_offset:float = Rs._ramp_offset + 9.523809523809524e-05 
+           add            R1,204522,R1 # L1001 
+# endloop t=103950100 
+           loop           R2,@local_99 # L1002 
+#     --- loop duration: 1050000 
+# awg_gain = 0.0, None t=105000000 
+           set_awg_gain   0,0        # L1003 @ 105000000
+# awg_offset = 0.0, None t=105000000 
+           set_awg_offs   0,0        # L1004 @ 105000000
+           upd_param      4          # L1005 t=105000000
+# --END-- 
+           stop                      # L1006 
+"""
+
