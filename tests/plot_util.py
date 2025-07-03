@@ -1,5 +1,6 @@
 import matplotlib.pyplot as pt
 
+
 def plot_output(instruments):
     for instrument in instruments:
         if hasattr(instrument, 'plot'):
@@ -7,3 +8,4 @@ def plot_output(instruments):
             pt.title(instrument.name)
             instrument.plot()
             pt.legend()
+            pt.grid(True)
