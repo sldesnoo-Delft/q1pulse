@@ -27,7 +27,8 @@ class PendingUpdate:
 
 CLOCK_PERIOD = 4  # ns
 MIN_WAIT = CLOCK_PERIOD
-MAX_WAIT = (1 << 16) - 1
+# Maximum wait is actually 65535, but we'll keep the 4 ns aligned value.
+MAX_WAIT = (1 << 16) - CLOCK_PERIOD
 
 
 class InstructionQueue:
