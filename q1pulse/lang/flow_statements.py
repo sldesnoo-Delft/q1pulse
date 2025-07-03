@@ -1,7 +1,9 @@
 from .timed_statements import TimedStatement
 
-class LoopDurationStatement: # @@@ add to end loop?
+
+class LoopDurationStatement:  # TODO add to end loop?
     ''' Adds loop duration for compiler. Does not add a statement. '''
+
     def __init__(self, n, t_loop):
         self.n = n
         self.t_loop = t_loop
@@ -11,7 +13,6 @@ class LoopDurationStatement: # @@@ add to end loop?
 
     def write_instruction(self, generator):
         generator.adjust_time((self.n-1) * self.t_loop)
-
 
 
 class BranchStatement(TimedStatement):
@@ -30,8 +31,10 @@ def _assign_reg(generator, register, value, allocate=True):
         generator.allocate_reg(register.name)
     generator.move(value, register)
 
+
 def _increment_reg(generator, register, incr):
     generator.add(register, incr, register)
+
 
 class LoopStatement(BranchStatement):
     def __init__(self, time, sequence, loop):
@@ -43,10 +46,10 @@ class LoopStatement(BranchStatement):
 
     def write_instruction(self, generator):
         generator._wait_till(self.time)
-        l = self._loop
-        if l.loopvar:
-            _assign_reg(generator, l.loopvar, l.start)
-        _assign_reg(generator, l._loop_reg, l._n)
+        loop = self._loop
+        if loop.loopvar:
+            _assign_reg(generator, loop.loopvar, loop.start)
+        _assign_reg(generator, loop._loop_reg, loop._n)
         generator.set_label(self._label)
 
 
@@ -61,12 +64,12 @@ class EndLoopStatement(TimedStatement):
 
     def write_instruction(self, generator):
         generator._wait_till(self.time)
-        l = self._loop
-        if l.loopvar:
+        loop = self._loop
+        if loop.loopvar:
             # increment loop value
-            _increment_reg(generator, l.loopvar, l.step)
+            _increment_reg(generator, loop.loopvar, loop.step)
         # loop, register
-        generator.loop(l._loop_reg, '@'+self._label)
+        generator.loop(loop._loop_reg, '@'+self._label)
 
 
 class ArrayLoopStatement(BranchStatement):
@@ -79,18 +82,19 @@ class ArrayLoopStatement(BranchStatement):
 
     def write_instruction(self, generator):
         generator._wait_till(self.time)
-        l = self._loop
+        loop = self._loop
 
         # set data address register to data_label
-        _assign_reg(generator, l._data_ptr, '@'+l._table_label)
+        _assign_reg(generator, loop._data_ptr, '@'+loop._table_label)
         # set first value
-        _assign_reg(generator, l.loopvar, l.values[0])
+        _assign_reg(generator, loop.loopvar, loop.values[0])
         # decrement data pointer with 2, because first value already loaded
-        _increment_reg(generator, l._data_ptr, -2)
+        _increment_reg(generator, loop._data_ptr, -2)
         # start loop
         generator.set_label(self._label)
         # increment data pointer with 2 for next value
-        _increment_reg(generator, l._data_ptr, 2)
+        _increment_reg(generator, loop._data_ptr, 2)
+
 
 class EndArrayLoopStatement(TimedStatement):
     def __init__(self, time, loop):
@@ -103,14 +107,14 @@ class EndArrayLoopStatement(TimedStatement):
 
     def write_instruction(self, generator):
         generator._wait_till(self.time)
-        l = self._loop
+        loop = self._loop
         # jump to data address
-        generator.jmp(l._data_ptr)
+        generator.jmp(loop._data_ptr)
         # set data start label
-        generator.set_label(l._table_label)
-        for value in l.values[1:]:
+        generator.set_label(loop._table_label)
+        for value in loop.values[1:]:
             # set next value
-            _assign_reg(generator, l.loopvar, value, allocate=False)
+            _assign_reg(generator, loop.loopvar, value, allocate=False)
             # jump to loop start
             generator.jmp('@'+self._label)
         # NOTE: last jump will end here at the end of loop.

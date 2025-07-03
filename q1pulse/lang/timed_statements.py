@@ -1,5 +1,6 @@
 from .base import Statement
 
+
 class TimedStatement(Statement):
     def __init__(self, time):
         self.time = time
@@ -49,6 +50,7 @@ class PlayWaveStatement(TimedStatement):
     def write_instruction(self, generator):
         generator.play(self.time, self.wave0, self.wave1)
 
+
 class SetFrequencyStatement(TimedStatement):
     def __init__(self, time, frequency):
         super().__init__(time)
@@ -60,15 +62,17 @@ class SetFrequencyStatement(TimedStatement):
     def write_instruction(self, generator):
         generator.set_freq(self.time, self.frequency)
 
+
 class ResetPhaseStatement(TimedStatement):
     def __init__(self, time):
         super().__init__(time)
 
     def __repr__(self):
-        return f'reset_phase'
+        return 'reset_phase'
 
     def write_instruction(self, generator):
         generator.reset_phase(self.time)
+
 
 class ShiftPhaseStatement(TimedStatement):
     def __init__(self, time, delta, hires_regs=False):
@@ -82,6 +86,7 @@ class ShiftPhaseStatement(TimedStatement):
     def write_instruction(self, generator):
         generator.add_phase(self.time, self.delta, self.hires_regs)
 
+
 class SetPhaseStatement(TimedStatement):
     def __init__(self, time, delta, hires_regs=False):
         super().__init__(time)
@@ -93,6 +98,7 @@ class SetPhaseStatement(TimedStatement):
 
     def write_instruction(self, generator):
         generator.set_phase(self.time, self.delta, self.hires_regs)
+
 
 class AwgDcOffsetStatement(TimedStatement):
     def __init__(self, time, offset0, offset1):
@@ -119,6 +125,7 @@ class AwgGainStatement(TimedStatement):
     def write_instruction(self, generator):
         generator.awg_gain(self.time, self.gain0, self.gain1)
 
+
 class AcquireStatement(TimedStatement):
     def __init__(self, time, bins, bin_index):
         super().__init__(time)
@@ -130,6 +137,7 @@ class AcquireStatement(TimedStatement):
 
     def write_instruction(self, generator):
         generator.acquire(self.time, self.bins, self.bin_index)
+
 
 class AcquireWeighedStatement(TimedStatement):
     def __init__(self, time, bins, bin_index, weight0, weight1):
@@ -143,7 +151,7 @@ class AcquireWeighedStatement(TimedStatement):
         weight0 = self.weight0.name if self.weight0 is not None else None
         weight1 = self.weight1.name if self.weight1 is not None else None
         return (
-            f'acquire_weighed(bins={self.bins.name}, bin={self.bin_index}, '+
+            f'acquire_weighed(bins={self.bins.name}, bin={self.bin_index}, '
             f'weight0={weight0}, weight1={weight1})')
 
     def write_instruction(self, generator):
