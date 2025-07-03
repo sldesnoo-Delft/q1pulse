@@ -71,19 +71,16 @@ class ControlBuilder(SequenceBuilder):
         self._add_statement(SetMarkersStatement(t1, value))
 
     def set_offset(self, value0, value1=None, t_offset=0):
-        value0, value1 = self._apply_paths(value0, value1)
         t1 = self.current_time + t_offset
         self.set_pulse_end(t1)
         self._add_statement(AwgDcOffsetStatement(t1, value0, value1))
 
     def set_gain(self, value0, value1=None, t_offset=0):
-        value0, value1 = self._apply_paths(value0, value1)
         t1 = self.current_time + t_offset
         self.set_pulse_end(t1)
         self._add_statement(AwgGainStatement(t1, value0, value1))
 
     def play(self, wave0, wave1=None, t_offset=0):
-        wave0, wave1 = self._apply_paths(wave0, wave1)
         t1 = self.current_time + t_offset
         self.set_pulse_end(t1)
         wave0 = self._translate_wave(wave0)
@@ -344,37 +341,6 @@ class ControlBuilder(SequenceBuilder):
                 self.wait(rem)
             self.set_gain(0.0)
             self.nco_frequency = nco_freq
-
-    def _apply_paths(self, arg0, arg1):
-        paths = self._enabled_paths
-        if len(paths) == 0:
-            raise Q1ValueError('No output paths enabled')
-
-        if len(paths) == 1:
-            path = paths[0]
-            if arg1 is None:
-                return (arg0, None) if path == 0 else (None, arg0)
-            else:
-                if path == 1:
-                    # NOTE:
-                    # if 1 path is enabled and 2 arguments are passed, then
-                    # IQ should be rotated over pi/2, i.e. multiplied with [[0, 1], [-1, 0]]
-                    # This rotation is applied to gain and offset.
-                    # The amplitude of the waveform is multiplied by the gain.
-                    # The waveforms only have to be swapped.
-                    if isinstance(arg1, Wave):
-                        return (arg1, arg0)
-                    else:
-                        return (-arg1, arg0)
-                return (arg0, arg1)
-
-        if paths[0] > paths[1]:
-            if arg1 is None or isinstance(arg1, Wave):
-                return (arg1, arg0)
-            else:
-                return (-arg1, arg0)
-
-        return (arg0, arg1)
 
     def _translate_wave(self, wave):
         if wave is None:

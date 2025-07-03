@@ -16,12 +16,12 @@ _start:    reset_ph                  # L0003 @ 0
            move           3221225472,R1 # L0004 R1: R._var0
            move           100,R2     # L0005 R2: R._cnt0
 # block_pulse(1050000, R._var0, None) 
-# awg_offset = None, R._var0 t=0 
+# awg_offset = R._var0, None t=0 
 loop_0:    asr            R1,16,R3   # L0006 temp R3
            nop                       # L0007  set_awg_offs wait for R3
-           set_awg_offs   R0,R3      # L0008 @ 0
+           set_awg_offs   R3,R0      # L0008 @ 0
            upd_param      65532      # L0009 t=0
-# awg_offset = None, 0.0 t=1050000 
+# awg_offset = 0.0, None t=1050000 
            set_awg_offs   0,0        # L0010 @ 1050000
            move           15,R3      # L0011 temp ['R3']
 wait1:     wait           65532      # L0012 

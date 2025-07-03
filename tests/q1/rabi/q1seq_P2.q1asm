@@ -38,7 +38,7 @@ _start:    reset_ph                  # L0004 @ 0
            move           100,R2     # L0005 R2: R._var0
            move           20,R3      # L0006 R3: R._cnt0
 # block_pulse(200, 0.04, None) 
-loop_0:    set_awg_offs   0,1310     # L0007 @ 0
+loop_0:    set_awg_offs   1310,0     # L0007 @ 0
            upd_param      200        # L0008 t=0
            set_awg_offs   0,0        # L0009 @ 200
            upd_param      20         # L0010 t=200
@@ -57,15 +57,15 @@ wait1:     wait           65528      # L0018
            jge            R4,65532,@wait1 # L0021 
 endwait1:  wait           R4         # L0022 
 # ramp(200, 0.0, 0.06) 
-           set_awg_gain   0,1022     # L0023 @ 220
+           set_awg_gain   1022,0     # L0023 @ 220
            set_awg_offs   0,0        # L0024 @ 220
            play           0,0,100    # L0025 t=220
-           set_awg_offs   0,983      # L0026 @ 320
+           set_awg_offs   983,0      # L0026 @ 320
            play           0,0,100    # L0027 t=320
            set_awg_gain   0,0        # L0028 @ 420
 # ------:  set_awg_offs   0,0        # @ 420 = overwritten =
 # -- Overwrites set_awg_offs at 420 -- 
-           set_awg_offs   0,1966     # L0029 @ 420
+           set_awg_offs   1966,0     # L0029 @ 420
            upd_param      2000       # L0030 t=420
            add            R2,100,R2  # L0031 
            loop           R3,@loop_0 # L0032 

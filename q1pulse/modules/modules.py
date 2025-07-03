@@ -1,7 +1,6 @@
 import logging
 import time
 from dataclasses import dataclass
-from abc import abstractmethod
 
 from q1pulse.turbo_cluster import TurboCluster
 from q1pulse.util.delayedkeyboardinterrupt import DelayedKeyboardInterrupt
@@ -16,11 +15,19 @@ class Sequencer:
     module_name: str
     seq_nr: int
     channels: list[int]
-    enabled_paths: list[int]
     max_output_voltage: float
     nco_frequency: float | None = None
     in_channels: list[int] | None = None
     label: str | None = None
+
+    @property
+    def enabled_paths(self) -> list[int]:
+        n = len(self.channels)
+        if n == 0:
+            return []
+        if n == 1:
+            return [0]
+        return [0, 1]
 
 
 class QbloxModule:
@@ -30,9 +37,9 @@ class QbloxModule:
     def __init__(self, pulsar):
         self.name = pulsar.name
         # check module is present in slot.
-        if hasattr(pulsar, 'present'):
+        if hasattr(pulsar, "present"):
             if not pulsar.present():
-                raise Exception('No module in slot {pulsar.slot_idx}')
+                raise Exception("No module in slot {pulsar.slot_idx}")
         self.pulsar = pulsar
         self._allocated_seq = 0
         self.disable_all_out()
@@ -58,32 +65,29 @@ class QbloxModule:
         if isinstance(self.root_instrument, TurboCluster):
             return self.root_instrument.get_system_error(self.slot_idx)
         else:
-            raise Exception("Oops")
+            raise Exception("Standard Cluster has no `get_system_error` per module.")
 
-    def get_sequencer(self, channels):
+    def get_sequencer(self, channels: list[int]) -> Sequencer:
+        available_channels = list(range(self.n_channels))
+        if any(ch not in available_channels for ch in channels):
+            raise Exception(f"Illegal channel number(s) {channels}")
         seq_nr = self._allocate_seq_number()
-        seq_paths = self._get_seq_paths(channels)
-        return Sequencer(self.name, seq_nr, channels, seq_paths,
-                         self.max_output_voltage)
+        return Sequencer(self.name, seq_nr, channels, self.max_output_voltage)
 
     def _allocate_seq_number(self):
         if self._allocated_seq == self.n_sequencers:
-            raise Exception(f'Module {self.name} is out of sequencers. '
-                            f'All {self.n_sequencers} are already allocated.')
+            raise Exception(f"Module {self.name} is out of sequencers. "
+                            f"All {self.n_sequencers} are already allocated.")
         sequencer_nr = self._allocated_seq
         self._allocated_seq += 1
         return sequencer_nr
-
-    @abstractmethod
-    def _get_seq_paths(self, channels):
-        pass
 
     def disable_all_out(self):
         for seq_nr in range(0, self.n_sequencers):
             # Note: RF module connect outputs in pairs.
             n_out_ch = self.n_channels // 2 if self.pulsar.is_rf_type else self.n_channels
             for out in range(0, n_out_ch):
-                self._sset(seq_nr, f'connect_out{out}', 'off')
+                self._sset(seq_nr, f"connect_out{out}", "off")
 
     def set_label(self, seq_nr, label):
         self.pulsar.sequencers[seq_nr].label = label
@@ -92,10 +96,10 @@ class QbloxModule:
         if isinstance(sequence, str):
             # don't cache sequence. The contents of the file might have changed.
             filename = sequence
-            # print(f'Loading {filename} to sequencer {self.pulsar.name}:{seq_nr}')
-            self._sset(seq_nr, 'sequence', filename, cache=False)
+            # print(f"Loading {filename} to sequencer {self.pulsar.name}:{seq_nr}")
+            self._sset(seq_nr, "sequence", filename, cache=False)
         else:
-            self._sset(seq_nr, 'sequence', sequence)
+            self._sset(seq_nr, "sequence", sequence)
 
     def arm_sequencers(self):
         for seq_nr in range(0, self.n_sequencers):
@@ -115,44 +119,45 @@ class QbloxModule:
         return translate_seq_status(status)
 
     def enable_sync(self, seq_nr, enable):
-        self._sset(seq_nr, 'sync_en', enable)
+        self._sset(seq_nr, "sync_en", enable)
 
-    def enable_out(self, seq_nr, channel):
-        # Keep old convention: I on 0 and 2, Q on 1 and 3
-        # TODO: change API to allow different IQ mapping.
-        value = 'I' if channel % 2 == 0 else 'Q'
-        self._sset(seq_nr, f'connect_out{channel}', value)
+    def enable_out(self, seq_nr: int, channels: list[int]) -> None:
+        n = len(channels)
+        if n > 0:
+            self._sset(seq_nr, f"connect_out{channels[0]}", "I")
+        if n == 2:
+            self._sset(seq_nr, f"connect_out{channels[1]}", "Q")
 
-    def enable_out_iq(self, seq_nr, channels):
+    def enable_out_iq(self, seq_nr: int, channels: list[int]) -> None:
         if len(channels) == 0:
             return
         if len(channels) != 2 or channels[0] // 2 != channels[1] // 2:
-            raise Exception(f'Incorrect channels {channels}. RF output must be enabled in pairs')
+            raise Exception(f"Incorrect channels {channels}. RF output must be enabled in pairs")
         ch = channels[0] // 2
-        self._sset(seq_nr, f'connect_out{ch}', 'IQ')
+        self._sset(seq_nr, f"connect_out{ch}", "IQ")
 
     def set_nco(self, seq_nr, nco_frequency):
-        self._sset(seq_nr, 'mod_en_awg', nco_frequency is not None)
+        self._sset(seq_nr, "mod_en_awg", nco_frequency is not None)
         if nco_frequency is not None:
-            self._sset(seq_nr, 'nco_freq', nco_frequency)
+            self._sset(seq_nr, "nco_freq", nco_frequency)
 
     def set_mixer_gain_ratio(self, seq_nr, value):
-        self._sset(seq_nr, 'mixer_corr_gain_ratio', value)
+        self._sset(seq_nr, "mixer_corr_gain_ratio", value)
 
     def set_mixer_phase_offset_degree(self, seq_nr, value):
-        self._sset(seq_nr, 'mixer_corr_phase_offset_degree', value)
+        self._sset(seq_nr, "mixer_corr_phase_offset_degree", value)
 
     def configure_trigger_counter(self, seq_nr, address, threshold, invert):
-        self._sset(seq_nr, f'trigger{address}_count_threshold', threshold)
-        self._sset(seq_nr, f'trigger{address}_threshold_invert', invert)
+        self._sset(seq_nr, f"trigger{address}_count_threshold", threshold)
+        self._sset(seq_nr, f"trigger{address}_threshold_invert", invert)
 
     def set_awg_offsets(self, seq_nr, offset0, offset1):
-        self._sset(seq_nr, 'offset_awg_path0', offset0)
-        self._sset(seq_nr, 'offset_awg_path1', offset1)
+        self._sset(seq_nr, "offset_awg_path0", offset0)
+        self._sset(seq_nr, "offset_awg_path1", offset1)
 
     def enabled(self, seq_nr):
-        seq = getattr(self.pulsar, f'sequencer{seq_nr}')
-        param = seq.parameters['sync_en']
+        seq = getattr(self.pulsar, f"sequencer{seq_nr}")
+        param = seq.parameters["sync_en"]
         return param.cache()
 
     def disable_seq(self, sequencer):
@@ -165,47 +170,46 @@ class QbloxModule:
         if self.pulsar.is_rf_type:
             self.enable_out_iq(seq_nr, sequencer.channels)
         else:
-            for ch in sequencer.channels:
-                self.enable_out(seq_nr, ch)
+            self.enable_out(seq_nr, sequencer.channels)
 
     def _sset(self, seq_nr, name, value, cache=True):
-        full_name = f'sequencer{seq_nr}.{name}'
-        seq = getattr(self.pulsar, f'sequencer{seq_nr}')
+        full_name = f"sequencer{seq_nr}.{name}"
+        seq = getattr(self.pulsar, f"sequencer{seq_nr}")
         param = seq.parameters[name]
         try:
             if cache and param.cache.valid and param.cache() == value:
                 if QbloxModule.verbose:
-                    logger.debug(f'# {full_name}={value} -- cached')
+                    logger.debug(f"# {full_name}={value} -- cached")
                 return
         except Exception:
-            logger.debug(f'No cache value for {full_name}')
+            logger.debug(f"No cache value for {full_name}")
         result = param(value)
         if QbloxModule.verbose:
-            logger.info(f'{full_name}={value}')
+            logger.info(f"{full_name}={value}")
         return result
 
     def invalidate_cache(self, seq_nr, param_name):
-        seq = getattr(self.pulsar, f'sequencer{seq_nr}')
+        seq = getattr(self.pulsar, f"sequencer{seq_nr}")
         param = seq.parameters[param_name]
         param.cache.invalidate()
 
     def set_out_offset(self, channel, offset_mV):
         if self.pulsar.is_rf_type:
-            name = f'out{channel//2}_offset_path{channel % 2}'
+            name = f"out{channel//2}_offset_path{channel % 2}"
             value = offset_mV
         else:
-            name = f'out{channel}_offset'
+            name = f"out{channel}_offset"
             value = offset_mV/1000
 
         param = self.pulsar.parameters[name]
         if param.cache() == value:
             if QbloxModule.verbose:
-                logger.debug(f'# {name}={value} -- cached')
+                logger.debug(f"# {name}={value} -- cached")
             return
         param(value)
 
     def set_marker_invert(self, number: int, invert: bool):
-        name = f'marker{number}_inv_en'
+        name = f"marker{number}_inv_en"
         param = self.pulsar.parameters[name]
         if param.cache() != invert:
             param(invert)
@@ -218,33 +222,6 @@ class QcmModule(QbloxModule):
         super().__init__(pulsar)
         self.max_output_voltage = 2.5 if not pulsar.is_rf_type else 3.3
 
-    def _get_seq_paths(self, channels):
-        if len(channels) == 0:
-            # no output, only markers
-            seq_channels = []
-
-        elif len(channels) == 1:
-            channel = channels[0]
-            if channel in [0, 1]:
-                seq_channels = [channel]
-            elif channel in [2, 3]:
-                seq_channels = [channel - 2]
-            else:
-                raise Exception(f'illegal channel combination {channels}')
-
-        elif len(channels) == 2:
-            channel_pair = sorted(channels)
-            if channel_pair == [0, 1]:
-                seq_channels = channels
-            elif channel_pair == [2, 3]:
-                seq_channels = [ch-2 for ch in channels]
-            else:
-                raise Exception(f'illegal channel combination {channels}')
-        else:
-            raise Exception(f'illegal channel combination {channels}')
-
-        return seq_channels
-
 
 class QrmModule(QbloxModule):
     n_channels = 2
@@ -255,54 +232,47 @@ class QrmModule(QbloxModule):
         self.disable_all_inputs()
         self._acq_ready = []
 
-    def _get_seq_paths(self, channels):
-        for channel in channels:
-            if channel not in [0, 1]:
-                raise Exception(f'illegal channel combination {channels}')
-
-        return channels
-
     def disable_all_inputs(self):
         for seq_nr in range(0, self.n_sequencers):
             if self.pulsar.is_rf_type:
-                self._sset(seq_nr, 'connect_acq', 'off')
+                self._sset(seq_nr, "connect_acq", "off")
             else:
-                self._sset(seq_nr, 'connect_acq_I', 'off')
-                self._sset(seq_nr, 'connect_acq_Q', 'off')
+                self._sset(seq_nr, "connect_acq_I", "off")
+                self._sset(seq_nr, "connect_acq_Q", "off")
 
     def thresholded_acq_rotation(self, seq_nr, phase_rotation):
-        self._sset(seq_nr, 'thresholded_acq_rotation', phase_rotation)
+        self._sset(seq_nr, "thresholded_acq_rotation", phase_rotation)
 
     def thresholded_acq_threshold(self, seq_nr, threshold):
-        self._sset(seq_nr, 'thresholded_acq_threshold', threshold)
+        self._sset(seq_nr, "thresholded_acq_threshold", threshold)
 
     def integration_length_acq(self, seq_nr, length):
-        self._sset(seq_nr, 'integration_length_acq', length)
+        self._sset(seq_nr, "integration_length_acq", length)
 
     def nco_prop_delay(self, seq_nr, delay):
         if delay > 0:
             if 96 <= delay <= 245:
-                self._sset(seq_nr, 'nco_prop_delay_comp_en', True)
-                self._sset(seq_nr, 'nco_prop_delay_comp', delay - 146)
+                self._sset(seq_nr, "nco_prop_delay_comp_en", True)
+                self._sset(seq_nr, "nco_prop_delay_comp", delay - 146)
             else:
                 logger.warning(f"NCO delay ({delay} ns) is out of range. NCO delay not enabled.")
-                self._sset(seq_nr, 'nco_prop_delay_comp_en', False)
+                self._sset(seq_nr, "nco_prop_delay_comp_en", False)
         else:
-            self._sset(seq_nr, 'nco_prop_delay_comp_en', False)
+            self._sset(seq_nr, "nco_prop_delay_comp_en", False)
 
     def delete_acquisition_data(self, seq_nr):
         self.pulsar.delete_acquisition_data(seq_nr, all=True)
 
     def enable_in(self, seq_nr, channel):
         if self.pulsar.is_rf_type:
-            self._sset(seq_nr, 'connect_acq', 'in0')
+            self._sset(seq_nr, "connect_acq", "in0")
         else:
             # Keep old convention: I on 0, Q on 1
             # TODO: change API to allow different IQ mapping.
             if channel == 0:
-                self._sset(seq_nr, 'connect_acq_I', 'in0')
+                self._sset(seq_nr, "connect_acq_I", "in0")
             else:
-                self._sset(seq_nr, 'connect_acq_Q', 'in1')
+                self._sset(seq_nr, "connect_acq_Q", "in1")
 
     def enable_seq(self, sequencer):
         super().enable_seq(sequencer)
@@ -313,14 +283,14 @@ class QrmModule(QbloxModule):
 
     def set_nco(self, seq_nr, nco_frequency):
         super().set_nco(seq_nr, nco_frequency)
-        self._sset(seq_nr, 'demod_en_acq', nco_frequency is not None)
+        self._sset(seq_nr, "demod_en_acq", nco_frequency is not None)
 
     def set_trigger(self, seq_nr, address, invert=False):
         enabled = address is not None and address > 0
-        self._sset(seq_nr, 'thresholded_acq_trigger_en', enabled)
+        self._sset(seq_nr, "thresholded_acq_trigger_en", enabled)
         if enabled:
-            self._sset(seq_nr, 'thresholded_acq_trigger_address', address)
-            self._sset(seq_nr, 'thresholded_acq_trigger_invert', invert)
+            self._sset(seq_nr, "thresholded_acq_trigger_address", address)
+            self._sset(seq_nr, "thresholded_acq_trigger_invert", invert)
 
     def arm_sequencers(self):
         self._acq_ready = []

@@ -21,139 +21,139 @@ seq_prog="""
 _start:    reset_ph                  # L0004 @ 0
            upd_param      12         # L0005 t=0
 # block_pulse(20, 0.5, None) 
-# awg_offset = None, 0.5 t=12 
-           set_awg_offs   0,16383    # L0006 @ 12
+# awg_offset = 0.5, None t=12 
+           set_awg_offs   16383,0    # L0006 @ 12
            upd_param      20         # L0007 t=12
-# awg_offset = None, 0.0 t=32 
+# awg_offset = 0.0, None t=32 
            set_awg_offs   0,0        # L0008 @ 32
            upd_param      9          # L0009 t=32
 # block_pulse(18, 0.5, None) 
-# awg_offset = None, 0.5 t=41 
-           set_awg_offs   0,16383    # L0010 @ 41
+# awg_offset = 0.5, None t=41 
+           set_awg_offs   16383,0    # L0010 @ 41
            upd_param      18         # L0011 t=41
-# awg_offset = None, 0.0 t=59 
+# awg_offset = 0.0, None t=59 
            set_awg_offs   0,0        # L0012 @ 59
            upd_param      11         # L0013 t=59
 # block_pulse(16, 0.5, None) 
-# awg_offset = None, 0.5 t=70 
-           set_awg_offs   0,16383    # L0014 @ 70
+# awg_offset = 0.5, None t=70 
+           set_awg_offs   16383,0    # L0014 @ 70
            upd_param      16         # L0015 t=70
-# awg_offset = None, 0.0 t=86 
+# awg_offset = 0.0, None t=86 
            set_awg_offs   0,0        # L0016 @ 86
            upd_param      13         # L0017 t=86
 # block_pulse(14, 0.5, None) 
-# awg_offset = None, 0.5 t=99 
-           set_awg_offs   0,16383    # L0018 @ 99
+# awg_offset = 0.5, None t=99 
+           set_awg_offs   16383,0    # L0018 @ 99
            upd_param      14         # L0019 t=99
-# awg_offset = None, 0.0 t=113 
+# awg_offset = 0.0, None t=113 
            set_awg_offs   0,0        # L0020 @ 113
            upd_param      129        # L0021 t=113
 # ramp(11, 0.0, 0.5) 
-# awg_gain = None, 0.5 t=242 
-           set_awg_gain   0,16383    # L0022 @ 242
-# awg_offset = None, 0.0 t=242 
+# awg_gain = 0.5, None t=242 
+           set_awg_gain   16383,0    # L0022 @ 242
+# awg_offset = 0.0, None t=242 
            set_awg_offs   0,0        # L0023 @ 242
-# play None _ramp_11 t=242 
+# play _ramp_11 None t=242 
            play           0,0,11     # L0024 t=242
-# awg_offset = None, 0.0 t=253 
+# awg_offset = 0.0, None t=253 
 # ------:  set_awg_offs   0,0        # @ 253 = overwritten =
 # block_pulse(12, 0.5, None) 
-# awg_offset = None, 0.5 t=253 
+# awg_offset = 0.5, None t=253 
 # -- Overwrites set_awg_offs at 253 -- 
-           set_awg_offs   0,16383    # L0025 @ 253
+           set_awg_offs   16383,0    # L0025 @ 253
            upd_param      12         # L0026 t=253
-# awg_offset = None, 0.0 t=265 
+# awg_offset = 0.0, None t=265 
 # ------:  set_awg_offs   0,0        # @ 265 = overwritten =
 # ramp(11, 0.5, 0.0) 
-# awg_gain = None, -0.5 t=265 
-           set_awg_gain   0,-16384   # L0027 @ 265
-# awg_offset = None, 0.5 t=265 
+# awg_gain = -0.5, None t=265 
+           set_awg_gain   -16384,0   # L0027 @ 265
+# awg_offset = 0.5, None t=265 
 # -- Overwrites set_awg_offs at 265 -- 
-           set_awg_offs   0,16383    # L0028 @ 265
-# play None _ramp_11 t=265 
+           set_awg_offs   16383,0    # L0028 @ 265
+# play _ramp_11 None t=265 
            play           0,0,11     # L0029 t=265
-# awg_offset = None, 0.0 t=276 
+# awg_offset = 0.0, None t=276 
            set_awg_offs   0,0        # L0030 @ 276
            upd_param      5          # L0031 t=276
 # ramp(11, 0.0, 0.5) 
-# awg_gain = None, 0.5 t=281 
-           set_awg_gain   0,16383    # L0032 @ 281
-# awg_offset = None, 0.0 t=281 
+# awg_gain = 0.5, None t=281 
+           set_awg_gain   16383,0    # L0032 @ 281
+# awg_offset = 0.0, None t=281 
            set_awg_offs   0,0        # L0033 @ 281
-# play None _ramp_11 t=281 
+# play _ramp_11 None t=281 
            play           0,0,11     # L0034 t=281
-# awg_offset = None, 0.0 t=292 
+# awg_offset = 0.0, None t=292 
 # ------:  set_awg_offs   0,0        # @ 292 = overwritten =
 # block_pulse(12, 0.5, None) 
-# awg_offset = None, 0.5 t=292 
+# awg_offset = 0.5, None t=292 
 # -- Overwrites set_awg_offs at 292 -- 
-           set_awg_offs   0,16383    # L0035 @ 292
+           set_awg_offs   16383,0    # L0035 @ 292
            upd_param      12         # L0036 t=292
-# awg_offset = None, 0.0 t=304 
+# awg_offset = 0.0, None t=304 
 # ------:  set_awg_offs   0,0        # @ 304 = overwritten =
 # ramp(11, 0.5, 0.0) 
-# awg_gain = None, -0.5 t=304 
-           set_awg_gain   0,-16384   # L0037 @ 304
-# awg_offset = None, 0.5 t=304 
+# awg_gain = -0.5, None t=304 
+           set_awg_gain   -16384,0   # L0037 @ 304
+# awg_offset = 0.5, None t=304 
 # -- Overwrites set_awg_offs at 304 -- 
-           set_awg_offs   0,16383    # L0038 @ 304
-# play None _ramp_11 t=304 
+           set_awg_offs   16383,0    # L0038 @ 304
+# play _ramp_11 None t=304 
            play           0,0,11     # L0039 t=304
-# awg_offset = None, 0.0 t=315 
+# awg_offset = 0.0, None t=315 
            set_awg_offs   0,0        # L0040 @ 315
            upd_param      5          # L0041 t=315
 # ramp(11, 0.0, 0.5) 
-# awg_gain = None, 0.5 t=320 
-           set_awg_gain   0,16383    # L0042 @ 320
-# awg_offset = None, 0.0 t=320 
+# awg_gain = 0.5, None t=320 
+           set_awg_gain   16383,0    # L0042 @ 320
+# awg_offset = 0.0, None t=320 
            set_awg_offs   0,0        # L0043 @ 320
-# play None _ramp_11 t=320 
+# play _ramp_11 None t=320 
            play           0,0,11     # L0044 t=320
-# awg_offset = None, 0.0 t=331 
+# awg_offset = 0.0, None t=331 
 # ------:  set_awg_offs   0,0        # @ 331 = overwritten =
 # block_pulse(12, 0.5, None) 
-# awg_offset = None, 0.5 t=331 
+# awg_offset = 0.5, None t=331 
 # -- Overwrites set_awg_offs at 331 -- 
-           set_awg_offs   0,16383    # L0045 @ 331
+           set_awg_offs   16383,0    # L0045 @ 331
            upd_param      12         # L0046 t=331
-# awg_offset = None, 0.0 t=343 
+# awg_offset = 0.0, None t=343 
 # ------:  set_awg_offs   0,0        # @ 343 = overwritten =
 # ramp(11, 0.5, 0.0) 
-# awg_gain = None, -0.5 t=343 
-           set_awg_gain   0,-16384   # L0047 @ 343
-# awg_offset = None, 0.5 t=343 
+# awg_gain = -0.5, None t=343 
+           set_awg_gain   -16384,0   # L0047 @ 343
+# awg_offset = 0.5, None t=343 
 # -- Overwrites set_awg_offs at 343 -- 
-           set_awg_offs   0,16383    # L0048 @ 343
-# play None _ramp_11 t=343 
+           set_awg_offs   16383,0    # L0048 @ 343
+# play _ramp_11 None t=343 
            play           0,0,11     # L0049 t=343
-# awg_offset = None, 0.0 t=354 
+# awg_offset = 0.0, None t=354 
            set_awg_offs   0,0        # L0050 @ 354
            upd_param      5          # L0051 t=354
 # ramp(11, 0.0, 0.5) 
-# awg_gain = None, 0.5 t=359 
-           set_awg_gain   0,16383    # L0052 @ 359
-# awg_offset = None, 0.0 t=359 
+# awg_gain = 0.5, None t=359 
+           set_awg_gain   16383,0    # L0052 @ 359
+# awg_offset = 0.0, None t=359 
            set_awg_offs   0,0        # L0053 @ 359
-# play None _ramp_11 t=359 
+# play _ramp_11 None t=359 
            play           0,0,11     # L0054 t=359
-# awg_offset = None, 0.0 t=370 
+# awg_offset = 0.0, None t=370 
 # ------:  set_awg_offs   0,0        # @ 370 = overwritten =
 # block_pulse(12, 0.5, None) 
-# awg_offset = None, 0.5 t=370 
+# awg_offset = 0.5, None t=370 
 # -- Overwrites set_awg_offs at 370 -- 
-           set_awg_offs   0,16383    # L0055 @ 370
+           set_awg_offs   16383,0    # L0055 @ 370
            upd_param      12         # L0056 t=370
-# awg_offset = None, 0.0 t=382 
+# awg_offset = 0.0, None t=382 
 # ------:  set_awg_offs   0,0        # @ 382 = overwritten =
 # ramp(11, 0.5, 0.0) 
-# awg_gain = None, -0.5 t=382 
-           set_awg_gain   0,-16384   # L0057 @ 382
-# awg_offset = None, 0.5 t=382 
+# awg_gain = -0.5, None t=382 
+           set_awg_gain   -16384,0   # L0057 @ 382
+# awg_offset = 0.5, None t=382 
 # -- Overwrites set_awg_offs at 382 -- 
-           set_awg_offs   0,16383    # L0058 @ 382
-# play None _ramp_11 t=382 
+           set_awg_offs   16383,0    # L0058 @ 382
+# play _ramp_11 None t=382 
            play           0,0,11     # L0059 t=382
-# awg_offset = None, 0.0 t=393 
+# awg_offset = 0.0, None t=393 
            set_awg_offs   0,0        # L0060 @ 393
            upd_param      5          # L0061 t=393
 # --END-- 

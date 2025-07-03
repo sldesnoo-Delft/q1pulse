@@ -1,1 +1,1 @@
-{"waveforms":{},"weights":{},"acquisitions":{},"program":" move 0,R0\n wait_sync 100\n_start: reset_ph \n upd_param 50\n set_awg_offs 0,13107\n upd_param 51\n set_awg_offs 0,0\n upd_param 52\n set_awg_offs 0,13107\n upd_param 53\n set_awg_offs 0,0\n upd_param 4\n stop "}
+{"waveforms":{},"weights":{},"acquisitions":{},"program":" move 0,R0\n wait_sync 100\n_start: reset_ph \n upd_param 50\n set_awg_offs 13107,0\n upd_param 51\n set_awg_offs 0,0\n upd_param 52\n set_awg_offs 13107,0\n upd_param 53\n set_awg_offs 0,0\n upd_param 4\n stop "}

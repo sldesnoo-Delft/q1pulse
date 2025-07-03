@@ -14,17 +14,17 @@ seq_prog="""
 _start:    reset_ph                  # L0003 @ 0
            upd_param      50         # L0004 t=0
 # block_pulse(51, 0.4, None) 
-# awg_offset = None, 0.4 t=50 
-           set_awg_offs   0,13107    # L0005 @ 50
+# awg_offset = 0.4, None t=50 
+           set_awg_offs   13107,0    # L0005 @ 50
            upd_param      51         # L0006 t=50
-# awg_offset = None, 0.0 t=101 
+# awg_offset = 0.0, None t=101 
            set_awg_offs   0,0        # L0007 @ 101
            upd_param      52         # L0008 t=101
 # block_pulse(53, 0.4, None) 
-# awg_offset = None, 0.4 t=153 
-           set_awg_offs   0,13107    # L0009 @ 153
+# awg_offset = 0.4, None t=153 
+           set_awg_offs   13107,0    # L0009 @ 153
            upd_param      53         # L0010 t=153
-# awg_offset = None, 0.0 t=206 
+# awg_offset = 0.0, None t=206 
            set_awg_offs   0,0        # L0011 @ 206
            upd_param      4          # L0012 t=206
 # --END-- 

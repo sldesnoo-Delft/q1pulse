@@ -15,10 +15,10 @@ seq_prog="""
 _start:    reset_ph                  # L0004 @ 0
            upd_param      340        # L0005 t=0
 # block_pulse(100, -0.25, None) 
-# awg_offset = None, -0.25 t=340 
-           set_awg_offs   0,-8192    # L0006 @ 340
+# awg_offset = -0.25, None t=340 
+           set_awg_offs   -8192,0    # L0006 @ 340
            upd_param      100        # L0007 t=340
-# awg_offset = None, 0.0 t=440 
+# awg_offset = 0.0, None t=440 
            set_awg_offs   0,0        # L0008 @ 440
 # --END-- 
            loop           R1,@_start # L0009 

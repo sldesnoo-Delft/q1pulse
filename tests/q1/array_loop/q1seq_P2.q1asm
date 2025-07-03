@@ -23,12 +23,12 @@ loop_0:    nop                       # L0009  add wait for R2
 # log "amplitude",R._var0,TRF 
 #Q1Sim:log "amplitude",R3,TRF 
 # block_pulse(80, R._var0, None) 
-# awg_offset = None, R._var0 t=240 
+# awg_offset = R._var0, None t=240 
            asr            R3,16,R4   # L0011 temp R4
            nop                       # L0012  set_awg_offs wait for R4
-           set_awg_offs   R0,R4      # L0013 @ 240
+           set_awg_offs   R4,R0      # L0013 @ 240
            upd_param      80         # L0014 t=240
-# awg_offset = None, 0.0 t=320 
+# awg_offset = 0.0, None t=320 
            set_awg_offs   0,0        # L0015 @ 320
 # endloop t=320 
            jmp            R2         # L0016 
@@ -51,8 +51,8 @@ _table0:   move           3865470566,R3 # L0017
            add            R2,4294967294,R2 # L0032 
 loop_1:    nop                       # L0033  add wait for R2
            add            R2,2,R2    # L0034 
-# awg_offset = None, 0.5 t=420 
-           set_awg_offs   0,16383    # L0035 @ 420
+# awg_offset = 0.5, None t=420 
+           set_awg_offs   16383,0    # L0035 @ 420
            upd_param      24         # L0036 t=420
 # wait(R._var1) t=420 
            sub            R3,4,R4    # L0037 R4: _waittime
@@ -88,7 +88,7 @@ wait2:     wait           65528      # L0060
            nop                       # L0062  jge wait for R5
            jge            R5,65532,@wait2 # L0063 
 endwait2:  wait           R5         # L0064 
-# awg_offset = None, 0.0 t=440 
+# awg_offset = 0.0, None t=440 
            set_awg_offs   0,0        # L0065 @ 440
            upd_param      100        # L0066 t=440
 # endloop t=540 

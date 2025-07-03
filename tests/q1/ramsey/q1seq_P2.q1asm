@@ -46,20 +46,20 @@ _start:    reset_ph                  # L0004 @ 0
            move           100,R2     # L0005 R2: R._var0
            move           20,R3      # L0006 R3: R._cnt0
 # block_pulse(200, 0.04, None) 
-# awg_offset = None, 0.04 t=0 
-loop_0:    set_awg_offs   0,1310     # L0007 @ 0
+# awg_offset = 0.04, None t=0 
+loop_0:    set_awg_offs   1310,0     # L0007 @ 0
            upd_param      200        # L0008 t=0
-# awg_offset = None, 0.0 t=200 
+# awg_offset = 0.0, None t=200 
 # ------:  set_awg_offs   0,0        # @ 200 = overwritten =
 # ramp(20, 0.04, 0.0) 
-# awg_gain = None, -0.04 t=200 
-           set_awg_gain   0,-1311    # L0009 @ 200
-# awg_offset = None, 0.04 t=200 
+# awg_gain = -0.04, None t=200 
+           set_awg_gain   -1311,0    # L0009 @ 200
+# awg_offset = 0.04, None t=200 
 # -- Overwrites set_awg_offs at 200 -- 
-           set_awg_offs   0,1310     # L0010 @ 200
-# play None _ramp_20 t=200 
+           set_awg_offs   1310,0     # L0010 @ 200
+# play _ramp_20 None t=200 
            play           0,0,20     # L0011 t=200
-# awg_offset = None, 0.0 t=220 
+# awg_offset = 0.0, None t=220 
            set_awg_offs   0,0        # L0012 @ 220
            upd_param      80         # L0013 t=220
 # wait(R._var0) t=300 
@@ -78,20 +78,20 @@ wait1:     wait           65528      # L0021
            jge            R4,65532,@wait1 # L0024 
 endwait1:  wait           R4         # L0025 
 # ramp(100, 0.0, 0.06) 
-# awg_gain = None, 0.06 t=380 
-           set_awg_gain   0,1966     # L0026 @ 380
+# awg_gain = 0.06, None t=380 
+           set_awg_gain   1966,0     # L0026 @ 380
            wait           80         # L0027 
-# awg_offset = None, 0.0 t=380 
+# awg_offset = 0.0, None t=380 
            set_awg_offs   0,0        # L0028 @ 380
-# play None _ramp_100 t=380 
+# play _ramp_100 None t=380 
            play           1,1,100    # L0029 t=380
-# awg_offset = None, 0.0 t=480 
+# awg_offset = 0.0, None t=480 
 # ------:  set_awg_offs   0,0        # @ 480 = overwritten =
-# awg_offset = None, 0.06 t=480 
+# awg_offset = 0.06, None t=480 
 # -- Overwrites set_awg_offs at 480 -- 
-           set_awg_offs   0,1966     # L0030 @ 480
+           set_awg_offs   1966,0     # L0030 @ 480
            upd_param      1000       # L0031 t=480
-# awg_offset = None, 0.0 t=1480 
+# awg_offset = 0.0, None t=1480 
            set_awg_offs   0,0        # L0032 @ 1480
 # endloop t=1480 
            add            R2,100,R2  # L0033 
