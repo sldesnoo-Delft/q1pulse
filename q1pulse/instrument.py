@@ -13,7 +13,7 @@ from q1pulse.sequencer.sequencer import SequenceBuilder
 from q1pulse.sequencer.control import ControlBuilder
 from q1pulse.sequencer.readout import ReadoutBuilder
 from q1pulse.turbo_cluster import TurboCluster
-from q1pulse.modules.modules import QcmModule, QrmModule, QbloxModule
+from q1pulse.modules.modules import QcmModule, QrmModule, QbloxModule, Sequencer
 from q1pulse.modules.sequencer_states import translate_seq_status
 from q1pulse.util.delayedkeyboardinterrupt import DelayedKeyboardInterrupt
 from q1pulse.util.qblox_version import check_qblox_instrument_version
@@ -44,11 +44,10 @@ class Q1Instrument:
             self.path = self.temp_dir.name
             logger.info("Instrument upload temp dir: " + self.path)
         self.root_instruments = set()
-        self.modules = {}
-        self.controllers = {}
-        self._upload_instruments = {}
-        self.readouts = {}
-        self._loaded_q1asm = {}
+        self.modules: dict[str, QbloxModule] = {}
+        self.controllers: dict[int, Sequencer] = {}
+        self.readouts: dict[int, Sequencer] = {}
+        self._loaded_q1asm: dict[str, dict] = {}
         SequenceBuilder.add_traceback_to_instructions = add_traceback
 
     def add_qcm(self, module):
@@ -112,8 +111,8 @@ class Q1Instrument:
             q1asm = program.q1asm(name)
             if q1asm is not None:
                 filename = f"q1seq_{name}.json"
-                with open(os.path.join(path, filename), 'w', encoding='utf-8') as f:
-                    json.dump(q1asm, f, indent=1, separators=(',', ':'))
+                with open(os.path.join(path, filename), "w", encoding="utf-8") as f:
+                    json.dump(q1asm, f, indent=1, separators=(",", ":"))
             else:
                 filename = None
             sequencer = self.controllers.get(name)
@@ -137,7 +136,7 @@ class Q1Instrument:
             if seq_type == "readout":
                 builder_config["in_channels"] = sequencer.in_channels
             config[name] = builder_config
-        with open(os.path.join(path, "q1program.json"), 'w', encoding='utf-8') as f:
+        with open(os.path.join(path, "q1program.json"), "w", encoding="utf-8") as f:
             json.dump(config, f, indent=2)
 
     def run_program(self, program):
@@ -236,7 +235,7 @@ class Q1Instrument:
                 module.start_sequencers()
             # for instrument in instruments_with_sequence:
             #     # t = (time.perf_counter() - t_start) * 1000
-            #     # logger.debug(f'Start  ({t:5.3f} ms)')
+            #     # logger.debug(f"Start  ({t:5.3f} ms)")
             #     instrument.start_sequencer()
             self.check_system_errors()
             self._t_start = time.perf_counter()
@@ -391,7 +390,7 @@ class Q1Instrument:
         if len(errors) > 0:
             if Q1Instrument._i_feel_lucky:
                 logger.error("You're not lucky. One of the previous calls failed...")
-            msg = instrument.name + ':' + '\n'.join(errors)
+            msg = instrument.name + ":" + "\n".join(errors)
             logger.error(msg)
             raise RuntimeError(msg)
 
@@ -402,7 +401,7 @@ class Q1Instrument:
     def get_acquisition_bins(self, sequencer_name, bin_name):
         seq = self.readouts[sequencer_name]
         q1asm = self._loaded_q1asm[sequencer_name]
-        if q1asm is None or len(q1asm['acquisitions']) == 0:
+        if q1asm is None or len(q1asm["acquisitions"]) == 0:
             logger.warning(f"No acquisitions for {sequencer_name}")
             return None
         module = self.modules[seq.module_name]
@@ -411,9 +410,9 @@ class Q1Instrument:
         return module.get_acquisitions(seq.seq_nr, bin_name)
 
     def get_input_ranges(self, sequencer_name):
-        ''' Returns input range for both channels of sequencer.
+        """ Returns input range for both channels of sequencer.
         Value is in Vpp.
-        '''
+        """
         seq = self.readouts[sequencer_name]
         module = self.modules[seq.module_name]
         if module.pulsar.is_rf_type:
@@ -430,10 +429,10 @@ class Q1Instrument:
 
 
 def set_exception_on_overload(enable: bool):
-    '''
+    """
     Setting set_exception_on_overload to False suppresses Exception
     when the QRM input is overloaded.
-    '''
+    """
     Q1Instrument._exception_on_overload = enable
 
 
