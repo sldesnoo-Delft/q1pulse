@@ -3,10 +3,12 @@ import numpy as np
 
 from ..lang.exceptions import Q1NameError
 
+
 @dataclass
 class Wave:
     name: str
     data: np.ndarray
+
 
 class WaveCollection:
     def __init__(self):
@@ -35,26 +37,27 @@ class WaveCollection:
 
         try:
             return self._waves[name]
-        except:
+        except KeyError:
             data = np.linspace(start, stop, n_samples, endpoint=False)
             wave = self.add_wave(name, data)
             return wave
 
-    def get_chirp(self, n_samples, f_end):
+    def get_chirp(self, n_samples, f_end, margin=0) -> tuple[Wave, Wave, float]:
         # Start with f = 0 and the delta phase / ns = 0
         # Every ns f_step/n_samples is added to delta phase / ns.
         # dp/ns = 0, 1, 2, 3, 4, ...
         # phase = 0, 1, 3, 6, 10, ...
         # phase expressed in rotations!
         dp_ns_end = f_end / 1e9
-        dp = np.linspace(0, dp_ns_end, n_samples, endpoint=False)
+        wave_size = n_samples+margin
+        dp = np.linspace(0, dp_ns_end*wave_size/n_samples, wave_size, endpoint=False)
         phase = np.cumsum(dp)
-        dp_next = (phase[-1] + dp_ns_end) * 2
-        nameI = f'_chirp_{n_samples}_{f_end:.0f}_real'
-        nameQ = f'_chirp_{n_samples}_{f_end:.0f}_imag'
+        dp_next = (phase[n_samples-1] + dp_ns_end) * 2
+        nameI = f'_chirp_{n_samples}_{margin}_{f_end:.0f}_real'
+        nameQ = f'_chirp_{n_samples}_{margin}_{f_end:.0f}_imag'
         try:
             return self._waves[nameI], self._waves[nameQ], dp_next
-        except:
+        except KeyError:
             waveI = self.add_wave(nameI, np.cos(2*np.pi*phase))
             waveQ = self.add_wave(nameQ, np.sin(2*np.pi*phase))
             # phase shift for next chirp, expressed in pi*rad!
@@ -65,6 +68,7 @@ class WaveCollection:
 class AcquisitionBins:
     name: str
     num_bins: int
+
 
 class AcquisitionBinsCollection:
     def __init__(self):
@@ -87,10 +91,12 @@ class AcquisitionBinsCollection:
             self._bins[name] = bins
         return bins
 
+
 @dataclass
 class AcquisitionWeight:
     name: str
     data: np.ndarray
+
 
 class WeightCollection:
     def __init__(self):
@@ -110,4 +116,3 @@ class WeightCollection:
         weight = AcquisitionWeight(name, data)
         self._weights[name] = weight
         return weight
-

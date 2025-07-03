@@ -185,7 +185,7 @@ class ControlBuilder(SequenceBuilder):
             raise Q1TypeError('Ramp duration cannot be a variable or expression; '
                               'Unroll loop using Python for-loop.')
 
-        ramp_loop_time = 100 # @@@ make argument with default.
+        ramp_loop_time = 100
         self.add_comment(f'ramp({duration}, {v_start}, {v_end})')
         with self._local_timeline(t_offset=t_offset, duration=duration):
             if duration <= ramp_loop_time:
@@ -216,32 +216,41 @@ class ControlBuilder(SequenceBuilder):
                     self.Rs._ramp_offset += self.Rs._ramp_step
                     self.wait(wave_duration)
             else:
+                margin = SequenceBuilder.MIN_DURATION
+                wave_duration = ramp_loop_time + margin
                 step = (v_end - v_start) * ramp_loop_time / duration
                 # step is a fixed point value in q1asm.  Resolution is 1/65536 of LSB output.
                 lsb = 1/(2**15)
                 if abs(step) > lsb:
-                    gain = step
+                    gain = step * wave_duration / ramp_loop_time
                     min_lsb_steps = 2**6
                     if abs(step) < lsb*min_lsb_steps:
                         # decrease ramp, increase gain for better accuracy
-                        w_ramp = self._waves.get_ramp(ramp_loop_time, stop=1/min_lsb_steps)
-                        gain = step * min_lsb_steps
+                        w_ramp = self._waves.get_ramp(wave_duration, stop=1/min_lsb_steps)
+                        gain *= min_lsb_steps
                     else:
-                        w_ramp = self._waves.get_ramp(ramp_loop_time)
-                    # divmod, but with rem [1,100], and n > 1
-                    n, rem = divmod(duration-1, ramp_loop_time)
-                    #  @@@if n <= (5 if rem > 0 else 6): unroll loop!
+                        w_ramp = self._waves.get_ramp(wave_duration)
+                    # divmod, but with rem [4,103], and n >= 0
+                    n, rem = divmod(duration-SequenceBuilder.MIN_DURATION, ramp_loop_time)
+                    rem += SequenceBuilder.MIN_DURATION
 
-                    rem += 1
-                    self.Rs._ramp_offset = v_start
-                    self.set_gain(gain)
-                    with self._seq_repeat(n):
-                        self.set_offset(self.Rs._ramp_offset)
-                        self.play(w_ramp)
-                        self.Rs._ramp_offset += step
-                        self.wait(ramp_loop_time)
-                    # @@@ do no use register
-                    self.set_offset(self.Rs._ramp_offset)
+                    #  unroll loop for small n
+                    if n <= 4:
+                        self.set_gain(gain)
+                        for i in range(n):
+                            self.set_offset(v_start + i*step)
+                            self.play(w_ramp)
+                            self.wait(ramp_loop_time)
+                    else:
+                        self.Rs._ramp_offset = v_start
+                        self.set_gain(gain)
+                        with self._seq_repeat(n):
+                            self.set_offset(self.Rs._ramp_offset)
+                            self.play(w_ramp)
+                            self.Rs._ramp_offset += step
+                            self.wait(ramp_loop_time)
+                    # Use immediate value to reduce amount of instructions.
+                    self.set_offset(v_start + n*step)
                     self.play(w_ramp)
                     self.wait(rem)
                     self.set_gain(0.0)
@@ -254,11 +263,11 @@ class ControlBuilder(SequenceBuilder):
                         rem = duration
                     else:
                         # minimum time multiple of 4 ns
-                        t_step = int(duration / n_steps)
-                        t_step = int(t_step / 4) * 4
-                        # divmod, but with rem [1,100]
-                        n, rem = divmod(duration-1, t_step)
-                        rem += 1
+                        t_step = int(duration / n_steps / 4) * 4
+                        # divmod, but with rem in range [4, ...]
+                        # So, rem can be up to 3 ns longer than t_step. This can be neglected.
+                        n, rem = divmod(duration-SequenceBuilder.MIN_DURATION, t_step)
+                        rem += SequenceBuilder.MIN_DURATION
                         step = (v_end - v_start) * t_step / duration
                     self.Rs._ramp_offset = v_start
                     if n > 0:
@@ -266,7 +275,8 @@ class ControlBuilder(SequenceBuilder):
                             self.set_offset(self.Rs._ramp_offset)
                             self.Rs._ramp_offset += step
                             self.wait(t_step)
-                    self.set_offset(self.Rs._ramp_offset)
+                    # Use immediate value to reduce amount of instructions.
+                    self.set_offset(v_start + n*step)
                     self.wait(rem)
 
             if v_after is not None:
@@ -291,18 +301,20 @@ class ControlBuilder(SequenceBuilder):
         if f_start * f_end <= 0:
             raise Q1ValueError('Chirping through f=0.0 Hz is currently not possible')
 
+        if duration < SequenceBuilder.MIN_DURATION:
+            raise Q1ValueError(f"Chirp duration of {duration} ns is too short. Minimum is 4 ns.")
+
         self.add_comment(f'chirp({duration}, {amplitude}, {f_start/1e6:7.3f}, {f_end/1e6:7.3f} MHz)')
         with self._local_timeline(t_offset=t_offset, duration=duration):
             f_step = (f_end - f_start) * chirp_loop_time / duration
             # Note: For the loop we need an integer frequency step. This could add a small
             # error of 0.5 Hz per iteration of the loop.
             # The maximum errror for a 10 ms chirp (100_000 iterations) is 0.05 MHz.
-            # TODO: for more precision: add f_step fraction (use 64 bit numbers?)
             f_step = round(f_step)
-            w_chirpI, w_chirpQ, delta_phase = self._waves.get_chirp(chirp_loop_time, f_step)
-            # divmod, but with rem [1,100], and n > 1
-            n, rem = divmod(duration-1, chirp_loop_time)
-            rem += 1
+            w_chirpI, w_chirpQ, delta_phase = self._waves.get_chirp(chirp_loop_time, f_step, margin=3)
+            # divmod, but with rem [4,103] to ensure minimum of 4 ns in remainder.
+            n, rem = divmod(duration-SequenceBuilder.MIN_DURATION, chirp_loop_time)
+            rem += SequenceBuilder.MIN_DURATION
 
             # TODO: remove workaround when fixed in firmware
             # Temporarily set NCO frequency for phase shift workaround.

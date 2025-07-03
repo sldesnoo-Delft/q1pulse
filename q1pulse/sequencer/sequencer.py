@@ -40,6 +40,8 @@ class SequenceBuilder(BuilderBase):
     Q1Instrument can suppress the traceback.
     '''
 
+    MIN_DURATION = 4
+
     def __init__(self, name):
         self.name = name
         self._local_loop_cnt = 0
@@ -84,18 +86,20 @@ class SequenceBuilder(BuilderBase):
         if not isinstance(statement, TimedStatement):
             return
         t = statement.time
-        if int(t) % 4:
-            raise Q1TimingError(f'Time must be multiple of 4 ns:\n'
-                                f'Adding:  t={statement.time}  {statement}')
         last = self._last_timed_statement
-        if last and t < last.time:
-            raise Q1TimingError(f'Statement time cannot be before {last.time}\n'
-                                f'Previous: t={last.time}  {last}\n'
-                                f'Adding:   t={statement.time}  {statement}')
+        if last and t != last.time:
+            delta_t = t - last.time
+            if delta_t < 0:
+                raise Q1TimingError(f'Statement time cannot be before {last.time}\n'
+                                    f'Previous: t={last.time}  {last}\n'
+                                    f'Adding:   t={statement.time}  {statement}')
+            if delta_t < SequenceBuilder.MIN_DURATION:
+                raise Q1TimingError(f'Time between statements must be at least of 4 ns:\n'
+                                    f'Adding:  t={statement.time}  {statement} (delta_t {delta_t})')
         self._last_timed_statement = statement
 
     def _add_traceback(self, statement):
-        max_depth=10
+        max_depth = 10
         # add 2 levels: _add_statement and _add_traceback.
         # these 2 levels are not added to statement.tb
         stack = traceback.extract_stack(limit=max_depth+2)
@@ -179,14 +183,14 @@ class SequenceBuilder(BuilderBase):
             fp.write(f'**** Exception in {self.name} while compiling. ****\n')
             if q1_tb:
                 fp.write(q1_tb)
-            fp.write(f'\n\n=== Q1Pulse Sequence ===\n')
+            fp.write('\n\n=== Q1Pulse Sequence ===\n')
             self.describe(fp)
-            fp.write(f'\n=== Q1ASM till error ===\n')
+            fp.write('\n=== Q1ASM till error ===\n')
             lines = generator.q1asm_lines()
             for line in lines:
                 fp.write(line+'\n')
             fp.write('/-'*40 + '\n')
-            fp.write(f'\n\n=== Full Exception ===\n\n')
+            fp.write('\n\n=== Full Exception ===\n\n')
             traceback.print_exception(exc, exc, None, file=fp)
 
     @property
@@ -200,12 +204,11 @@ class SequenceBuilder(BuilderBase):
             self.sequence.timeline.set_pulse_end(value)
 
     @contextmanager
-    def _local_timeline(self, duration=None, t_offset=0):
+    def _local_timeline(self, duration=0, t_offset=0):
         if self._local_time_active:
             raise Q1InternalError('Local timeline already active')
         end_time = self.current_time + t_offset
-        if duration is not None:
-            end_time += duration
+        end_time += duration
         self._local_time = t_offset
         self._local_time_active = True
         yield
@@ -339,5 +342,3 @@ class SequenceBuilder(BuilderBase):
         self._in_condition = False
         self._sequence_pop()
         self._last_timed_statement = self._conditional_block
-
-

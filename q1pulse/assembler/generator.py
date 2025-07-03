@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 
 from .generator_data import GeneratorData
-from .instruction_queue import InstructionQueue, Instruction, PendingUpdate
+from .instruction_queue import InstructionQueue, Instruction, PendingUpdate, MIN_WAIT, CLOCK_PERIOD
 from .registers import SequencerRegisters
 from ..lang.math_expressions import get_dtype, Expression, Operand
 from ..lang.generator import GeneratorBase
@@ -69,14 +69,15 @@ def register_args(signature):
 
     def arg_f(generator, i, arg, conversion_comments):
         # Note: label has dtype int
-#        dtype = get_dtype(arg)
-        # check optional all float or all int
-#        if opt_type is None:
-#            opt_type = dtype
-#        elif dtype is not None and dtype != opt_type:
-#            raise Q1TypeError(f'Float/int argument mismatch {dtype}<>{opt_type}')
 
-        if isinstance(arg,str):
+        # dtype = get_dtype(arg)
+        # # check optional all float or all int
+        # if opt_type is None:
+        #     opt_type = dtype
+        # elif dtype is not None and dtype != opt_type:
+        #     raise Q1TypeError(f'Float/int argument mismatch {dtype}<>{opt_type}')
+
+        if isinstance(arg, str):
             # label or 'Rxx'
             return arg
         elif isinstance(arg, Operand):
@@ -245,7 +246,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
 
     def set_condition(self, mask, operator):
         # always use 4 ns for else-wait.
-        self._add_instruction('set_cond', 1, mask, operator, 4)
+        self._add_instruction('set_cond', 1, mask, operator, MIN_WAIT)
         # Store rt state at start to set the time after the block.
         self._conditional_block_state.n_rt_instruction_start = self._n_rt_instructions
         self._conditional_block_state.rt_time_start = self._rt_time
@@ -257,7 +258,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         # add wait command if there is no pending rt command with wait_after time
         if self._last_rt_command is None:
             self._add_rt_command('wait', time=self._rt_time)
-        else_time = 4*(self._n_rt_instructions - cbs.n_rt_instruction_start)
+        else_time = CLOCK_PERIOD*(self._n_rt_instructions - cbs.n_rt_instruction_start)
         self.add_comment(f'End condition. total wait_else {else_time} ns (t_end={self._rt_time})')
         # update end times of previous branches with time spent in else-wait.
         for i in range(len(cbs.rt_end_times)):
@@ -465,7 +466,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
     def add_phase(self, time, delta, hires_regs):
         with self.scope():
             iphase = self._convert_phase(delta, hires_regs)
-            # @@@ accumulate phase shifts at same time
+            # FIXME accumulate phase shifts at same time. Currently they are overwritten.
             self._add_rt_setting('set_ph_delta', iphase, time=time)
 
     @register_args(signature='tI')
@@ -665,7 +666,6 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                 r1 = (phase >> 2)-(phase >> 5) + (phase >> 6)-(phase >> 9)
                 # 6 terms: rel. error -1.8e4
                 r1 += (phase >> 11)-(phase >> 13)
-                # @@@ check on hardware...
                 # without hires this takes ~32 cycles = 128 ns
                 # with hires it takes ~62 cycles = 248 ns
                 if hires_regs:

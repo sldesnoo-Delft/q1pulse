@@ -25,8 +25,9 @@ class PendingUpdate:
     time: int
 
 
-RT_RESOLUTION = 4
-MAX_WAIT = (1 << 16) - RT_RESOLUTION
+CLOCK_PERIOD = 4  # ns
+MIN_WAIT = CLOCK_PERIOD
+MAX_WAIT = (1 << 16) - 1
 
 
 class InstructionQueue:
@@ -94,7 +95,7 @@ class InstructionQueue:
     def _add_rt_command(self, mnemonic, *args, time=None, updating=False):
         self._wait_till(time,
                         pending_update=PendingUpdate.MERGE if updating else PendingUpdate.FLUSH)
-        wait_after = RT_RESOLUTION
+        wait_after = MIN_WAIT
         if self.add_comments:
             comment = f't={time}'
         else:
@@ -160,7 +161,7 @@ class InstructionQueue:
     def _flush_pending_update(self):
         pending_update = self._pending_update
         if pending_update is not None:
-            wait_after = RT_RESOLUTION
+            wait_after = MIN_WAIT
             if self.add_comments:
                 comment = f't={pending_update.time}'
             else:
@@ -195,10 +196,10 @@ class InstructionQueue:
                 self._n_rt_instructions += 1
 
     def _add_wait_reg(self, time_reg, elapsed=0, less_then_65us=False):  # @@@ make use of option less_then_65us
-        self._n_rt_instructions += 1  # this is not correct if > 65 us.
         if less_then_65us and elapsed == 0 and not self._check_time_reg:
             # single instruction for short simple wait
             self._add_instruction('wait', time_reg)
+            self._n_rt_instructions += 1
             return
 
         wait_reg = self.allocate_reg('_waittime')
@@ -215,26 +216,28 @@ class InstructionQueue:
                 self.add_comment('         --- emulate signed wait time')
                 with self.temp_regs(1) as temp_reg:
                     self._add_reg_instruction('xor', wait_reg, 0x8000_0000, temp_reg)
-                    self._add_instruction('jge', temp_reg, 0x8000_0000 + RT_RESOLUTION, '@'+continue_label)
+                    self._add_instruction('jge', temp_reg, 0x8000_0000 + MIN_WAIT, '@'+continue_label)
             else:
-                self._add_instruction('jge', wait_reg, RT_RESOLUTION, '@'+continue_label)
+                self._add_instruction('jge', wait_reg, MIN_WAIT, '@'+continue_label)
             self._add_instruction('illegal', comment='negative wait time')
             if less_then_65us:
                 self._add_instruction('jlt', wait_reg, MAX_WAIT, '@'+continue_label)
                 self._add_instruction('illegal', comment='larger than 65 us')
             self.set_label(continue_label)
 
+        # FIXME: NO Looping allowed inside conditional, because number rt_instructions cannot be counted properly.
         if not less_then_65us:
             loop_label = f'wait{self._wait_loop_cnt}'
             end_label = f'endwait{self._wait_loop_cnt}'
             self._add_instruction('jlt', wait_reg, MAX_WAIT, '@'+end_label)
             self.set_label(loop_label)
-            self._add_instruction('wait', MAX_WAIT-RT_RESOLUTION)
-            self._add_reg_instruction('sub', wait_reg, MAX_WAIT-RT_RESOLUTION, wait_reg)
+            self._add_instruction('wait', MAX_WAIT-MIN_WAIT)
+            self._add_reg_instruction('sub', wait_reg, MAX_WAIT-MIN_WAIT, wait_reg)
             self._add_instruction('jge', wait_reg, MAX_WAIT, '@'+loop_label)
             self.set_label(end_label)
 
         self._add_instruction('wait', wait_reg)
+        self._n_rt_instructions += 1
 
     def _wait_register_updates(self, instruction):
         '''
