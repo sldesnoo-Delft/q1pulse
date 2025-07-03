@@ -307,7 +307,7 @@ class Q1Instrument:
         not when sleeping.
         """
         expiration_time = time.perf_counter() + timeout_minutes*60.0
-        timeout_poll_res = 0.01
+        timeout_poll_res = 0.001
         with DelayedKeyboardInterrupt("check status"):
             status = module.get_sequencer_status(seq_nr, 0.0)
         while (status.state == "RUNNING"
