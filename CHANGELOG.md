@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.17.3] - 2025-07-08
+
+- Implemented 1 ns resolution.
+- Optimized code for ramps to generate less Q1ASM instructions (10 to 20% less code).
+- Dropped support for qblox-instruments < v0.12.0
+- Internal change: always path 0 also for odd output channels.
+
 ## \[0.17.2] - 2025-06-19
 
 - Improved performance of TurboCluster with another 10%.
@@ -13,7 +20,6 @@ All notable changes to Q1Pulse will be documented in this file.
 ## \[0.17.0] - 2025-06-04
 
 - Update to qblox-instruments v0.17
-
 
 ## \[0.16.4] - 2025-06-02
 
