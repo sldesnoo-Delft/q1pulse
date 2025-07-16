@@ -31,9 +31,9 @@ class DelayedKeyboardInterrupt:
     def __enter__(self) -> None:
         is_main_thread = threading.current_thread() is threading.main_thread()
         if not is_main_thread:
-            logger.debug(
-                "Not on main thread. Cannot intercept interrupts. " + self._where_msg
-            )
+            # logger.debug(
+            #     "Not on main thread. Cannot intercept interrupts. " + self._where_msg
+            # )
             return
         handler = signal.getsignal(signal.SIGINT)
         try:

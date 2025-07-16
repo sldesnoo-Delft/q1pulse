@@ -453,7 +453,7 @@ class TurboCluster(Cluster):
                 cached_str = self._channel_map_cache[(slot, sequencer)]
                 return json.loads(cached_str)
             except KeyError:
-                logger.info(f"cache mis channel_map {slot}, {sequencer}")
+                logger.info(f"cache miss channel_map {slot}, {sequencer}")
                 pass
             result = ClusterScpi._get_sequencer_channel_map(self, slot, sequencer)
             self._channel_map_cache[(slot, sequencer)] = json.dumps(result)
@@ -524,7 +524,7 @@ class TurboCluster(Cluster):
                 cached_str = self._sequencer_config_cache[(slot, sequencer)]
                 return json.loads(cached_str)
             except KeyError:
-                logger.info(f"cache mis sequencer_config {slot}, {sequencer}")
+                logger.info(f"cache miss sequencer_config {slot}, {sequencer}")
                 pass
             result = ClusterScpi._get_sequencer_config(self, slot, sequencer)
             self._sequencer_config_cache[(slot, sequencer)] = json.dumps(result)
@@ -588,7 +588,7 @@ class TurboCluster(Cluster):
                 cached_str = self._slot_predistortion_cache[slot]
                 return json.loads(cached_str)
             except KeyError:
-                logger.info(f"cache mis predistortion {slot}")
+                logger.info(f"cache miss predistortion {slot}")
                 pass
             result = ClusterScpi._get_pre_distortion_config(self, slot)
             self._slot_predistortion_cache[slot] = json.dumps(result)
