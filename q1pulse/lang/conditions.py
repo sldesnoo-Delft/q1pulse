@@ -5,6 +5,7 @@ from .timed_statements import TimedStatement, MultiBranchStatement
 from .sequence import Sequence
 from .exceptions import Q1InternalError, Q1SyntaxError
 
+
 class Operators(IntEnum):
     OR = 0
     ''' At least 1 bit set '''
@@ -80,7 +81,7 @@ class LatchResetStatement(TimedStatement):
         super().__init__(time)
 
     def __repr__(self):
-        return f'latch_reset()'
+        return 'latch_reset()'
 
     def write_instruction(self, generator):
         generator.latch_rst(self.time)
@@ -117,6 +118,7 @@ class ConditionalBlockStatement(MultiBranchStatement):
 
     Branches are added in programming order.
     '''
+
     def __init__(self, time, counters):
         super().__init__(time)
         self.counters = counters
@@ -158,7 +160,7 @@ class ConditionalBlockStatement(MultiBranchStatement):
             return operators[0].opposite
         if len(self.counters) == 1:
             if len(operators) > 2:
-                raise Q1SyntaxError(f'Cannot have more than 2 different operators with 1 counter')
+                raise Q1SyntaxError('Cannot have more than 2 different operators with 1 counter')
             flag_set_ops = [Operators.AND, Operators.OR, Operators.XOR]
             if (operators[0] in flag_set_ops) == (operators[1] in flag_set_ops):
                 raise Q1SyntaxError(f'Incompatible operators {[op.name for op in operators]} on 1 counter')
@@ -172,14 +174,14 @@ class ConditionalBlockStatement(MultiBranchStatement):
                     tri_state.remove(op)
                 return list(tri_state)[0]
             except KeyError:
-                raise Q1SyntaxError(f'Operators {[op.name for op in operators]} are not exclusive')
+                raise Q1SyntaxError(f'Operators {[op.name for op in operators]} are not exclusive') from None
         else:
             try:
                 for op in operators:
                     tri_state.remove(op)
                 return None
             except KeyError:
-                raise Q1SyntaxError(f'Operators {[op.name for op in operators]} are not exclusive')
+                raise Q1SyntaxError(f'Operators {[op.name for op in operators]} are not exclusive') from None
 
     def __repr__(self):
         return f'conditional({[counter.name for counter in self.counters]}):'
@@ -194,7 +196,7 @@ class ConditionalBlockStatement(MultiBranchStatement):
         generator.enter_conditional(self.time)
         for branch in self.branches:
             generator.set_condition(mask, branch.operator.value)
-            branch.compile(generator, annotate=False) # TODO: move annotate flag to generator.
+            branch.compile(generator, annotate=False)  # TODO: move annotate flag to generator.
             generator.exit_condition()
         # disables conditions and enforces equal end-time.
         generator.exit_conditional(self.end_time)
