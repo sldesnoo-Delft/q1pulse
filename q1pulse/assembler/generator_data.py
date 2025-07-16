@@ -1,5 +1,3 @@
-import numpy as np
-
 from q1pulse.sequencer.sequencer_data import Wave, AcquisitionBins, AcquisitionWeight
 from q1pulse.lang.exceptions import Q1TypeError
 
