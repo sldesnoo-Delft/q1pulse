@@ -358,8 +358,13 @@ class Q1Instrument:
                                 seq_nums.append(seq_num)
                         sequencers[slot] = seq_nums
 
-                    with DelayedKeyboardInterrupt("check status"):
-                        res = instrument.get_sequencer_status_multiple(sequencers)
+                    try:
+                        res = None
+                        with DelayedKeyboardInterrupt("check status"):
+                            res = instrument.get_sequencer_status_multiple(sequencers)
+                    except KeyboardInterrupt:
+                        logger.info(f"Interrupted during get_sequencer_status_multiple. Statusses: {res}")
+                        raise
 
                     for slot, seq_num, status in res:
                         status = translate_seq_status(status)
@@ -407,7 +412,8 @@ class Q1Instrument:
         module = self.modules[seq.module_name]
         # first check if module is ready.
         module.get_acquisition_status(seq.seq_nr, 1)
-        return module.get_acquisitions(seq.seq_nr, bin_name)
+        with DelayedKeyboardInterrupt("get_acquisitions"):
+            return module.get_acquisitions(seq.seq_nr, bin_name)
 
     def get_input_ranges(self, sequencer_name):
         """ Returns input range for both channels of sequencer.

@@ -42,10 +42,11 @@ class QbloxModule:
                 raise Exception("No module in slot {pulsar.slot_idx}")
         self.pulsar = pulsar
         self._allocated_seq = 0
-        self.disable_all_out()
-        # disable all sequencers
-        for seq_nr in range(0, self.n_sequencers):
-            self.enable_sync(seq_nr, False)
+        with DelayedKeyboardInterrupt("module.__init__"):
+            self.disable_all_out()
+            # disable all sequencers
+            for seq_nr in range(0, self.n_sequencers):
+                self.enable_sync(seq_nr, False)
 
     @property
     def slot_idx(self):
