@@ -1,9 +1,13 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.17.4] - 2025-07-16
+
+- Improved KeyboardInterrupt handling.
+
 ## \[0.17.3] - 2025-07-08
 
-- Implemented 1 ns resolution.
+- Implemented scheduling on 1 ns resolution.
 - Optimized code for ramps to generate less Q1ASM instructions (10 to 20% less code).
 - Dropped support for qblox-instruments < v0.12.0
 - Internal change: always path 0 also for odd output channels.
