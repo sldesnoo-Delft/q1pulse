@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 from ..lang.exceptions import Q1NameError, Q1MemoryError
 
+
 class SequencerRegisters:
     stack_size = 32
 
@@ -17,7 +18,7 @@ class SequencerRegisters:
         try:
             return self._allocated_regs[name]
         except KeyError:
-            raise Q1NameError(f'Register {name} not defined')
+            raise Q1NameError(f'Register {name} not defined') from None
 
     def allocate_reg(self, name, log=True):
         if name in self._allocated_regs:
@@ -30,7 +31,7 @@ class SequencerRegisters:
                 self._log(f'{asm_reg}: {name}')
             return asm_reg
         except IndexError:
-            raise Q1MemoryError(f'Cannot allocate register {name}')
+            raise Q1MemoryError(f'Cannot allocate register {name}') from None
 
     def enter_scope(self):
         self._scope.append((self._stack_ptr, {}))
@@ -68,13 +69,12 @@ class SequencerRegisters:
 
     def _print_reg_admin(self):
         # print(f'Free: {self._free_regs}')
-        reg_names = {f'R{i}':name for name,i in self._allocated_regs.items()}
+        reg_names = {f'R{i}': name for name, i in self._allocated_regs.items()}
         print('Allocated:')
-        for r,name in sorted(reg_names.items()):
+        for r, name in sorted(reg_names.items()):
             print(f'  {r}: {name}')
         indent = 0
         for scope in self._scope_regs:
             indent += 4
             spaces = ' '*indent
             print(f'{spaces}> {scope}')
-
