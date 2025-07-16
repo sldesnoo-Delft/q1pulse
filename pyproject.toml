@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "q1pulse"
-version = "0.17.3" # tbump: version
+version = "0.17.4" # tbump: version
 authors = [
   { name="Sander de Snoo", email="s.l.desnoo@tudelft.nl" },
 ]
@@ -39,7 +39,7 @@ Changelog = "https://github.com/sldesnoo-Delft/q1pulse/blob/main/CHANGELOG.md"
 # github_url = "https://github.com/<user or organization>/<project>/"
 
 [tool.tbump.version]
-current = "0.17.3"
+current = "0.17.4"
 
 # Example of a semver regexp.
 # Make sure this matches current_version before
