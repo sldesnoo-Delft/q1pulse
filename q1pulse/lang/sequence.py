@@ -2,6 +2,7 @@ from .timed_statements import TimedStatement, MultiBranchStatement
 from .flow_statements import BranchStatement
 from .exceptions import Q1Exception, Q1SequenceError
 
+
 class Sequence:
     def __init__(self, timeline):
         self.timeline = timeline
