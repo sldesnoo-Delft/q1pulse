@@ -27,8 +27,9 @@ class PendingUpdate:
 
 CLOCK_PERIOD = 4  # ns
 MIN_WAIT = CLOCK_PERIOD
-# Maximum wait is actually 65535, but we'll keep the 4 ns aligned value.
-MAX_WAIT = (1 << 16) - CLOCK_PERIOD
+# A smaller step in wait loops guarantees that the next step will be at least 4 ns
+MAX_WAIT_STEP = (1 << 16) - CLOCK_PERIOD
+MAX_WAIT = (1 << 16) - 1
 
 
 class InstructionQueue:
@@ -144,8 +145,8 @@ class InstructionQueue:
                 if self._last_rt_command.wait_after + wait_time <= MAX_WAIT:
                     self._last_rt_command.wait_after += wait_time
                 else:
-                    rem_wait_time = wait_time - MAX_WAIT + self._last_rt_command.wait_after
-                    self._last_rt_command.wait_after = MAX_WAIT
+                    rem_wait_time = wait_time - MAX_WAIT_STEP + self._last_rt_command.wait_after
+                    self._last_rt_command.wait_after = MAX_WAIT_STEP
                     self.__add_wait_instruction(rem_wait_time)
             else:
                 self.__add_wait_instruction(wait_time)
@@ -175,21 +176,27 @@ class InstructionQueue:
             self._rt_time += wait_after
 
     def __add_wait_instruction(self, time):
+        if time < MIN_WAIT:
+            raise Q1TimingError(f"Too short wait time of {time} ns at t={self._rt_time}")
         if time < MAX_WAIT:
             self._add_instruction('wait', time)
             self._n_rt_instructions += 1
         else:
-            n_max, rem_wait = divmod(time, MAX_WAIT)
+            n_max, rem_wait = divmod(time, MAX_WAIT_STEP)
+            if 0 < rem_wait < MIN_WAIT:
+                # rem_wait 1, 2 or 3 => 65533, 65534, 65535
+                n_max -= 1
+                rem_wait += MAX_WAIT_STEP
             if n_max <= 2:
                 for _ in range(n_max):
-                    self._add_instruction('wait', MAX_WAIT)
+                    self._add_instruction('wait', MAX_WAIT_STEP)
             else:
                 self._wait_loop_cnt += 1
                 with self.temp_regs(1) as wait_reg:
                     self._add_reg_instruction('move', n_max, wait_reg)
                     label = f'wait{self._wait_loop_cnt}'
                     self.set_label(label)
-                    self._add_instruction('wait', MAX_WAIT)
+                    self._add_instruction('wait', MAX_WAIT_STEP)
                     self._add_instruction('loop', wait_reg, '@'+label)
             self._n_rt_instructions += n_max
             if rem_wait > 0:
@@ -220,7 +227,7 @@ class InstructionQueue:
                     self._add_instruction('jge', temp_reg, 0x8000_0000 + MIN_WAIT, '@'+continue_label)
             else:
                 self._add_instruction('jge', wait_reg, MIN_WAIT, '@'+continue_label)
-            self._add_instruction('illegal', comment='negative wait time')
+            self._add_instruction('illegal', comment='wait time < 4 ns')
             if less_then_65us:
                 self._add_instruction('jlt', wait_reg, MAX_WAIT, '@'+continue_label)
                 self._add_instruction('illegal', comment='larger than 65 us')
@@ -232,8 +239,8 @@ class InstructionQueue:
             end_label = f'endwait{self._wait_loop_cnt}'
             self._add_instruction('jlt', wait_reg, MAX_WAIT, '@'+end_label)
             self.set_label(loop_label)
-            self._add_instruction('wait', MAX_WAIT-MIN_WAIT)
-            self._add_reg_instruction('sub', wait_reg, MAX_WAIT-MIN_WAIT, wait_reg)
+            self._add_instruction('wait', MAX_WAIT_STEP)
+            self._add_reg_instruction('sub', wait_reg, MAX_WAIT_STEP, wait_reg)
             self._add_instruction('jge', wait_reg, MAX_WAIT, '@'+loop_label)
             self.set_label(end_label)
 
