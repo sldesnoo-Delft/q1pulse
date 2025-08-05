@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.17.5] - 2025-08-05
+
+- Fix illegal wait 1 ns.
+
 ## \[0.17.4] - 2025-07-16
 
 - Improved KeyboardInterrupt handling.
