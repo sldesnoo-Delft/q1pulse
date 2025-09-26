@@ -65,6 +65,7 @@ class TurboCluster(Cluster):
         self._ip_address = addr_info.address
         self._connections: dict[int, Ieee488_2] = {}
         self._needs_check: dict[int, bool] = {}
+        self._init_batching()
         self._clear_cache()
         for slot in range(1, 21):
             ip_config = resolve(f"{self._ip_address}/{slot}")
@@ -82,24 +83,68 @@ class TurboCluster(Cluster):
         self._debug = 2
         self._init_configuration_cache()
 
+    def _init_batching(self):
+        self._is_batching: list[bool] = [False]*21
+        self._write_buffer: list[bytearray] = [bytearray() for _ in range(21)]
+
+    def start_batching(self, slot):
+        if self._is_batching[slot]:
+            raise Exception(f"Batching already active for slot {slot}")
+        buffer = self._write_buffer[slot]
+        if len(buffer) > 0:
+            raise Exception(f"Internal error in batching: {buffer}")
+        self._is_batching[slot] = True
+
+    def stop_batching(self, slot):
+        self._flush_buffer(slot)
+        self._is_batching[slot] = False
+
+    def _add_to_buffer(self, slot, data):
+        buffer = self._write_buffer[slot]
+        if len(buffer) + len(data) > 1400:
+            self._flush_buffer(slot)
+        buffer += data
+
+    def _flush_buffer(self, slot):
+        buffer = self._write_buffer[slot]
+        if not self._is_batching[slot] or len(buffer) == 0:
+            return
+        conn = self._connections[slot]
+        conn._transport.write_binary(buffer)
+        buffer.clear()
+
     def _write(self, cmd_str):
-        conn, cmd = self._get_connection_and_remove_slot(cmd_str)
+        conn, cmd, slot = self._get_connection_and_remove_slot(cmd_str)
+        if slot is not None and self._is_batching[slot]:
+            # convert to binary like done by Ieee488_2 and IpTransport.
+            self._add_to_buffer(slot, (cmd_str + " \n").encode("ascii"))
+            return
         conn._write(cmd)
         # logger.debug(f"write {cmd_str}")
 
     def _write_bin(self, cmd_str, bin_block):
-        conn, cmd = self._get_connection_and_remove_slot(cmd_str)
+        conn, cmd, slot = self._get_connection_and_remove_slot(cmd_str)
+        if slot is not None and self._is_batching[slot]:
+            # convert to binary like done by Ieee488_2 and IpTransport.
+            header = cmd_str + " " + Ieee488_2._build_header_string(len(bin_block))
+            data = bytearray(header.encode("ascii")) + bin_block + "\n".encode("ascii")
+            self._add_to_buffer(slot, data)
+            return
         conn._write_bin(cmd, bin_block)
         # logger.debug(f"write_bin {cmd_str}")
 
     def _read_bin(self, cmd_str, flush_line_end=True):
-        conn, cmd = self._get_connection_and_remove_slot(cmd_str)
+        conn, cmd, slot = self._get_connection_and_remove_slot(cmd_str)
+        if slot is not None and self._is_batching[slot]:
+            self._flush_buffer(slot)
         res = conn._read_bin(cmd, flush_line_end)
         # logger.debug(f"read_bin {cmd_str}")
         return res
 
     def _read(self, cmd_str: str) -> str:
-        conn, cmd = self._get_connection_and_remove_slot(cmd_str)
+        conn, cmd, slot = self._get_connection_and_remove_slot(cmd_str)
+        if slot is not None and self._is_batching[slot]:
+            self._flush_buffer(slot)
         res = conn._read(cmd)
         # logger.debug(f"read {cmd_str}")
         return res
@@ -113,8 +158,8 @@ class TurboCluster(Cluster):
                 except ValueError:
                     raise Exception(f"Connect extract slot index from '{cmd}'")
                 self._needs_check[slot] = True
-                return self._connections[slot], module_cmd
-        return super(), cmd
+                return self._connections[slot], module_cmd, slot
+        return super(), cmd, None
 
     # ------------------------------------------------------------------
     # Versions <= v0.16 call arm_sequencer start_sequencer and stop_sequencer directly on the original
@@ -237,6 +282,8 @@ class TurboCluster(Cluster):
         if slot is None:
             return super().get_system_error()
         else:
+            if self._is_batching[slot]:
+                self._flush_buffer(slot)
             return f"slot{slot}: " + self._connections[slot]._read("SYSTem:ERRor:NEXT?")
 
     def get_num_system_error(self, slot: int | None = None) -> int:
@@ -257,6 +304,8 @@ class TurboCluster(Cluster):
         if slot is None:
             return super().get_num_system_error()
         else:
+            if self._is_batching[slot]:
+                self._flush_buffer(slot)
             if not self._needs_check.get(slot, False):
                 return 0
             cnt = int(self._connections[slot]._read("SYSTem:ERRor:COUNt?"))
@@ -286,6 +335,8 @@ class TurboCluster(Cluster):
 
         # write all requests
         for slot in slots:
+            if self._is_batching[slot]:
+                self._flush_buffer(slot)
             conn = self._connections.get(slot, self)
             conn._write(err_count_request)
         # read all responses
@@ -329,6 +380,8 @@ class TurboCluster(Cluster):
         for slot, seq_nums in sequencers.items():
             if len(seq_nums) == 0:
                 continue
+            if self._is_batching[slot]:
+                self._flush_buffer(slot)
             conn = self._connections[slot]
             for sequencer in seq_nums:
                 conn._write(f"SEQuencer{sequencer}:STATE?")
@@ -629,6 +682,7 @@ def _convert_sequencer_status(state_str: str):
         log,
     )
     return state_tuple
+
 
 def _parse_sequencer_status(full_status_str: str) -> tuple([list, list, list, list]):
     full_status_list = re.sub(" |-", "_", full_status_str).split(";")

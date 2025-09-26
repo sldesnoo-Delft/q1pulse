@@ -164,9 +164,8 @@ class Q1Instrument:
 
         for name, seq in sequencers.items():
             t_start_seq = time.perf_counter()
-            with DelayedKeyboardInterrupt("configure sequencers"):
-                module = self.modules[seq.module_name]
-
+            module = self.modules[seq.module_name]
+            with DelayedKeyboardInterrupt("configure sequencers"), BatchedWrite(module):
                 q1asm = program.q1asm(name)
                 self._loaded_q1asm[name] = q1asm
                 if q1asm is None:
@@ -199,11 +198,11 @@ class Q1Instrument:
 
         for name, seq in self.readouts.items():
             t_start_seq = time.perf_counter()
-            with DelayedKeyboardInterrupt("configure readout"):
+            module = self.modules[seq.module_name]
+            if not module.enabled(seq.seq_nr):
+                continue
+            with DelayedKeyboardInterrupt("configure readout"), BatchedWrite(module):
                 readout = program[name]
-                module = self.modules[seq.module_name]
-                if not module.enabled(seq.seq_nr):
-                    continue
                 module.thresholded_acq_rotation(seq.seq_nr, readout.thresholded_acq_rotation)
                 module.thresholded_acq_threshold(seq.seq_nr, readout.thresholded_acq_threshold)
                 module.integration_length_acq(seq.seq_nr, int(readout.integration_length_acq))
@@ -457,3 +456,18 @@ def check_instrument_status(instrument, print_status=False):
             print(f"Status (Dummy) {instrument.name}:", sys_state)
         else:
             raise Exception(f"{instrument.name} status not OKAY: {sys_state}")
+
+
+class BatchedWrite:
+    def __init__(self, module):
+        self.instrument = module.root_instrument
+        self.slot_idx = module.slot_idx
+        self.can_batch = hasattr(self.instrument, "start_batching")
+
+    def __enter__(self):
+        if self.can_batch:
+            self.instrument.start_batching(self.slot_idx)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self.can_batch:
+            self.instrument.stop_batching(self.slot_idx)
