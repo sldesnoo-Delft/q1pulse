@@ -9,7 +9,7 @@ from qblox_instruments import Cluster
 from qblox_instruments.scpi import Cluster as ClusterScpi
 from qblox_instruments.ieee488_2 import Ieee488_2, IpTransport
 from qblox_instruments.pnp import resolve
-from q1pulse.util.qblox_version import check_qblox_instrument_version
+from q1pulse.util.qblox_version import check_qblox_instrument_version, qblox_version, Version
 
 from qblox_instruments import (
     SequencerStatus,
@@ -77,8 +77,12 @@ class TurboCluster(Cluster):
             if module.present():
                 for seq_nr in range(6):
                     seq = module.sequencers[seq_nr]
+                    # TODO: this might not be needed anymore for version >= 0.18
                     # disable slow validators
                     seq.sequence._vals = []
+        # SCPI transaction map is added in v0.18 and used for commands with multiple reads like get_acquistion_data
+        if hasattr(self, "_scpi_transaction_connection_map"):
+            self._scpi_transaction_connection_map = self._connections
         # Disable continuous error checking
         self._debug = 2
         self._init_configuration_cache()

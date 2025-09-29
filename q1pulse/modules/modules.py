@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from q1pulse.turbo_cluster import TurboCluster
 from q1pulse.util.delayedkeyboardinterrupt import DelayedKeyboardInterrupt
+from q1pulse.util.qblox_version import qblox_version, Version
 from .sequencer_states import translate_seq_status
 
 
@@ -320,4 +321,7 @@ class QrmModule(QbloxModule):
         return completed
 
     def get_acquisitions(self, seq_nr: int, bin_name: str):
-        return self.pulsar.get_acquisitions(seq_nr)[bin_name]["acquisition"]["bins"]
+        if qblox_version >= Version("0.18"):
+            return self.pulsar.get_acquisitions(seq_nr, as_numpy=True)[bin_name]["acquisition"]["bins"]
+        else:
+            return self.pulsar.get_acquisitions(seq_nr)[bin_name]["acquisition"]["bins"]
