@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.18.0] - 2025-10-08
+
+- Updates for qblox-instruments v0.18.0
+- Use `as_numpy=True` in `get_acquisitions`.
+- Use SCPI transaction in TurboCluser for `get_acquisitions`.
+
 ## \[0.17.5] - 2025-08-05
 
 - Fix illegal wait 1 ns.
