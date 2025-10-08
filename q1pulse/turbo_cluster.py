@@ -89,23 +89,23 @@ class TurboCluster(Cluster):
         self._init_configuration_cache()
 
     def _write(self, cmd_str):
-        conn, cmd, slot = self._get_connection_and_remove_slot(cmd_str)
+        conn, cmd = self._get_connection_and_remove_slot(cmd_str)
         conn._write(cmd)
         # logger.debug(f"write {cmd_str}")
 
     def _write_bin(self, cmd_str, bin_block):
-        conn, cmd, slot = self._get_connection_and_remove_slot(cmd_str)
+        conn, cmd = self._get_connection_and_remove_slot(cmd_str)
         conn._write_bin(cmd, bin_block)
         # logger.debug(f"write_bin {cmd_str}")
 
     def _read_bin(self, cmd_str, flush_line_end=True):
-        conn, cmd, slot = self._get_connection_and_remove_slot(cmd_str)
+        conn, cmd = self._get_connection_and_remove_slot(cmd_str)
         res = conn._read_bin(cmd, flush_line_end)
         # logger.debug(f"read_bin {cmd_str}")
         return res
 
     def _read(self, cmd_str: str) -> str:
-        conn, cmd, slot = self._get_connection_and_remove_slot(cmd_str)
+        conn, cmd = self._get_connection_and_remove_slot(cmd_str)
         res = conn._read(cmd)
         # logger.debug(f"read {cmd_str}")
         return res
@@ -119,8 +119,8 @@ class TurboCluster(Cluster):
                 except ValueError:
                     raise Exception(f"Connect extract slot index from '{cmd}'")
                 self._needs_check[slot] = True
-                return self._connections[slot], module_cmd, slot
-        return super(), cmd, None
+                return self._connections[slot], module_cmd
+        return super(), cmd
 
     # ------------------------------------------------------------------
     # Versions <= v0.16 call arm_sequencer start_sequencer and stop_sequencer directly on the original
