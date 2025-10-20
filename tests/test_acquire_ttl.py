@@ -1,6 +1,6 @@
 from q1pulse.instrument import Q1Instrument
 
-from init_pulsars import qcm0, qrm1
+from init_pulsars import qcm0, qrm1, cluster
 from plot_util import plot_output
 
 instrument = Q1Instrument('q1')
@@ -14,19 +14,19 @@ vmax_in = 0.5
 qrm1.in0_gain(0)
 qrm1.in1_gain(0)
 
-
+# %%
 p = instrument.new_program('acquire_ttl')
-p.repetitions = 10
+p.repetitions = 6
 
 P1 = p.P1
 R1 = p.R1
 
 N = 5
 n_acq = max(N, p.repetitions)
-R1.add_acquisition_bins('ttl', n_acq)
+R1.add_acquisition_bins('ttl', n_acq*N)
 R1.ttl_acq_input_select = 0
 R1.ttl_acq_auto_bin_incr_en = False
-R1.ttl_acq_threshold = 0.220 / 0.5  # Threshold at 220 mV
+R1.ttl_acq_threshold = 0.20 / 0.5  # Threshold at 220 mV
 
 # output range QCM (P1): +/- 2.5 V
 # input range QRM (R1): +/- 0.5 V (gain = 0 dB)
@@ -36,7 +36,7 @@ v2_max = 0.2/2.5  # 200 mV
 
 bin_index = 0 if R1.ttl_acq_auto_bin_incr_en else "increment"
 
-
+# R1.reset_bin_counter("ttl")
 # Generate 5 pulses per acquisition.
 # Amplitude of first pulse  of sequence increments from 0 to 200 mV.
 # The pulses in the pulse train increment with steps of 50 mV from 0 to 200 mV
@@ -55,10 +55,12 @@ with p.loop_linspace(0, v1_max, N) as v1:
 
     p.wait(2000)
 
-p.describe()
-print()
+# p.describe()
+# print()
 
 p.compile(listing=True, annotate=True)
+
+# print(p.q1asm("P1"))
 
 instrument.run_program(p)
 
