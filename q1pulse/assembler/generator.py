@@ -206,7 +206,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         self.add_comment('--START-- (t=0)')
         self.set_label('_start')
         self.block_start()
-        self.reset_phase(0)
+        self.reset_phase(0) # TODO only if NCO enabled?
         self._contains_io_instr = False
 
         if self._repetitions > 1:
@@ -518,6 +518,14 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             self._add_rt_command('acquire_weighed',
                                  bins, bin_index, weight0, weight1,
                                  time=time, updating=True)
+        self._contains_io_instr = True
+
+    @register_args(signature='toIo')
+    def acquire_ttl(self, time, section, bin_index, enable):
+        section = self._data.translate_acquisition(section)
+        self._add_rt_command('acquire_ttl',
+                             section, bin_index, enable,
+                             time=time, updating=True)
         self._contains_io_instr = True
 
     @register_args(signature='tI')

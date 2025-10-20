@@ -213,6 +213,13 @@ class Q1Instrument:
                     module.set_trigger(seq.seq_nr, trigger.address, trigger.invert)
                 else:
                     module.set_trigger(seq.seq_nr, None)
+                module.set_ttl(
+                    seq.seq_nr,
+                    readout.ttl_acq_input_select,
+                    readout.ttl_acq_threshold,
+                    readout.ttl_acq_auto_bin_incr_en
+                    )
+
             if Q1Instrument.verbose:
                 duration = time.perf_counter() - t_start_seq
                 logger.debug(f"Configured QRM {name} in {duration*1000.0:3.1f} ms")

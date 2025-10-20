@@ -1,6 +1,6 @@
 from .control import ControlBuilder
 from ..lang.exceptions import Q1ValueError, Q1TypeError
-from ..lang.timed_statements import AcquireStatement, AcquireWeighedStatement
+from ..lang.timed_statements import AcquireStatement, AcquireWeighedStatement, AcquireTtlStatement
 from .sequencer_data import (
     AcquisitionWeight, WeightCollection,
     AcquisitionBins, AcquisitionBinsCollection
@@ -20,6 +20,9 @@ class ReadoutBuilder(ControlBuilder):
         self._thresholded_acq_threshold = 0.0
         self._trigger = None
         self._nco_prop_delay = 0
+        self._ttl_acq_input_select = None
+        self._ttl_acq_auto_bin_incr_en = None
+        self._ttl_acq_threshold = None
 
     @property
     def thresholded_acq_rotation(self):
@@ -61,6 +64,30 @@ class ReadoutBuilder(ControlBuilder):
     def trigger(self, trigger):
         self._trigger = trigger
 
+    @property
+    def ttl_acq_input_select(self):
+        return self._ttl_acq_input_select
+
+    @ttl_acq_input_select.setter
+    def ttl_acq_input_select(self, value):
+        self._ttl_acq_input_select = value
+
+    @property
+    def ttl_acq_auto_bin_incr_en(self):
+        return self._ttl_acq_auto_bin_incr_en
+
+    @ttl_acq_auto_bin_incr_en.setter
+    def ttl_acq_auto_bin_incr_en(self, enable):
+        self._ttl_acq_auto_bin_incr_en = enable
+
+    @property
+    def ttl_acq_threshold(self):
+        return self._ttl_acq_threshold
+
+    @ttl_acq_threshold.setter
+    def ttl_acq_threshold(self, threshold):
+        self._ttl_acq_threshold = threshold
+
     def add_acquisition_bins(self, name, num_bins):
         return self._acquisitions.define_bins(name, num_bins)
 
@@ -99,6 +126,22 @@ class ReadoutBuilder(ControlBuilder):
         else:
             st = AcquireWeighedStatement(t1, bins, bin_index, weight0, weight1)
             self._add_statement(st)
+
+    def acquire_ttl(self, bins, bin_index, enable, t_offset=0):
+        self.add_comment(f'acquire_ttl({bins}, {bin_index}, {enable})')
+        bins = self._translate_bins(bins)
+        t1 = self.current_time + t_offset
+        self.set_pulse_end(t1)
+        if bin_index == 'increment':
+            if enable:
+                reg_name = self._get_bin_reg_name(bins)
+                bin_reg = self.Rs.init(reg_name)
+                self._add_statement(AcquireTtlStatement(t1, bins, bin_reg, enable))
+                self.Rs[reg_name] += 1
+            else:
+                self._add_statement(AcquireTtlStatement(t1, bins, 0, enable))
+        else:
+            self._add_statement(AcquireTtlStatement(t1, bins, bin_index, enable))
 
     def repeated_acquire(self, n, period, bins, bin_index='increment', t_offset=0):
         self.add_comment(f'repeated_acquire({n}, {period}, {bins}, {bin_index})')
@@ -182,6 +225,14 @@ class ReadoutBuilder(ControlBuilder):
                     self.acquire_weighed(bins, bin_index, weight0, weight1)
                     self.wait(period)
             self.acquire_weighed(bins, bin_index, weight0, weight1)
+
+    def acquire_ttl_interval(self, bins, bin_index, duration, t_offset=0):
+        """Perform TTL acquisition for specified duration.
+        """
+        with self._local_timeline(t_offset=t_offset, duration=duration):
+            self.acquire_ttl(bins, bin_index, 1)
+            self.wait(duration)
+            self.acquire_ttl(bins, bin_index, 0)
 
     def reset_bin_counter(self, bins):
         reg_name = self._get_bin_reg_name(bins)
