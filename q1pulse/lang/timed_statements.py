@@ -157,3 +157,19 @@ class AcquireWeighedStatement(TimedStatement):
     def write_instruction(self, generator):
         generator.acquire_weighed(self.time, self.bins, self.bin_index,
                                   self.weight0, self.weight1)
+
+
+class AcquireTtlStatement(TimedStatement):
+    def __init__(self, time, bins, bin_index, enable):
+        super().__init__(time)
+        self.bins = bins
+        self.bin_index = bin_index
+        self.enable = enable
+
+    def __repr__(self):
+        return (
+            f'acquire_ttl(bins={self.bins.name}, bin={self.bin_index}, '
+            f'enable={self.enable})')
+
+    def write_instruction(self, generator):
+        generator.acquire_ttl(self.time, self.bins, self.bin_index, self.enable)

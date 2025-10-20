@@ -294,6 +294,14 @@ class QrmModule(QbloxModule):
             self._sset(seq_nr, "thresholded_acq_trigger_address", address)
             self._sset(seq_nr, "thresholded_acq_trigger_invert", invert)
 
+    def set_ttl(self, seq_nr, ttl_acq_input_select, ttl_acq_threshold, ttl_acq_auto_bin_incr_en):
+        if ttl_acq_input_select is not None:
+            self._sset(seq_nr, "ttl_acq_input_select", ttl_acq_input_select)
+        if ttl_acq_threshold is not None:
+            self._sset(seq_nr, "ttl_acq_threshold", ttl_acq_threshold)
+        if ttl_acq_auto_bin_incr_en is not None:
+            self._sset(seq_nr, "ttl_acq_auto_bin_incr_en", ttl_acq_auto_bin_incr_en)
+
     def arm_sequencers(self):
         self._acq_ready = []
         super().arm_sequencers()
