@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 class Q1Instrument:
     verbose = False
     concurrent_communication = True
+    ignore_acq_binning_done = False
 
     # Postpone error checking till the end to save communication overhead.
     # System errors are only reported for SCPI errors. It's higly unlikely to
@@ -416,8 +417,16 @@ class Q1Instrument:
             logger.warning(f"No acquisitions for {sequencer_name}")
             return None
         module = self.modules[seq.module_name]
-        # first check if module is ready.
-        module.get_acquisition_status(seq.seq_nr, 1)
+        if self.ignore_acq_binning_done:
+            finished = module.get_acquisition_status(seq.seq_nr, 0)
+            if not finished:
+                logger.info("Acquisition not finished")
+        else:
+            # check if module is ready.
+            timeout = 0.1  # wait max 6 s.
+            finished = module.get_acquisition_status(seq.seq_nr, timeout)
+            if not finished:
+                logger.error("Acquisition not finished (according to QRM)")
         with DelayedKeyboardInterrupt("get_acquisitions"):
             return module.get_acquisitions(seq.seq_nr, bin_name)
 
