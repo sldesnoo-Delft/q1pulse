@@ -320,12 +320,14 @@ class QrmModule(QbloxModule):
         expiration_time = time.perf_counter() + timeout_minutes*60.0
 
         completed = False
-        while not completed and time.perf_counter() < expiration_time:
+        while not completed:
             with DelayedKeyboardInterrupt("get acquisition status"):
                 completed = self.pulsar.get_acquisition_status(seq_nr, 0)
                 logger.debug(f"Acquisition status {self.pulsar.name}:{seq_nr} ready={completed}")
                 if not completed:
                     time.sleep(0.001)
+            if time.perf_counter() > expiration_time:
+                break
         return completed
 
     def get_acquisitions(self, seq_nr: int, bin_name: str):
