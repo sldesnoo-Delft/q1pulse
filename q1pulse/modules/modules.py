@@ -251,7 +251,8 @@ class QbloxModule:
                 continue
             for name, entry in new_entries.items():
                 if name in loaded_entries and entry == loaded_entries[name]:
-                    logger.debug(f"{self.slot_idx}.{seq_nr} Reuse {key}: {name}, index:{entry['index']}")
+                    if QbloxModule.verbose:
+                        logger.debug(f"{self.slot_idx}.{seq_nr} Reuse {key}: {name}, index:{entry['index']}")
                     continue
                 else:
                     # remove entries with same index.
