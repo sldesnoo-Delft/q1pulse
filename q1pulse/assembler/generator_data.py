@@ -1,5 +1,6 @@
 from q1pulse.sequencer.sequencer_data import Wave, AcquisitionBins, AcquisitionWeight
-from q1pulse.lang.exceptions import Q1TypeError
+from q1pulse.lang.exceptions import Q1TypeError, Q1MemoryError
+from q1pulse.util.q1configuration import Q1Configuration
 
 
 class GeneratorData:
@@ -7,6 +8,8 @@ class GeneratorData:
         self.waveforms = {}
         self.weights = {}
         self.acquisitions = {}
+        self._size_waveforms = 0
+        self._size_weights = 0
 
     def translate_wave(self, wave: Wave):
         if not isinstance(wave, Wave):
@@ -18,6 +21,12 @@ class GeneratorData:
             return entry['index']
         except KeyError:
             index = len(waveforms)
+            if index >= Q1Configuration.MAX_NUM_WAVEFORMS - 1:
+                raise Q1MemoryError("Too many waveforms")
+            size_waveforms = self._size_waveforms + len(wave.data)
+            if size_waveforms > Q1Configuration.WAVEFORM_MEM_SIZE:
+                raise Q1MemoryError("Too much waveform data for memory")
+            self._size_waveforms = size_waveforms
             waveforms[wave.name] = {
                     'data': list(wave.data),
                     'index': index
@@ -41,9 +50,16 @@ class GeneratorData:
             raise Q1TypeError(f'Unsupported type for weight: {weight}')
 
         if weight.name not in self.weights:
+            index = len(self.weights)
+            if index >= Q1Configuration.MAX_NUM_WEIGHTS - 1:
+                raise Q1MemoryError("Too many acquisition weights")
+            size_weights = self._size_weights + len(weight.data)
+            if size_weights > Q1Configuration.WEIGHTS_MEM_SIZE:
+                raise Q1MemoryError("Too much acquisition weight data for memory")
+            self._size_weights = size_weights
             self.weights[weight.name] = {
                     'data': list(weight.data),
-                    'index': len(self.weights),
+                    'index': index,
                     }
 
         return self.weights[weight.name]['index']
