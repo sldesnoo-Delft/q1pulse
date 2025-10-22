@@ -2,9 +2,12 @@ import logging
 import time
 from dataclasses import dataclass
 
+from q1pulse.lang.exceptions import Q1MemoryError
 from q1pulse.turbo_cluster import TurboCluster
 from q1pulse.util.delayedkeyboardinterrupt import DelayedKeyboardInterrupt
+from q1pulse.util.q1configuration import Q1Configuration
 from q1pulse.util.qblox_version import qblox_version, Version
+
 from .sequencer_states import translate_seq_status
 
 
@@ -101,7 +104,14 @@ class QbloxModule:
             # print(f"Loading {filename} to sequencer {self.pulsar.name}:{seq_nr}")
             self._sset(seq_nr, "sequence", filename, cache=False)
         else:
-            self._sset(seq_nr, "sequence", sequence)
+            for key in ["waveforms", "weights", "acquisitions"]:
+                self._check_size(seq_nr, sequence, key)
+
+            if qblox_version >= Version("0.18.0"):
+                # Smart update
+                self._update_sequence(seq_nr, sequence)
+            else:
+                self._sset(seq_nr, "sequence", sequence)
 
     def arm_sequencers(self):
         for seq_nr in range(0, self.n_sequencers):
@@ -215,6 +225,86 @@ class QbloxModule:
         param = self.pulsar.parameters[name]
         if param.cache() != invert:
             param(invert)
+
+    def _update_sequence(self, seq_nr, sequence):
+        seq = getattr(self.pulsar, f"sequencer{seq_nr}")
+        param = seq.parameters["sequence"]
+        if not param.cache.valid:
+            # update all.
+            self._sset(seq_nr, "sequence", sequence)
+            return
+
+        # compare sequence with cached value.
+        # note: changes to loaded are immediately changed in cache.
+        loaded = param.cache()
+
+        program = sequence["program"]
+        if loaded["program"] != program:
+            loaded["program"] = program
+            seq.update_sequence(program=program)
+
+        for key in ["waveforms", "weights", "acquisitions"]:
+            updates = {}
+            loaded_entries = loaded[key]
+            new_entries = sequence[key]
+            if len(new_entries) == 0:
+                continue
+            for name, entry in new_entries.items():
+                if name in loaded_entries and entry == loaded_entries[name]:
+                    logger.debug(f"{self.slot_idx}.{seq_nr} Reuse {key}: {name}, index:{entry['index']}")
+                    continue
+                else:
+                    # remove entries with same index.
+                    index_name = {name: entry["index"] for name, entry in loaded_entries.items()}
+                    try:
+                        del loaded_entries[index_name[entry["index"]]]
+                    except KeyError:
+                        pass
+                    loaded_entries[name] = entry
+                    updates[name] = entry
+
+            erase = self._check_size(seq_nr, loaded, key, raise_exception=False) is False
+            if QbloxModule.verbose and len(updates) and not erase:
+                logger.debug(f"{self.slot_idx}.{seq_nr} Update {key}: {len(new_entries)} entries, "
+                             f"write {[entry['index'] for entry in updates.values()]}")
+            if erase:
+                logger.debug(f"{self.slot_idx}.{seq_nr} Erase {key}: {len(new_entries)} new entries")
+                # overwrite cached entries
+                loaded[key] = new_entries
+                seq.update_sequence(waveforms=new_entries, erase_existing=True)
+            elif len(updates) > 0:
+                # loaded entries is already updated.
+                seq.update_sequence(**{key: updates}, erase_existing=False)
+
+    def _check_size(self, seq_nr: int, sequence: dict, key: str, raise_exception: bool = True) -> bool:
+        entries = sequence[key]
+        if len(entries) == 0:
+            return True
+
+        if key == "acquisitions":
+            max_bins = [131072, 131072, 131072, 65536, 65536, 63536]
+            size = sum(entry["num_bins"] for entry in entries.values())
+            max_size = max_bins[seq_nr]
+            max_entries = 32 # TODO Verify
+        else:
+            size = sum(len(entry["data"]) for entry in entries.values())
+            if key == "waveforms":
+                max_size = Q1Configuration.WAVEFORM_MEM_SIZE
+                max_entries = Q1Configuration.MAX_NUM_WAVEFORMS
+            else:
+                max_size = Q1Configuration.WEIGHTS_MEM_SIZE
+                max_entries = Q1Configuration.MAX_NUM_WEIGHTS
+        if QbloxModule.verbose:
+            logger.debug(f"{self.slot_idx}.{seq_nr} {key}: {len(entries)} entries, {size} total")
+        if size > max_size:
+            if raise_exception:
+                raise Q1MemoryError(f"Too much {key} data ({size}) for memory of sequencer {seq_nr}")
+            return False
+        if len(entries) > max_entries:
+            if raise_exception:
+                raise Q1MemoryError(f"Too many {key} entries ({len(entries)}) for memory of sequencer {seq_nr}")
+            return False
+        return True
 
 
 class QcmModule(QbloxModule):
