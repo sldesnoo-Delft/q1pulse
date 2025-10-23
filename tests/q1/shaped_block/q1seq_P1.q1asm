@@ -50,12 +50,12 @@ loop_0:    upd_param      80         # L0008 t=0
            xor            R5,2147483648,R6 # L0013 temp ['R6']
            nop                       # L0014  jge wait for R6
            jge            R6,2147483652,@waitc1 # L0015 
-           illegal                   # L0016 negative wait time
-waitc1:    jlt            R5,65532,@endwait1 # L0017 
-wait1:     wait           65528      # L0018 
-           sub            R5,65528,R5 # L0019 
+           illegal                   # L0016 wait time < 4 ns
+waitc1:    jlt            R5,65535,@endwait1 # L0017 
+wait1:     wait           65532      # L0018 
+           sub            R5,65532,R5 # L0019 
            nop                       # L0020  jge wait for R5
-           jge            R5,65532,@wait1 # L0021 
+           jge            R5,65535,@wait1 # L0021 
 endwait1:  wait           R5         # L0022 
 # endloop t=180 
            add            R3,1,R3    # L0023 

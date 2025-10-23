@@ -13,7 +13,7 @@ seq_prog="""
            wait_sync      100        # L0003 t=0
 # --START-- (t=0) 
 _start:    reset_ph                  # L0004 @ 0
-           move           0,R2       # L0005 R2: Rs._bin_default
+           move           0,R2       # L0005 R2: Rs._acq_default
            move           100,R3     # L0006 R3: R._var0
            move           20,R4      # L0007 R4: R._cnt0
 loop_0:    upd_param      220        # L0008 t=0
@@ -24,12 +24,12 @@ loop_0:    upd_param      220        # L0008 t=0
            xor            R5,2147483648,R6 # L0011 temp ['R6']
            nop                       # L0012  jge wait for R6
            jge            R6,2147483652,@waitc1 # L0013 
-           illegal                   # L0014 negative wait time
-waitc1:    jlt            R5,65532,@endwait1 # L0015 
-wait1:     wait           65528      # L0016 
-           sub            R5,65528,R5 # L0017 
+           illegal                   # L0014 wait time < 4 ns
+waitc1:    jlt            R5,65535,@endwait1 # L0015 
+wait1:     wait           65532      # L0016 
+           sub            R5,65532,R5 # L0017 
            nop                       # L0018  jge wait for R5
-           jge            R5,65532,@wait1 # L0019 
+           jge            R5,65535,@wait1 # L0019 
 endwait1:  wait           R5         # L0020 
 # acquire(default, increment) 
            wait           300        # L0021 
