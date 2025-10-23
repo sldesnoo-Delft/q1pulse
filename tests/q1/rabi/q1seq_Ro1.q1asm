@@ -23,12 +23,12 @@ loop_0:    upd_param      220        # L0007 t=0
            xor            R4,2147483648,R5 # L0010 temp ['R5']
            nop                       # L0011  jge wait for R5
            jge            R5,2147483652,@waitc1 # L0012 
-           illegal                   # L0013 negative wait time
-waitc1:    jlt            R4,65532,@endwait1 # L0014 
-wait1:     wait           65528      # L0015 
-           sub            R4,65528,R4 # L0016 
+           illegal                   # L0013 wait time < 4 ns
+waitc1:    jlt            R4,65535,@endwait1 # L0014 
+wait1:     wait           65532      # L0015 
+           sub            R4,65532,R4 # L0016 
            nop                       # L0017  jge wait for R4
-           jge            R4,65532,@wait1 # L0018 
+           jge            R4,65535,@wait1 # L0018 
 endwait1:  wait           R4         # L0019 
 # block_pulse(600, 0.1, None) 
            set_awg_offs   3276,0     # L0020 @ 420

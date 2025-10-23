@@ -31,10 +31,10 @@ acquisitions={'non-weighed': {'index': 0, 'num_bins': 25},
 seq_prog="""
 # --INIT-- 
            move           0,R0       # L0001 R0: _zero
-# Rs._bin_non-weighed:int = 0 
-           move           0,R1       # L0002 R1: Rs._bin_non-weighed
-# Rs._bin_weighed:int = 0 
-           move           0,R2       # L0003 R2: Rs._bin_weighed
+# Rs._acq_non-weighed:int = 0 
+           move           0,R1       # L0002 R1: Rs._acq_non-weighed
+# Rs._acq_weighed:int = 0 
+           move           0,R2       # L0003 R2: Rs._acq_weighed
            wait_sync      100        # L0004 t=0
 # --START-- (t=0) 
 _start:    reset_ph                  # L0005 @ 0
@@ -46,17 +46,17 @@ loop_0:    move           2576980377,R5 # L0008 R5: R._var1
            move           5,R6       # L0009 R6: R._cnt1
 loop_1:    upd_param      160        # L0010 t=0
 # acquire(non-weighed, increment) 
-# acquire(bins=non-weighed, bin=Rs._bin_non-weighed) t=160 
+# acquire(bins=non-weighed, bin=Rs._acq_non-weighed) t=160 
            acquire        0,R1,500   # L0011 t=160
-# Rs._bin_non-weighed:int = Rs._bin_non-weighed + 1 
+# Rs._acq_non-weighed:int = Rs._acq_non-weighed + 1 
            add            R1,1,R1    # L0012 
 # acquire_weighed(weighed, increment) 
-# acquire_weighed(bins=weighed, bin=Rs._bin_weighed, weight0=gaus100, weight1=gaus100) t=660 
+# acquire_weighed(bins=weighed, bin=Rs._acq_weighed, weight0=gaus100, weight1=gaus100) t=660 
            move           0,R7       # L0013 temp ['R7', 'R8']
            move           0,R8       # L0014 
            nop                       # L0015  acquire_weighed wait for R8
            acquire_weighed 1,R2,R7,R8,1440 # L0016 t=660
-# Rs._bin_weighed:int = Rs._bin_weighed + 1 
+# Rs._acq_weighed:int = Rs._acq_weighed + 1 
            add            R2,1,R2    # L0017 
 # endloop t=2100 
            add            R5,858993459,R5 # L0018 
