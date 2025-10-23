@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[0.18.1] - 2925-10-23
+
+- Added `acquire_ttl` and associated QCoDeS parameters.
+- Use `update_sequence`.
+- Check waveform memory and weights memory allocation before uploading.
+- Added `get_scope_data`.
+- Removed sleeps when polling for status.
+
 ## \[0.18.0] - 2025-10-08
 
 - Updates for qblox-instruments v0.18.0
