@@ -49,12 +49,12 @@ loop_0:    set_awg_gain   16383,16383 # L0008 @ 0
            xor            R5,2147483648,R6 # L0012 temp ['R6']
            nop                       # L0013  jge wait for R6
            jge            R6,2147483652,@waitc1 # L0014 
-           illegal                   # L0015 negative wait time
-waitc1:    jlt            R5,65532,@endwait1 # L0016 
-wait1:     wait           65528      # L0017 
-           sub            R5,65528,R5 # L0018 
+           illegal                   # L0015 wait time < 4 ns
+waitc1:    jlt            R5,65535,@endwait1 # L0016 
+wait1:     wait           65532      # L0017 
+           sub            R5,65532,R5 # L0018 
            nop                       # L0019  jge wait for R5
-           jge            R5,65532,@wait1 # L0020 
+           jge            R5,65535,@wait1 # L0020 
 endwait1:  wait           R5         # L0021 
 # endloop t=180 
            add            R3,1,R3    # L0022 

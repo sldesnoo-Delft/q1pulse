@@ -37,12 +37,12 @@ loop_0:    set_awg_offs   26214,0    # L0010 @ 200
            xor            R4,2147483648,R5 # L0016 temp ['R5']
            nop                       # L0017  jge wait for R5
            jge            R5,2147483652,@waitc1 # L0018 
-           illegal                   # L0019 negative wait time
-waitc1:    jlt            R4,65532,@endwait1 # L0020 
-wait1:     wait           65528      # L0021 
-           sub            R4,65528,R4 # L0022 
+           illegal                   # L0019 wait time < 4 ns
+waitc1:    jlt            R4,65535,@endwait1 # L0020 
+wait1:     wait           65532      # L0021 
+           sub            R4,65532,R4 # L0022 
            nop                       # L0023  jge wait for R4
-           jge            R4,65532,@wait1 # L0024 
+           jge            R4,65535,@wait1 # L0024 
 endwait1:  wait           R4         # L0025 
 # endloop t=440 
            add            R2,20,R2   # L0026 
@@ -81,12 +81,12 @@ loop_2:    set_awg_offs   3276,0     # L0039 @ 660
            xor            R5,2147483648,R6 # L0047 temp ['R6']
            nop                       # L0048  jge wait for R6
            jge            R6,2147483652,@waitc2 # L0049 
-           illegal                   # L0050 negative wait time
-waitc2:    jlt            R5,65532,@endwait2 # L0051 
-wait2:     wait           65528      # L0052 
-           sub            R5,65528,R5 # L0053 
+           illegal                   # L0050 wait time < 4 ns
+waitc2:    jlt            R5,65535,@endwait2 # L0051 
+wait2:     wait           65532      # L0052 
+           sub            R5,65532,R5 # L0053 
            nop                       # L0054  jge wait for R5
-           jge            R5,65532,@wait2 # L0055 
+           jge            R5,65535,@wait2 # L0055 
 endwait2:  wait           R5         # L0056 
 # endloop t=680 
            add            R2,4294967276,R2 # L0057 

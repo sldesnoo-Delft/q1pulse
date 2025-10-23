@@ -62,12 +62,12 @@ loop_1:    nop                       # L0033  add wait for R2
            xor            R4,2147483648,R5 # L0039 temp ['R5']
            nop                       # L0040  jge wait for R5
            jge            R5,2147483652,@waitc1 # L0041 
-           illegal                   # L0042 negative wait time
-waitc1:    jlt            R4,65532,@endwait1 # L0043 
-wait1:     wait           65528      # L0044 
-           sub            R4,65528,R4 # L0045 
+           illegal                   # L0042 wait time < 4 ns
+waitc1:    jlt            R4,65535,@endwait1 # L0043 
+wait1:     wait           65532      # L0044 
+           sub            R4,65532,R4 # L0045 
            nop                       # L0046  jge wait for R4
-           jge            R4,65532,@wait1 # L0047 
+           jge            R4,65535,@wait1 # L0047 
 endwait1:  wait           R4         # L0048 
 # wait(100 - R._var1) t=440 
            move           100,R5     # L0049 temp ['R5']
@@ -81,12 +81,12 @@ endwait1:  wait           R4         # L0048
            xor            R5,2147483648,R6 # L0055 temp ['R6']
            nop                       # L0056  jge wait for R6
            jge            R6,2147483652,@waitc2 # L0057 
-           illegal                   # L0058 negative wait time
-waitc2:    jlt            R5,65532,@endwait2 # L0059 
-wait2:     wait           65528      # L0060 
-           sub            R5,65528,R5 # L0061 
+           illegal                   # L0058 wait time < 4 ns
+waitc2:    jlt            R5,65535,@endwait2 # L0059 
+wait2:     wait           65532      # L0060 
+           sub            R5,65532,R5 # L0061 
            nop                       # L0062  jge wait for R5
-           jge            R5,65532,@wait2 # L0063 
+           jge            R5,65535,@wait2 # L0063 
 endwait2:  wait           R5         # L0064 
 # awg_offset = 0.0, None t=440 
            set_awg_offs   0,0        # L0065 @ 440

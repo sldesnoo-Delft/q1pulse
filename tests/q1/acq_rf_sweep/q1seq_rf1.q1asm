@@ -9,7 +9,7 @@ acquisitions={'default': {'index': 0, 'num_bins': 101}}
 seq_prog="""
 # --INIT-- 
            move           0,R0       # L0001 R0: _zero
-           move           0,R1       # L0002 R1: Rs._bin_default
+           move           0,R1       # L0002 R1: Rs._acq_default
            wait_sync      100        # L0003 t=0
 # --START-- (t=0) 
 _start:    reset_ph                  # L0004 @ 0

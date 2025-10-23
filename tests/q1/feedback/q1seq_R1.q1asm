@@ -10,7 +10,7 @@ seq_prog="""
 # --INIT-- 
            move           0,R0       # L0001 R0: _zero
            move           2,R2       # L0002 R2: _repetitions
-           move           0,R1       # L0003 R1: Rs._bin_measurements
+           move           0,R1       # L0003 R1: Rs._acq_measurements
            wait_sync      100        # L0004 t=0
 # --START-- (t=0) 
 _start:    reset_ph                  # L0005 @ 0

@@ -67,12 +67,12 @@ loop_1:    nop                       # L0035  add wait for R2
            xor            R4,2147483648,R5 # L0040 temp ['R5']
            nop                       # L0041  jge wait for R5
            jge            R5,2147483652,@waitc1 # L0042 
-           illegal                   # L0043 negative wait time
-waitc1:    jlt            R4,65532,@endwait1 # L0044 
-wait1:     wait           65528      # L0045 
-           sub            R4,65528,R4 # L0046 
+           illegal                   # L0043 wait time < 4 ns
+waitc1:    jlt            R4,65535,@endwait1 # L0044 
+wait1:     wait           65532      # L0045 
+           sub            R4,65532,R4 # L0046 
            nop                       # L0047  jge wait for R4
-           jge            R4,65532,@wait1 # L0048 
+           jge            R4,65535,@wait1 # L0048 
 endwait1:  wait           R4         # L0049 
 # log "after",None,T 
 #Q1Sim:log "after",none,T 
@@ -95,12 +95,12 @@ endwait1:  wait           R4         # L0049
            xor            R5,2147483648,R6 # L0060 temp ['R6']
            nop                       # L0061  jge wait for R6
            jge            R6,2147483652,@waitc2 # L0062 
-           illegal                   # L0063 negative wait time
-waitc2:    jlt            R5,65532,@endwait2 # L0064 
-wait2:     wait           65528      # L0065 
-           sub            R5,65528,R5 # L0066 
+           illegal                   # L0063 wait time < 4 ns
+waitc2:    jlt            R5,65535,@endwait2 # L0064 
+wait2:     wait           65532      # L0065 
+           sub            R5,65532,R5 # L0066 
            nop                       # L0067  jge wait for R5
-           jge            R5,65532,@wait2 # L0068 
+           jge            R5,65535,@wait2 # L0068 
 endwait2:  wait           R5         # L0069 
 # endloop t=540 
            jmp            R2         # L0070 

@@ -26,12 +26,12 @@ loop_0:    upd_param      20         # L0008 t=200
            xor            R4,2147483648,R5 # L0011 temp ['R5']
            nop                       # L0012  jge wait for R5
            jge            R5,2147483652,@waitc1 # L0013 
-           illegal                   # L0014 negative wait time
-waitc1:    jlt            R4,65532,@endwait1 # L0015 
-wait1:     wait           65528      # L0016 
-           sub            R4,65528,R4 # L0017 
+           illegal                   # L0014 wait time < 4 ns
+waitc1:    jlt            R4,65535,@endwait1 # L0015 
+wait1:     wait           65532      # L0016 
+           sub            R4,65532,R4 # L0017 
            nop                       # L0018  jge wait for R4
-           jge            R4,65532,@wait1 # L0019 
+           jge            R4,65535,@wait1 # L0019 
 endwait1:  wait           R4         # L0020 
 # block_pulse(20, 0.6, None) 
 # awg_offset = 0.6, None t=220 
@@ -65,12 +65,12 @@ loop_2:    upd_param      20         # L0035 t=660
            xor            R5,2147483648,R6 # L0040 temp ['R6']
            nop                       # L0041  jge wait for R6
            jge            R6,2147483652,@waitc2 # L0042 
-           illegal                   # L0043 negative wait time
-waitc2:    jlt            R5,65532,@endwait2 # L0044 
-wait2:     wait           65528      # L0045 
-           sub            R5,65528,R5 # L0046 
+           illegal                   # L0043 wait time < 4 ns
+waitc2:    jlt            R5,65535,@endwait2 # L0044 
+wait2:     wait           65532      # L0045 
+           sub            R5,65532,R5 # L0046 
            nop                       # L0047  jge wait for R5
-           jge            R5,65532,@wait2 # L0048 
+           jge            R5,65535,@wait2 # L0048 
 endwait2:  wait           R5         # L0049 
 # endloop t=680 
            add            R2,4294967276,R2 # L0050 
