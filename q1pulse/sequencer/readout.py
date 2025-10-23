@@ -3,7 +3,7 @@ from ..lang.exceptions import Q1ValueError, Q1TypeError
 from ..lang.timed_statements import AcquireStatement, AcquireWeighedStatement, AcquireTtlStatement
 from .sequencer_data import (
     AcquisitionWeight, WeightCollection,
-    AcquisitionBins, AcquisitionBinsCollection
+    Acquisition, AcquisitionCollection
 )
 
 
@@ -13,7 +13,7 @@ class ReadoutBuilder(ControlBuilder):
     def __init__(self, name, enabled_paths, max_output_voltage,
                  nco_frequency=None):
         super().__init__(name, enabled_paths, max_output_voltage, nco_frequency)
-        self._acquisitions = AcquisitionBinsCollection()
+        self._acquisitions = AcquisitionCollection()
         self._weights = WeightCollection()
         self._integration_length_acq = 4
         self._thresholded_acq_rotation = 0.0
@@ -89,62 +89,62 @@ class ReadoutBuilder(ControlBuilder):
         self._ttl_acq_threshold = threshold
 
     def add_acquisition_bins(self, name, num_bins):
-        return self._acquisitions.define_bins(name, num_bins)
+        return self._acquisitions.add_acquisition(name, num_bins)
 
     def add_weight(self, name, data):
         return self._weights.add_weight(name, data)
 
-    def acquire(self, bins, bin_index='increment', t_offset=0):
-        self.add_comment(f'acquire({bins}, {bin_index})')
-        bins = self._translate_bins(bins)
+    def acquire(self, acquisition, bin_index='increment', t_offset=0):
+        self.add_comment(f'acquire({acquisition}, {bin_index})')
+        acquisition = self._translate_acquisition(acquisition)
         t1 = self.current_time + t_offset
         self.set_pulse_end(t1)
         # TODO Keep track of acquisition trigger interval to prevent overruns?
         if bin_index == 'increment':
-            reg_name = self._get_bin_reg_name(bins)
+            reg_name = self._get_acquisition_reg_name(acquisition)
             bin_reg = self.Rs.init(reg_name)
-            self._add_statement(AcquireStatement(t1, bins, bin_reg))
+            self._add_statement(AcquireStatement(t1, acquisition, bin_reg))
             self.Rs[reg_name] += 1
         else:
-            self._add_statement(AcquireStatement(t1, bins, bin_index))
+            self._add_statement(AcquireStatement(t1, acquisition, bin_index))
 
-    def acquire_weighed(self, bins, bin_index, weight0, weight1=None, t_offset=0):
-        self.add_comment(f'acquire_weighed({bins}, {bin_index})')
+    def acquire_weighed(self, acquisition, bin_index, weight0, weight1=None, t_offset=0):
+        self.add_comment(f'acquire_weighed({acquisition}, {bin_index})')
         if weight1 is None:
             weight1 = weight0
-        bins = self._translate_bins(bins)
+        acquisition = self._translate_acquisition(acquisition)
         weight0 = self._translate_weight(weight0)
         weight1 = self._translate_weight(weight1)
         t1 = self.current_time + t_offset
         self.set_pulse_end(t1)
         if bin_index == 'increment':
-            reg_name = self._get_bin_reg_name(bins)
+            reg_name = self._get_acquisition_reg_name(acquisition)
             bin_reg = self.Rs.init(reg_name)
-            st = AcquireWeighedStatement(t1, bins, bin_reg, weight0, weight1)
+            st = AcquireWeighedStatement(t1, acquisition, bin_reg, weight0, weight1)
             self._add_statement(st)
             self.Rs[reg_name] += 1
         else:
-            st = AcquireWeighedStatement(t1, bins, bin_index, weight0, weight1)
+            st = AcquireWeighedStatement(t1, acquisition, bin_index, weight0, weight1)
             self._add_statement(st)
 
-    def acquire_ttl(self, bins, bin_index, enable, t_offset=0):
-        self.add_comment(f'acquire_ttl({bins}, {bin_index}, {enable})')
-        bins = self._translate_bins(bins)
+    def acquire_ttl(self, acquisition, bin_index, enable, t_offset=0):
+        self.add_comment(f'acquire_ttl({acquisition}, {bin_index}, {enable})')
+        acquisition = self._translate_acquisition(acquisition)
         t1 = self.current_time + t_offset
         self.set_pulse_end(t1)
         if bin_index == 'increment':
             if enable:
-                reg_name = self._get_bin_reg_name(bins)
+                reg_name = self._get_acquisition_reg_name(acquisition)
                 bin_reg = self.Rs.init(reg_name)
-                self._add_statement(AcquireTtlStatement(t1, bins, bin_reg, enable))
+                self._add_statement(AcquireTtlStatement(t1, acquisition, bin_reg, enable))
                 self.Rs[reg_name] += 1
             else:
-                self._add_statement(AcquireTtlStatement(t1, bins, 0, enable))
+                self._add_statement(AcquireTtlStatement(t1, acquisition, 0, enable))
         else:
-            self._add_statement(AcquireTtlStatement(t1, bins, bin_index, enable))
+            self._add_statement(AcquireTtlStatement(t1, acquisition, bin_index, enable))
 
-    def repeated_acquire(self, n, period, bins, bin_index='increment', t_offset=0):
-        self.add_comment(f'repeated_acquire({n}, {period}, {bins}, {bin_index})')
+    def repeated_acquire(self, n, period, acquisition, bin_index='increment', t_offset=0):
+        self.add_comment(f'repeated_acquire({n}, {period}, {acquisition}, {bin_index})')
         if period < ReadoutBuilder.MIN_ACQUISITION_INTERVAL:
             raise Q1ValueError(f'Acquisition period ({period} ns) too small. '
                                f'Minimum is {ReadoutBuilder.MIN_ACQUISITION_INTERVAL} ns')
@@ -154,13 +154,14 @@ class ReadoutBuilder(ControlBuilder):
             # control sequencers, because acquisition is ~100 ns delayed w.r.t. control.
             if n > 1:
                 with self._seq_repeat(n-1):
-                    self.acquire(bins, bin_index)
+                    self.acquire(acquisition, bin_index)
                     self.wait(period)
-            self.acquire(bins, bin_index)
+            self.acquire(acquisition, bin_index)
 
     def acquire_frequency_sweep(self, n, period,
                                 f_start, f_stop,
-                                bins, bin_index='increment',
+                                acquisition,
+                                bin_index='increment',
                                 acq_delay=0,
                                 weight0: str | AcquisitionWeight | None = None,
                                 weight1: str | AcquisitionWeight | None = None,
@@ -180,7 +181,7 @@ class ReadoutBuilder(ControlBuilder):
             Experimentally it is determined that the nco_prop_delay should be 146 ns + delay in lines (~ 4 ns/m),
             and acq_delay should be nco_prop_delay + 4 ns.
         """
-        self.add_comment(f'acquire_frequency_sweep({n}, {period}, {f_start}, {f_stop} {bins}, {bin_index})')
+        self.add_comment(f'acquire_frequency_sweep({n}, {period}, {f_start}, {f_stop} {acquisition}, {bin_index})')
         if period < ReadoutBuilder.MIN_ACQUISITION_INTERVAL:
             raise Q1ValueError(f'Acquisition period ({period} ns) too small. '
                                f'Minimum is {ReadoutBuilder.MIN_ACQUISITION_INTERVAL} ns')
@@ -198,21 +199,21 @@ class ReadoutBuilder(ControlBuilder):
             if n > 1:
                 with self._seq_repeat(n-1):
                     if weight0 is not None or weight1 is not None:
-                        self.acquire_weighed(bins, bin_index, weight0, weight1)
+                        self.acquire_weighed(acquisition, bin_index, weight0, weight1)
                     else:
-                        self.acquire(bins, bin_index)
+                        self.acquire(acquisition, bin_index)
                     self.Rs.frequency += int(f_step)
                     self.wait(period - acq_delay)
                     self.set_frequency(self.Rs.frequency)
                     self.wait(acq_delay)
             if weight0 is not None or weight1 is not None:
-                self.acquire_weighed(bins, bin_index, weight0, weight1)
+                self.acquire_weighed(acquisition, bin_index, weight0, weight1)
             else:
-                self.acquire(bins, bin_index)
+                self.acquire(acquisition, bin_index)
 
-    def repeated_acquire_weighed(self, n, period, bins, bin_index,
+    def repeated_acquire_weighed(self, n, period, acquisition, bin_index,
                                  weight0, weight1=None, t_offset=0):
-        self.add_comment(f'repeated_acquire_weighed({n}, {period}, {bins}, {bin_index})')
+        self.add_comment(f'repeated_acquire_weighed({n}, {period}, {acquisition}, {bin_index})')
         if period < ReadoutBuilder.MIN_ACQUISITION_INTERVAL:
             raise Q1ValueError(f'Acquisition period ({period} ns) too small. '
                                f'Minimum is {ReadoutBuilder.MIN_ACQUISITION_INTERVAL} ns')
@@ -222,35 +223,35 @@ class ReadoutBuilder(ControlBuilder):
             # control sequencers, because acquisition is ~100 ns delayed w.r.t. control.
             if n > 1:
                 with self._seq_repeat(n-1):
-                    self.acquire_weighed(bins, bin_index, weight0, weight1)
+                    self.acquire_weighed(acquisition, bin_index, weight0, weight1)
                     self.wait(period)
-            self.acquire_weighed(bins, bin_index, weight0, weight1)
+            self.acquire_weighed(acquisition, bin_index, weight0, weight1)
 
-    def acquire_ttl_interval(self, bins, bin_index, duration, t_offset=0):
+    def acquire_ttl_interval(self, acquisition, bin_index, duration, t_offset=0):
         """Perform TTL acquisition for specified duration.
         """
         with self._local_timeline(t_offset=t_offset, duration=duration):
-            self.acquire_ttl(bins, bin_index, 1)
+            self.acquire_ttl(acquisition, bin_index, 1)
             self.wait(duration)
-            self.acquire_ttl(bins, bin_index, 0)
+            self.acquire_ttl(acquisition, bin_index, 0)
 
-    def reset_bin_counter(self, bins):
-        reg_name = self._get_bin_reg_name(bins)
+    def reset_bin_counter(self, acquisition):
+        reg_name = self._get_acquisition_reg_name(acquisition)
         self.Rs[reg_name] = 0
 
-    def _get_bin_reg_name(self, bins):
-        if isinstance(bins, AcquisitionBins):
-            return f'_bin_{bins.name}'
-        return f'_bin_{bins}'
+    def _get_acquisition_reg_name(self, acquisition):
+        if isinstance(acquisition, Acquisition):
+            return f'_acq_{acquisition.name}'
+        return f'_acq_{acquisition}'
 
-    def _translate_bins(self, bins):
-        if bins is None:
+    def _translate_acquisition(self, acquisition):
+        if acquisition is None:
             return None
-        if isinstance(bins, str):
-            return self._acquisitions[bins]
-        if isinstance(bins, AcquisitionBins):
-            return bins
-        raise Q1TypeError(f'Illegal type {bins}')
+        if isinstance(acquisition, str):
+            return self._acquisitions[acquisition]
+        if isinstance(acquisition, Acquisition):
+            return acquisition
+        raise Q1TypeError(f'Illegal type {acquisition}')
 
     def _translate_weight(self, weight):
         if weight is None:

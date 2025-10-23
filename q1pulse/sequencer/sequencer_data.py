@@ -65,31 +65,33 @@ class WaveCollection:
 
 
 @dataclass
-class AcquisitionBins:
+class Acquisition:
     name: str
     num_bins: int
 
 
-class AcquisitionBinsCollection:
+class AcquisitionCollection:
     def __init__(self):
-        self._bins = {}
+        self._acquisitions = {}
 
     def __getitem__(self, name):
-        return self._get_bins(name)
+        return self._get_acquisition(name)
 
-    def _get_bins(self, name):
-        if name not in self._bins:
-            raise Q1NameError(f"Acquisition bins '{name}' not defined")
-        return self._bins[name]
+    def _get_acquisition(self, name):
+        if name not in self._acquisitions:
+            raise Q1NameError(f"Acquisition '{name}' not defined")
+        return self._acquisitions[name]
 
-    def define_bins(self, name, num_bins):
-        if name in self._bins:
-            bins = self._bins[name]
-            bins.num_bins = num_bins
+    def add_acquisition(self, name, num_bins):
+        if name in self._acquisitions:
+            acquisition = self._bins[name]
+            if acquisition.num_bins != num_bins:
+                raise Exception(f"Inconsistent number of bins in acquisition {name}: "
+                                f"{num_bins} != {acquisition.num_bins}")
         else:
-            bins = AcquisitionBins(name, num_bins)
-            self._bins[name] = bins
-        return bins
+            acquisition = Acquisition(name, num_bins)
+            self._acquisitions[name] = acquisition
+        return acquisition
 
 
 @dataclass

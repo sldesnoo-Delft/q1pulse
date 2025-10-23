@@ -229,7 +229,7 @@ class QbloxModule:
     def _update_sequence(self, seq_nr, sequence):
         seq = getattr(self.pulsar, f"sequencer{seq_nr}")
         param = seq.parameters["sequence"]
-        if not param.cache.valid:
+        if not param.cache.valid or param.cache() is None:
             # update all.
             self._sset(seq_nr, "sequence", sequence)
             return
@@ -286,7 +286,7 @@ class QbloxModule:
             max_bins = [131072, 131072, 131072, 65536, 65536, 63536]
             size = sum(entry["num_bins"] for entry in entries.values())
             max_size = max_bins[seq_nr]
-            max_entries = 32 # TODO Verify
+            max_entries = max_size
         else:
             size = sum(len(entry["data"]) for entry in entries.values())
             if key == "waveforms":
@@ -415,14 +415,18 @@ class QrmModule(QbloxModule):
             with DelayedKeyboardInterrupt("get acquisition status"):
                 completed = self.pulsar.get_acquisition_status(seq_nr, 0)
                 logger.debug(f"Acquisition status {self.pulsar.name}:{seq_nr} ready={completed}")
-                if not completed:
-                    time.sleep(0.001)
             if time.perf_counter() > expiration_time:
                 break
         return completed
 
-    def get_acquisitions(self, seq_nr: int, bin_name: str):
+    def get_acquisitions(self, seq_nr: int, acq_name: str):
         if qblox_version >= Version("0.18"):
-            return self.pulsar.get_acquisitions(seq_nr, as_numpy=True)[bin_name]["acquisition"]["bins"]
+            return self.pulsar.get_acquisitions(seq_nr, as_numpy=True)[acq_name]
         else:
-            return self.pulsar.get_acquisitions(seq_nr)[bin_name]["acquisition"]["bins"]
+            return self.pulsar.get_acquisitions(seq_nr)[acq_name]
+
+    def get_scope_data(self, seq_nr: int, acq_name: str):
+        if qblox_version >= Version("0.18"):
+            return self.pulsar.get_acquisitions(seq_nr, as_numpy=True)[acq_name]["acquisition"]["scope"]
+        else:
+            return self.pulsar.get_acquisitions(seq_nr)[acq_name]["acquisition"]["scope"]

@@ -309,14 +309,14 @@ class Q1Instrument:
         not when sleeping.
         """
         expiration_time = time.perf_counter() + timeout_minutes*60.0
-        timeout_poll_res = 0.001
+        # timeout_poll_res = 0.001
         with DelayedKeyboardInterrupt("check status"):
             status = module.get_sequencer_status(seq_nr, 0.0)
         while (status.state == "RUNNING"
                 or status.state == "Q1_STOPPED"
                 or status.state == "ARMED"
                ) and time.perf_counter() < expiration_time:
-            time.sleep(timeout_poll_res)
+            # time.sleep(timeout_poll_res)
             with DelayedKeyboardInterrupt("check status"):
                 status = module.get_sequencer_status(seq_nr, 0.0)
         return status
@@ -332,7 +332,7 @@ class Q1Instrument:
         not_ready = ["ARMED", "RUNNING", "Q1_STOPPED"]
         statuses = []
         expiration_time = time.perf_counter() + timeout_minutes*60.0
-        timeout_poll_res = 0.001
+        # timeout_poll_res = 0.001
         if not Q1Instrument.concurrent_communication:
             for module, seq in active_sequencers:
                 statuses.append(self._get_sequencer_status(module, seq.seq_nr, timeout_minutes))
@@ -378,8 +378,8 @@ class Q1Instrument:
                         statuses[index[(instrument, slot, seq_num)]] = status
                 if time.perf_counter() > expiration_time:
                     break
-                if any(status.state in not_ready for status in statuses):
-                    time.sleep(timeout_poll_res)
+                # if any(status.state in not_ready for status in statuses):
+                #     time.sleep(timeout_poll_res)
 
         return statuses
 
@@ -410,7 +410,19 @@ class Q1Instrument:
             duration = time.perf_counter() - t_start_check
             logger.debug(f"Checked errors in {duration*1000.0:3.1f} ms")
 
-    def get_acquisition_bins(self, sequencer_name, bin_name):
+    def get_acquisition_bins(self, sequencer_name, acq_name):
+        acq_data = self._get_acquisitions(sequencer_name, acq_name)
+        if acq_data is None:
+            return None
+        return acq_data["acquisition"]["bins"]
+
+    def get_scope_data(self, sequencer_name: str, acq_name: str):
+        acq_data = self._get_acquisitions(sequencer_name, acq_name)
+        if acq_data is None:
+            return None
+        return acq_data["acquisition"]["scope"]
+
+    def _get_acquisitions(self, sequencer_name, acq_name):
         seq = self.readouts[sequencer_name]
         q1asm = self._loaded_q1asm[sequencer_name]
         if q1asm is None or len(q1asm["acquisitions"]) == 0:
@@ -420,7 +432,7 @@ class Q1Instrument:
         if self.ignore_acq_binning_done:
             finished = module.get_acquisition_status(seq.seq_nr, 0)
             if not finished:
-                logger.info("Acquisition not finished")
+                logger.info("Acquisition not finished (according to QRM)")
         else:
             # check if module is ready.
             timeout = 0.1  # wait max 6 s.
@@ -428,7 +440,7 @@ class Q1Instrument:
             if not finished:
                 logger.error("Acquisition not finished (according to QRM)")
         with DelayedKeyboardInterrupt("get_acquisitions"):
-            return module.get_acquisitions(seq.seq_nr, bin_name)
+            return module.get_acquisitions(seq.seq_nr, acq_name)
 
     def get_input_ranges(self, sequencer_name):
         """ Returns input range for both channels of sequencer.

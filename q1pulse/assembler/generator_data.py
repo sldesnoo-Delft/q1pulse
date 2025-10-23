@@ -1,4 +1,4 @@
-from q1pulse.sequencer.sequencer_data import Wave, AcquisitionBins, AcquisitionWeight
+from q1pulse.sequencer.sequencer_data import Wave, Acquisition, AcquisitionWeight
 from q1pulse.lang.exceptions import Q1TypeError, Q1MemoryError
 from q1pulse.util.q1configuration import Q1Configuration
 
@@ -34,7 +34,7 @@ class GeneratorData:
             return index
 
     def translate_acquisition(self, acquisition):
-        if not isinstance(acquisition, AcquisitionBins):
+        if not isinstance(acquisition, Acquisition):
             raise Q1TypeError(f'Unsupported type for acquisition: {acquisition}')
 
         if acquisition.name not in self.acquisitions:

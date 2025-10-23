@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 
+
 class GeneratorBase(ABC):
     @property
     @abstractmethod
@@ -132,11 +133,15 @@ class GeneratorBase(ABC):
         pass
 
     @abstractmethod
-    def acquire(self, time, section, bin_index):
+    def acquire(self, time, acq_index, bin_index):
         pass
 
     @abstractmethod
-    def acquire_weighed(self, time, bins, bin_index, weight0, weight1):
+    def acquire_weighed(self, time, acq_index, bin_index, weight0, weight1):
+        pass
+
+    @abstractmethod
+    def acquire_ttl(self, time, acq_index, bin_index, enable):
         pass
 
     @abstractmethod
