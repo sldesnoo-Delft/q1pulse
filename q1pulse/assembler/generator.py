@@ -493,16 +493,16 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         self._contains_io_instr = True
 
     @register_args(signature='toI')
-    def acquire(self, time, section, bin_index):
-        section = self._data.translate_acquisition(section)
+    def acquire(self, time, acquisition, bin_index):
+        acq_index = self._data.translate_acquisition(acquisition)
         self._add_rt_command('acquire',
-                             section, bin_index,
+                             acq_index, bin_index,
                              time=time, updating=True)
         self._contains_io_instr = True
 
     @register_args(signature='toIoo')
-    def acquire_weighed(self, time, bins, bin_index, weight0, weight1):
-        bins = self._data.translate_acquisition(bins)
+    def acquire_weighed(self, time, acquisition, bin_index, weight0, weight1):
+        acq_index = self._data.translate_acquisition(acquisition)
         weight0 = self._data.translate_weight(weight0)
         weight1 = self._data.translate_weight(weight1)
         # q1asm has no instruction for acquire_weighed imm,reg,imm,imm,imme.
@@ -512,19 +512,19 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                 self.move(weight0, rw0)
                 self.move(weight1, rw1)
                 self._add_rt_command('acquire_weighed',
-                                     bins, bin_index, rw0, rw1,
+                                     acq_index, bin_index, rw0, rw1,
                                      time=time, updating=True)
         else:
             self._add_rt_command('acquire_weighed',
-                                 bins, bin_index, weight0, weight1,
+                                 acq_index, bin_index, weight0, weight1,
                                  time=time, updating=True)
         self._contains_io_instr = True
 
     @register_args(signature='toIo')
-    def acquire_ttl(self, time, section, bin_index, enable):
-        section = self._data.translate_acquisition(section)
+    def acquire_ttl(self, time, acquisition, bin_index, enable):
+        acq_index = self._data.translate_acquisition(acquisition)
         self._add_rt_command('acquire_ttl',
-                             section, bin_index, enable,
+                             acq_index, bin_index, enable,
                              time=time, updating=True)
         self._contains_io_instr = True
 
