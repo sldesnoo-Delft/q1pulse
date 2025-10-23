@@ -5,7 +5,7 @@ Q1Pulse supports loops, variables and expressions that are translated to Q1ASM.
 
 
 This project has several goals:
-- create a driver to use in the backend of [pulse_lib](https://github.com/stephanlphilips/pulse_lib)
+- create a driver to use in the backend of [pulse_lib](https://gitlab.tudelft.nl/qutech-qdlabs/pulse_lib)
 - provide a very simple API to test QCM and QRM
 - explore the possibilities of Q1ASM and the QCM and QRM
 - have fun with building a compiler for Q1ASM.
@@ -19,7 +19,7 @@ As a consequence the compiler will have to generate multiple Q1ASM instructions 
 - NOP instruction are inserted to wait a cycle for a register being updated.
 - Temporary registers are used for immediate values when the instruction does not support immediate operand.
 
-Q1Pulse is inspired on [pulse_lib](https://github.com/stephanlphilips/pulse_lib).
+Q1Pulse is inspired on [pulse_lib](https://gitlab.tudelft.nl/qutech-qdlabs/pulse_lib).
 The following features of pulse_lib are **not** available in Q1Pulse:
 - Virtual matrix for compensation of capacitive coupling of device gates.
 - Channel delay compensation.
@@ -116,6 +116,60 @@ Sequencers controlling 2 outputs will most likely be used for the generation of 
 Some instructions intended for voltage control, e.g. ramp, will fail on sequencers controlling 2 output
 channels.
 
+
+## Q1Instrument
+
+Q1Instrument contains the mapping of sequencer with logical names to inputs and outputs.
+Q1Instrument also configures the sequencers when a program is executed.
+This configuration of the sequencers is stored in the program.
+
+For every sequencer Q1Instrument configures:
+- sync_en, only if the sequencer contains a program.
+- input/output channels for I and Q.
+- nco frequency and (de)modulation.
+- IQ mixer gain and ratio.
+- acquisition threshold and rotation for feedback.
+- trigger configuration for feedback.
+- TTL acquisition parameters.
+
+```python
+    instrument = Q1Instrument()
+    instrument.add_qcm(qcm0)
+    instrument.add_qrm(qrm1)
+    # add sequencers with output channels
+    instrument.add_control('q1', qcm0.name, \[0,1])
+    instrument.add_control('P1', qcm0.name, \[2])
+    instrument.add_control('P2', qcm0.name, \[3])
+    instrument.add_readout('R1', qrm1.name, \[1])
+
+    p = instrument.new_program('my_q1_program')
+    ...
+
+    instrument.start_program(p)
+    instrument.wait_stopped()
+
+    # input ranges in Vpp
+    in_range = instrument.get_input_ranges('R1')
+
+    data = instrument.get_acquisition_bins('R1', 'default')
+
+    # Get data in Volt
+    path0 = np.require(bin_data['integration']['path0'], dtype=float) / (t_integration*in_range[0]/2)
+    path1 = np.require(bin_data['integration']['path1'], dtype=float) / (t_integration*in_range[1]/2)
+
+```
+
+Programs can be saved and inspected with Q1ProgramBrowser from Q1Simulator.
+
+```python
+    instrument.save_program("./stored_programs/program_xyz", program)
+```
+
+```Python
+    from q1simulator import Q1ProgramBrowser
+    Q1ProgramBrowser("./stored_programs")
+```
+
 ## Q1Pulse instructions
 
 ### Instruction arguments: floating point and nanoseconds
@@ -171,6 +225,8 @@ QRM specific instructions:
 - acquire_weighed: acquire data using weighed average, optionally incrementing the bin counter. (1)
 - repeated_acquire: N times acquire data, optionally incrementing the bin counter.
 - repeated_acquire_weighed: N times acquire data using weighed average, optionally incrementing the bin counter.
+- acquire_ttl: start or stop TTL acquisition. (1)
+- acquire_ttl_interval: start TTL acquisition and stop after specified interval.
 
 Notes:
 1. instruction does not advance time in sequence.
@@ -340,19 +396,41 @@ that take 4 ns to evaluate.
             P1.ramp(60, 0.25, 0.0)
 ```
 
-## Instrument
+## TTL acquisition
 
-```python
-    instrument = Q1Instrument()
-    instrument.add_qcm(qcm0)
-    instrument.add_qrm(qrm1)
-    # add sequencers with output channels
-    instrument.add_control('q1', qcm0.name, \[0,1])
-    instrument.add_control('P1', qcm0.name, \[2])
-    instrument.add_control('P2', qcm0.name, \[3])
-    instrument.add_readout('R1', qrm1.name, \[1])
+TTL acquisitions can be done with `acquire_ttl` or `acquire_ttl_interval`. The former either start of stops the
+acquisition. The latter stops the acquisition after the interval.
+The configuration for TTL acquisition should be done on the sequencer. See example.
 
-    p = instrument.new_program('my_q1_program')
+Every acquisition count will be stored in the next bin when acquisition is called with `bin_index="increment"`.
+This differs from `ttl_acq_auto_bin_incr_en=True` which increments the bin index after every trigger.
+Both features should not be used at the same time, because the result will not quite useless.
+
+Note: The application could 'hang' when the TTL acquire does not get any trigger.
+In this situation the sequencer does not set the flag ACQ_BINNING_DONE.
+A boolean `ignore_acq_binning_done` can be set to ignore this flag.
+
+```Python
+instrument.ignore_acq_binning_done = True
+
+p = instrument.new_program('acquire_ttl')
+p.repetitions = 6
+
+R1 = p.R1
+
+N = 5
+n_acq = max(N, p.repetitions)
+R1.add_acquisition_bins('ttl', n_acq*N)
+R1.ttl_acq_input_select = 0
+R1.ttl_acq_auto_bin_incr_en = False
+R1.ttl_acq_threshold = 0.20 / 0.5  # Threshold at 220 mV; input range QRM (R1): +/- 0.5 V (gain = 0 dB)
+
+# Store every acquisition count in a new bin if ttl_acq_auto_bin_incr_en is False.
+bin_index = 0 if R1.ttl_acq_auto_bin_incr_en else "increment"
+
+R1.acquire_ttl_interval("ttl", bin_index, 500, t_offset=160)
+
+p.wait(2000)
 ```
 
 ## Logging with Q1Simulator
