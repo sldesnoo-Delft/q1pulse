@@ -5,8 +5,8 @@ from q1pulse import __version__ as q1pulse_version
 
 
 def check_qblox_instrument_version():
-    min_version = "0.12.0"
-    max_version = "0.18.0"
+    min_version = "0.14.0"
+    max_version = "1.0.0"
     if qblox_version < Version(min_version):
         raise Exception(f'Q1Pulse {q1pulse_version} requires qblox_instruments {min_version}+')
     if qblox_version > Version(max_version):
