@@ -42,43 +42,41 @@ _start:    reset_ph                  # L0003 @ 0
            asl            R1,2,R5    # L0022 R5: R.e
 # R.f:int = R.a >> 2 
 #          --- emulate signed ASR 
-           and            R1,2147483648,R7 # L0023 temp R7
-           asr            R1,2,R6    # L0024 
-           jlt            R7,2147483648,@asr_end0 # L0025 
-           or             R6,3758096384,R6 # L0026 
+           asr            R1,2,R6    # L0023 R6: R.f
+           jlt            R1,2147483648,@asr_end0 # L0024 
+           or             R6,3758096384,R6 # L0025 
 # R.h:int = R.d >> 2 
 #          --- emulate signed ASR 
-asr_end0:  and            R4,2147483648,R8 # L0027 temp R8
-           asr            R4,2,R7    # L0028 
-           jlt            R8,2147483648,@asr_end1 # L0029 
-           or             R7,3758096384,R7 # L0030 
+asr_end0:  asr            R4,2,R7    # L0026 R7: R.h
+           jlt            R4,2147483648,@asr_end1 # L0027 
+           or             R7,3758096384,R7 # L0028 
 # R.x:float = 1.0 
-asr_end1:  move           2147483647,R8 # L0031 R8: R.x
+asr_end1:  move           2147483647,R8 # L0029 R8: R.x
 # R.x:float = R.x - 0.8 
-           nop                       # L0032  sub wait for R8
-           sub            R8,1717986918,R8 # L0033 
+           nop                       # L0030  sub wait for R8
+           sub            R8,1717986918,R8 # L0031 
 # R.y:float = 0.5 
-           move           1073741823,R9 # L0034 R9: R.y
+           move           1073741823,R9 # L0032 R9: R.y
 # R.z:float = R.x - R.y 
-           nop                       # L0035  sub wait for R9
-           sub            R8,R9,R10  # L0036 R10: R.z
+           nop                       # L0033  sub wait for R9
+           sub            R8,R9,R10  # L0034 R10: R.z
 # Rs.x:int = 9 
-           move           9,R11      # L0037 R11: Rs.x
+           move           9,R11      # L0035 R11: Rs.x
 # Rs.y:int = Rs.x + R.b 
-           nop                       # L0038  add wait for R11
-           add            R11,R2,R12 # L0039 R12: Rs.y
+           nop                       # L0036  add wait for R11
+           add            R11,R2,R12 # L0037 R12: Rs.y
 # Rs.a:int = 3 
-           move           3,R13      # L0040 R13: Rs.a
+           move           3,R13      # L0038 R13: Rs.a
 # Rs.b:int = Rs.a & 5 
-           nop                       # L0041  and wait for R13
-           and            R13,5,R14  # L0042 R14: Rs.b
+           nop                       # L0039  and wait for R13
+           and            R13,5,R14  # L0040 R14: Rs.b
 # Rs.c:int = Rs.a | 5 
-           or             R13,5,R15  # L0043 R15: Rs.c
+           or             R13,5,R15  # L0041 R15: Rs.c
 # Rs.d:int = 5 ^ Rs.a 
-           xor            R13,5,R16  # L0044 R16: Rs.d
+           xor            R13,5,R16  # L0042 R16: Rs.d
 # Rs.e:int = ~Rs.a 
-           not            R13,R17    # L0045 R17: Rs.e
+           not            R13,R17    # L0043 R17: Rs.e
 # --END-- 
-           stop                      # L0046 
+           stop                      # L0044 
 """
 
