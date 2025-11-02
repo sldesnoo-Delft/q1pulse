@@ -266,6 +266,7 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
         # store last rt-statement
         cbs.last_rt_instructions.append(self._last_rt_command)
         cbs.rt_end_times.append(self._rt_time)
+
         # set time to else time.
         self._rt_time = cbs.rt_time_start + else_time
         self._last_rt_command = None
@@ -359,15 +360,18 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             if self.emulate_signed:
                 self.add_comment('         --- emulate signed ASR')
                 if isinstance(rhs, Number):
-                    # This emulation adds 3 instructions: AND, JLT, OR
+                    # This emulation adds 2 instructions: JLT, OR (24 ns)
                     # This implementation works only for literal rhs.
                     # It is more efficient than the other emulation below.
                     label = f'asr_end{self._asr_jumps}'
                     self._asr_jumps += 1
-                    sign = self.get_temp_reg()
-                    # get sign of lhs
-                    self.bits_and(lhs, 0x8000_0000, sign)
-                    # actual ASR
+                    # save "sign" of lhs
+                    if lhs == destination:
+                        sign = self.get_temp_reg()
+                        self.move(lhs, sign)
+                    else:
+                        sign = lhs
+                    # actually LSR
                     self._add_reg_instruction('asr', lhs, rhs, destination)
                     # add sign extension bits if negative (highest bit set)
                     self.jlt(sign, 0x8000_0000, '@'+label)
@@ -376,12 +380,12 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
                     self.bits_or(destination, sign_extension, destination)
                     self.set_label(label)
                 else:
-                    # This emulation adds 6 instructions: AND, ASR, NOP, SUB, NOP, OR
+                    # This emulation adds 6 instructions: AND, ASR, NOP, SUB, NOP, OR (56 ns)
                     sign = self.get_temp_reg()
                     sign_extension = self.get_temp_reg()
                     # get sign of lhs (highest bit)
                     self.bits_and(lhs, 0x8000_0000, sign)
-                    # actual ASR
+                    # actually LSR
                     self._add_reg_instruction('asr', lhs, rhs, destination)
                     # compute sign extension bits
                     self.lsr(sign, rhs, sign)  # explicit unsigned shift
