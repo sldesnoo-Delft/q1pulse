@@ -1,7 +1,12 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
-## \[0.18.1] - 2925-10-23
+## \[1.0.0] - 2025-11-03
+
+- Updates for qblox-instruments v1.0.0
+- Dropped support for qblox-instruments < 0.14.0
+
+## \[0.18.1] - 2025-10-23
 
 - Added `acquire_ttl` and associated QCoDeS parameters.
 - Use `update_sequence`.
