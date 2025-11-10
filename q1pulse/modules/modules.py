@@ -272,7 +272,7 @@ class QbloxModule:
                 logger.debug(f"{self.slot_idx}.{seq_nr} Erase {key}: {len(new_entries)} new entries")
                 # overwrite cached entries
                 loaded[key] = new_entries
-                seq.update_sequence(waveforms=new_entries, erase_existing=True)
+                seq.update_sequence(**{key: new_entries}, erase_existing=True)
             elif len(updates) > 0:
                 # loaded entries is already updated.
                 seq.update_sequence(**{key: updates}, erase_existing=False)
