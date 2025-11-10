@@ -8,10 +8,7 @@ version = "1.0.0" # tbump: version
 authors = [
   { name="Sander de Snoo", email="s.l.desnoo@tudelft.nl" },
 ]
-description = """
-Pulse sequence builder and compiler for Q1ASM.
-Q1Pulse is a simple library to compile pulse sequence to Q1ASM, the assembly language of Qblox instruments.
-"""
+description = "Compiler for Qblox Q1ASM in Python."
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
