@@ -244,21 +244,23 @@ class QbloxModule:
             seq.update_sequence(program=program)
 
         for key in ["waveforms", "weights", "acquisitions"]:
-            updates = {}
-            loaded_entries = loaded[key]
             new_entries = sequence[key]
             if len(new_entries) == 0:
                 continue
+            updates = {}
+            loaded_entries = loaded[key]
+            loaded_indices_names = {entry["index"]: name for name, entry in loaded_entries.items()}
             for name, entry in new_entries.items():
                 if name in loaded_entries and entry == loaded_entries[name]:
+                    # Name, index and data match!
                     if QbloxModule.verbose:
                         logger.debug(f"{self.slot_idx}.{seq_nr} Reuse {key}: {name}, index:{entry['index']}")
                     continue
                 else:
-                    # remove entries with same index.
-                    index_name = {name: entry["index"] for name, entry in loaded_entries.items()}
+                    # Avoid duplicate indices: Remove any entries with same index.
+                    index = entry["index"]
                     try:
-                        del loaded_entries[index_name[entry["index"]]]
+                        del loaded_entries[loaded_indices_names[index]]
                     except KeyError:
                         pass
                     loaded_entries[name] = entry
