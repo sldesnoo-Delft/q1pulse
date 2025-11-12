@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[1.0.3] - 2025-11-12
+
+- Another fix in use of `update_sequence`.
+
 ## \[1.0.2] - 2025-11-12
 
 - Fixed another bug when using update_sequence of qblox-instruments v1.0.0
