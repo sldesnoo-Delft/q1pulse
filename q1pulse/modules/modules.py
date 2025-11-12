@@ -247,37 +247,43 @@ class QbloxModule:
             new_entries = sequence[key]
             if len(new_entries) == 0:
                 continue
-            updates = {}
-            loaded_entries = loaded[key]
-            loaded_indices_names = {entry["index"]: name for name, entry in loaded_entries.items()}
-            for name, entry in new_entries.items():
-                if name in loaded_entries and entry == loaded_entries[name]:
-                    # Name, index and data match!
-                    if QbloxModule.verbose:
-                        logger.debug(f"{self.slot_idx}.{seq_nr} Reuse {key}: {name}, index:{entry['index']}")
-                    continue
-                else:
-                    # Avoid duplicate indices: Remove any entries with same index.
-                    index = entry["index"]
-                    try:
-                        del loaded_entries[loaded_indices_names[index]]
-                    except KeyError:
-                        pass
-                    loaded_entries[name] = entry
-                    updates[name] = entry
+            self._update_sequence_part(seq, key, new_entries, loaded)
 
-            erase = self._check_size(seq_nr, loaded, key, raise_exception=False) is False
-            if QbloxModule.verbose and len(updates) and not erase:
-                logger.debug(f"{self.slot_idx}.{seq_nr} Update {key}: {len(new_entries)} entries, "
-                             f"write {[entry['index'] for entry in updates.values()]}")
-            if erase:
-                logger.debug(f"{self.slot_idx}.{seq_nr} Erase {key}: {len(new_entries)} new entries")
-                # overwrite cached entries
-                loaded[key] = new_entries
-                seq.update_sequence(**{key: new_entries}, erase_existing=True)
-            elif len(updates) > 0:
-                # loaded entries is already updated.
-                seq.update_sequence(**{key: updates}, erase_existing=False)
+    def _update_sequence_part(self, sequencer, key, new_entries: dict, loaded: dict):
+        seq_idx = sequencer.seq_idx
+        updates = {}
+        loaded_entries = loaded[key]
+        erase = False
+        for name, entry in new_entries.items():
+            if name in loaded_entries and entry == loaded_entries[name]:
+                # Name, index and data match!
+                if QbloxModule.verbose:
+                    logger.debug(f"{self.slot_idx}.{seq_idx} Reuse {key}: {name}, index:{entry['index']}")
+                continue
+            else:
+                index = entry["index"]
+                # Avoid duplicate indices: Erase all if another loaded waveform has same index
+                if any(e["index"] == index and n != name for n, e in loaded_entries.items()):
+                    if QbloxModule.verbose:
+                        logger.debug(f"Duplicate index; erase all {key}")
+                    erase = True
+                    break
+                loaded_entries[name] = entry
+                updates[name] = entry
+
+        erase = erase or (self._check_size(seq_idx, loaded, key, raise_exception=False) is False)
+
+        if QbloxModule.verbose and len(updates) and not erase:
+            logger.debug(f"{self.slot_idx}.{seq_idx} Update {key}: {len(new_entries)} entries, "
+                         f"write {[entry['index'] for entry in updates.values()]}")
+        if erase:
+            logger.debug(f"{self.slot_idx}.{seq_idx} Erase {key}: {len(new_entries)} new entries")
+            # overwrite cached entries
+            loaded[key] = new_entries
+            sequencer.update_sequence(**{key: new_entries}, erase_existing=True)
+        elif len(updates) > 0:
+            # loaded entries is already updated.
+            sequencer.update_sequence(**{key: updates}, erase_existing=False)
 
     def _check_size(self, seq_nr: int, sequence: dict, key: str, raise_exception: bool = True) -> bool:
         entries = sequence[key]
