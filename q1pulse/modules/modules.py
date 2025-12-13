@@ -248,6 +248,8 @@ class QbloxModule:
             if len(new_entries) == 0:
                 continue
             self._update_sequence_part(seq, key, new_entries, loaded)
+        # set the cache again. It's cleared by update_sequence
+        param.cache.set(loaded)
 
     def _update_sequence_part(self, sequencer, key, new_entries: dict, loaded: dict):
         seq_idx = sequencer.seq_idx
