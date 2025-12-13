@@ -28,7 +28,7 @@ class GeneratorData:
                 raise Q1MemoryError("Too much waveform data for memory")
             self._size_waveforms = size_waveforms
             waveforms[wave.name] = {
-                    'data': list(wave.data),
+                    'data': wave.data.tolist(),
                     'index': index
                     }
             return index
@@ -58,7 +58,7 @@ class GeneratorData:
                 raise Q1MemoryError("Too much acquisition weight data for memory")
             self._size_weights = size_weights
             self.weights[weight.name] = {
-                    'data': list(weight.data),
+                    'data': weight.data.tolist(),
                     'index': index,
                     }
 
