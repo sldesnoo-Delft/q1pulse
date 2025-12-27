@@ -240,10 +240,6 @@ class Q1Instrument:
 
             for module in self.modules.values():
                 module.start_sequencers()
-            # for instrument in instruments_with_sequence:
-            #     # t = (time.perf_counter() - t_start) * 1000
-            #     # logger.debug(f"Start  ({t:5.3f} ms)")
-            #     instrument.start_sequencer()
             self.check_system_errors()
             self._t_start = time.perf_counter()
 
@@ -256,7 +252,7 @@ class Q1Instrument:
             errors = {}
             msg_level = 0
             # list[tuple[module, sequencer]]
-            active_sequencers: list[tuple[QbloxModule, SequenceBuilder]] = []
+            active_sequencers: list[tuple[QbloxModule, Sequencer]] = []
             sequencers = {**self.controllers, **self.readouts}
             for name, seq in sequencers.items():
                 module = self.modules[seq.module_name]
@@ -269,21 +265,20 @@ class Q1Instrument:
                 # status = self._get_sequencer_status(module, seq.seq_nr, timeout_minutes)
                 if "ACQ BINNING DONE" in status.debug_msgs:
                     module.mark_acq_ready(seq.seq_nr)
-                logger.log(status.level,
-                           f"Status {module.slot_idx}:{seq.seq_nr} ({module.pulsar.name}:{seq.seq_nr}): {status}")
+                logger.log(status.level, f"Status {module.slot_idx}:{seq.seq_nr} ({seq.label}): {status}")
                 msg_level = max(msg_level, status.level)
                 if status.status != "OKAY" or status.state != "STOPPED" or status.level >= logging.WARNING:
-                    errors[name] = str(status)
+                    errors[seq.label] = str(status)
                     # reset awg offsets in case of any error.
                     with DelayedKeyboardInterrupt("set offsets"):
                         module.set_awg_offsets(seq.seq_nr, 0.0, 0.0)
                 if status.input_overloaded:
                     if Q1Instrument._exception_on_overload:
                         raise Q1InputOverloaded(
-                                f"INPUT OVERLOAD on {name}."
+                                f"INPUT OVERLOAD on {seq.label}."
                                 "\nException can be suppressed with q1pulse.set_exception_on_overload(False)")
                     else:
-                        print(f"WARNING: input overload on {name}")
+                        print(f"WARNING: input overload on {seq.label}")
 
             if msg_level == logging.ERROR:
                 logger.error("*** Program errors ***")
