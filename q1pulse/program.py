@@ -1,6 +1,7 @@
 import os
 import time
 import logging
+import uuid
 from contextlib import contextmanager
 from numbers import Number
 
@@ -22,6 +23,7 @@ class Program:
     verbose = False
 
     def __init__(self, path=None):
+        self.uuid = uuid.uuid4()
         self.sequence_builders = {}
         self.path = path if path is not None else os.path.join("q1", "_prog")
         self.R = Registers(self, local=False)
