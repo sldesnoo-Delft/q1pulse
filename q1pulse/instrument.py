@@ -49,6 +49,7 @@ class Q1Instrument:
         self.controllers: dict[int, Sequencer] = {}
         self.readouts: dict[int, Sequencer] = {}
         self._loaded_q1asm: dict[str, dict] = {}
+        self._loaded_program_uuid = None
         SequenceBuilder.add_traceback_to_instructions = add_traceback
 
     def add_qcm(self, module):
@@ -144,16 +145,47 @@ class Q1Instrument:
         self.start_program(program)
         self.wait_stopped()
 
+    def load_program(self, program):
+        # TODO @@@@ add global state?
+        t_start = time.perf_counter()
+
+        for instrument in self.root_instruments:
+            if Q1Instrument._i_feel_lucky and hasattr(instrument, "_debug"):
+                # Change the debug level to speed up communication.
+                # Errors will be checked before start of the sequence.
+                instrument._debug = 2
+
+        sequencers = {**self.controllers, **self.readouts}
+
+        # sort on (seq_num, slot)
+        sequencers = dict(sorted(sequencers.items(),
+                                 key=lambda kv: (kv[1].seq_nr, self.modules[kv[1].module_name].slot_idx)))
+
+        for name, seq in sequencers.items():
+            module = self.modules[seq.module_name]
+            with DelayedKeyboardInterrupt("upload sequences"):
+                q1asm = program.q1asm(name)
+                self._loaded_q1asm[name] = q1asm
+                if q1asm is None:
+                    continue
+                module.upload(seq.seq_nr, q1asm)
+
+        # TODO @@@@ Check errors? This gives some delay!
+
+        t = (time.perf_counter() - t_start) * 1000
+        logger.info(f"Duration (async) upload: ({t:5.3f}ms)")
+
+        self._loaded_program_uuid = program.uuid
+
     def start_program(self, program):
+        if program.uuid != self._loaded_program_uuid:
+            self.load_program(program)
+
         t_start = time.perf_counter()
 
         for instrument in self.root_instruments:
             with DelayedKeyboardInterrupt("check status"):
                 check_instrument_status(instrument)
-                if Q1Instrument._i_feel_lucky and hasattr(instrument, "_debug"):
-                    # Change the debug level to speed up communication.
-                    # Errors will be checked before start of the sequence.
-                    instrument._debug = 2
 
         instruments_with_sequence = set()
         sequencers = {**self.controllers, **self.readouts}
@@ -177,7 +209,7 @@ class Q1Instrument:
                 n_configured += 1
                 instruments_with_sequence.add(module.root_instrument)
                 module.set_label(seq.seq_nr, name)
-                module.upload(seq.seq_nr, q1asm)
+                # module.upload(seq.seq_nr, q1asm) @@@ Already loaded.
                 module.invalidate_cache(seq.seq_nr, "offset_awg_path0")
                 module.invalidate_cache(seq.seq_nr, "offset_awg_path1")
                 module.enable_seq(seq)
@@ -246,7 +278,7 @@ class Q1Instrument:
         t = (time.perf_counter() - t_start) * 1000
         logger.info(f"Duration upload/start: ({t:5.3f}ms)")
 
-    def wait_stopped(self, timeout_minutes=1):
+    def wait_stopped(self, timeout_minutes: float = 1):
         try:
             # Wait for completion
             errors = {}
