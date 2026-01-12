@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[1.0.5] - 2026-01-12
+
+- Fixed sequencer name in status/error reporting
+- Added separate `instrument.upload(program)` for upload while playing.
+
 ## \[1.0.4] - 2025-12-13
 
 - Update sequence.cache after update_sequence.
