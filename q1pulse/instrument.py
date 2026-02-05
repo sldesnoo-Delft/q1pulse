@@ -1,8 +1,10 @@
 import json
+import logging
 import os
 import time
-import logging
+import traceback
 from collections import defaultdict
+from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -43,14 +45,17 @@ class Q1Instrument:
             q1dir.mkdir(exist_ok=True)
             self.temp_dir = TemporaryDirectory(dir=q1dir)
             self.path = self.temp_dir.name
-            logger.info("Instrument upload temp dir: " + self.path)
+            logger.info("Instrument upload temp dir: " + self.path) # @@@ Fix temp path
         self.root_instruments = set()
         self.modules: dict[str, QbloxModule] = {}
         self.controllers: dict[int, Sequencer] = {}
         self.readouts: dict[int, Sequencer] = {}
         self._loaded_q1asm: dict[str, dict] = {}
         self._loaded_program_uuid = None
+        self._last_started = None
+        self._running = False
         SequenceBuilder.add_traceback_to_instructions = add_traceback
+        self._cluster_debug_disabled = True
 
     def add_qcm(self, module):
         logger.info(f"Add {module.name}")
@@ -146,14 +151,10 @@ class Q1Instrument:
         self.wait_stopped()
 
     def load_program(self, program):
-        # TODO @@@@ add global state?
-        t_start = time.perf_counter()
+        # @@@ check for background upload
+        # @@@ else stop if not yet stopped.
 
-        for instrument in self.root_instruments:
-            if Q1Instrument._i_feel_lucky and hasattr(instrument, "_debug"):
-                # Change the debug level to speed up communication.
-                # Errors will be checked before start of the sequence.
-                instrument._debug = 2
+        t_start = time.perf_counter()
 
         sequencers = {**self.controllers, **self.readouts}
 
@@ -165,12 +166,11 @@ class Q1Instrument:
             module = self.modules[seq.module_name]
             with DelayedKeyboardInterrupt("upload sequences"):
                 q1asm = program.q1asm(name)
-                self._loaded_q1asm[name] = q1asm
                 if q1asm is None:
                     continue
                 module.upload(seq.seq_nr, q1asm)
 
-        # TODO @@@@ Check errors? This gives some delay!
+        # TODO Check errors? This gives some delay!
 
         t = (time.perf_counter() - t_start) * 1000
         logger.info(f"Duration (async) upload: ({t:5.3f}ms)")
@@ -178,8 +178,17 @@ class Q1Instrument:
         self._loaded_program_uuid = program.uuid
 
     def start_program(self, program):
+        self._disable_cluster_debug()
+
+        if self._running:
+            self.dump_program(self._last_started, "stop", "Not properly stopped")
+            self.stop_program()
+
         if program.uuid != self._loaded_program_uuid:
             self.load_program(program)
+
+        # Store for debugging / dumping
+        self._last_started = program
 
         t_start = time.perf_counter()
 
@@ -209,7 +218,6 @@ class Q1Instrument:
                 n_configured += 1
                 instruments_with_sequence.add(module.root_instrument)
                 module.set_label(seq.seq_nr, name)
-                # module.upload(seq.seq_nr, q1asm) @@@ Already loaded.
                 module.invalidate_cache(seq.seq_nr, "offset_awg_path0")
                 module.invalidate_cache(seq.seq_nr, "offset_awg_path1")
                 module.enable_seq(seq)
@@ -257,23 +265,28 @@ class Q1Instrument:
                 duration = time.perf_counter() - t_start_seq
                 logger.debug(f"Configured QRM {name} in {duration*1000.0:3.1f} ms")
 
-        with DelayedKeyboardInterrupt("arm and start"):
-            t_start_arm = time.perf_counter()
-            # Note: arm per sequencer. Arm on the cluster still gives red leds on the modules.
-            for module in self.modules.values():
-                module.arm_sequencers()
-            if Q1Instrument.verbose:
-                duration = time.perf_counter() - t_start_arm
-                logger.debug(f"Armed {n_configured} sequencers in {duration*1000.0:3.1f} ms")
+        try:
+            with DelayedKeyboardInterrupt("arm and start"):
+                t_start_arm = time.perf_counter()
+                # Note: arm per sequencer. Arm on the cluster still gives red leds on the modules.
+                for module in self.modules.values():
+                    module.arm_sequencers()
+                if Q1Instrument.verbose:
+                    duration = time.perf_counter() - t_start_arm
+                    logger.debug(f"Armed {n_configured} sequencers in {duration*1000.0:3.1f} ms")
 
-            # Error check implicitly waits for the module to process all previous commands.
-            # Exclude CMM (slot=0)
-            self.check_system_errors(exclude=[0])
+                # Error check implicitly waits for the module to process all previous commands.
+                # Exclude CMM (slot=0)
+                self.check_system_errors(exclude=[0])
 
-            for module in self.modules.values():
-                module.start_sequencers()
-            self.check_system_errors()
-            self._t_start = time.perf_counter()
+                for module in self.modules.values():
+                    module.start_sequencers()
+                self.check_system_errors()
+                self._t_start = time.perf_counter()
+                self._running = True
+        except Exception as ex:
+            self.dump_program(self._last_started, "q1error", "Exception in start", ex)
+            raise
 
         t = (time.perf_counter() - t_start) * 1000
         logger.info(f"Duration upload/start: ({t:5.3f}ms)")
@@ -319,16 +332,63 @@ class Q1Instrument:
                 raise Exception(f"Q1 failures (see logging):\n {errors}")
             duration = time.perf_counter() - self._t_start
             logger.debug(f"Ready after {duration*1000:.1f} ms")
-        except Exception:
+        except Exception as ex:
             logger.error("Exception", exc_info=True)
+            self.dump_program(self._last_started, "q1error", "Exception in stop", ex)
             raise
         finally:
-            with DelayedKeyboardInterrupt("stop sequencers"):
-                logger.debug("Stop sequencers")
-                # for instrument in self.root_instruments:
-                #     instrument.stop_sequencer()
-                for module in self.modules.values():
-                    module.stop_sequencers()
+            self.stop_program()
+
+    def stop_program(self) -> None:
+        with DelayedKeyboardInterrupt("stop sequencers"):
+            logger.debug("Stop sequencers")
+            # for instrument in self.root_instruments:
+            #     instrument.stop_sequencer()
+            for module in self.modules.values():
+                module.stop_sequencers()
+        self._running = False
+
+    def dump_program(
+            self,
+            program: Program,
+            prefix: str = "dump",
+            reason: str | None = None,
+            exc: Exception | None = None,
+            ) -> None:
+        now = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+
+        if isinstance(exc, KeyboardInterrupt):
+            prefix = "interrupt"
+
+        path = os.path.join(
+            os.path.expanduser("~"),
+            ".q1",
+            f"{prefix}_{now}",
+            )
+
+        os.makedirs(path, exist_ok=True)
+        print(f"Writing Cluster program dump to {path}.")
+        logger.info(f"Writing Cluster program dump to {path}.")
+        if reason is not None or exc is not None:
+            with open(os.path.join(path, "dump_reason.txt"), "w") as fp:
+                if reason is not None:
+                    fp.write(f"{reason}\n")
+                if exc is not None:
+                    traceback.print_exception(exc, file=fp)
+
+        self.save_program(self._last_started, path)
+
+    def _disable_cluster_debug(self):
+        if not self._cluster_debug_disabled and Q1Instrument._i_feel_lucky:
+            # Change the debug level to speed up communication.
+            # Errors will be checked before start of the sequence.
+            for instrument in self.root_instruments:
+                if hasattr(instrument, "_debug"):
+                    instrument._debug = 2
+                if hasattr(instrument, "_scpi"):
+                    # qblox-instruments v1.1.0: communication uses `_scpi`
+                    instrument._scpi._debug = 2
+            self._cluster_debug_disabled = True
 
     def _get_sequencer_status(self, module, seq_nr, timeout_minutes):
         """Get sequencer status in a interrupt safe way.
