@@ -2,14 +2,32 @@ import io
 import json
 import logging
 import re
-from functools import partial
 from typing import Any
 
-from qblox_instruments import Cluster
-from qblox_instruments.scpi import Cluster as ClusterScpi
+_use_legacy = True
+
+try:
+    # qblox-instruments < v1.1.0
+    from qblox_instruments.scpi import Cluster as ClusterScpi
+    from qblox_instruments import Cluster
+except ImportError:
+    # Qblox-instruments v1.1+
+    if _use_legacy:
+        from qblox_instruments.native import ClusterLegacy as Cluster
+        from qblox_instruments.scpi.layers.cluster_mm_1_0 import Cluster as ClusterScpi
+    else:
+        from qblox_instruments import Cluster
+        from qblox_instruments.scpi import Scpi
+        raise Exception("Not tested")
+try:
+    from qblox_instruments.native.helpers import Ieee488_2Connection
+    _ieee_connection_defined = True
+except ImportError:
+    _ieee_connection_defined = False
+
 from qblox_instruments.ieee488_2 import Ieee488_2, IpTransport
 from qblox_instruments.pnp import resolve
-from q1pulse.util.qblox_version import check_qblox_instrument_version
+from q1pulse.util.qblox_version import check_qblox_instrument_version, qblox_version, Version
 
 from qblox_instruments import (
     SequencerStatus,
@@ -63,30 +81,53 @@ class TurboCluster(Cluster):
                 f"Use qblox-pnp tool to rectify; serial number is {addr_info.address}"
             )
         self._ip_address = addr_info.address
-        self._connections: dict[int, Ieee488_2] = {}
+        self._connections: dict[int | None, Ieee488_2] = {}
         self._needs_check: dict[int, bool] = {}
         self._clear_cache()
         for slot in range(1, 21):
             ip_config = resolve(f"{self._ip_address}/{slot}")
             transport = IpTransport(ip_config.address, ip_config.scpi_port, timeout=5.0)
             self._connections[slot] = Ieee488_2(transport)
+
         super().__init__(name, identifier, port, debug=debug)
+
+        self._override_transport_calls()
+
+        self._remove_slow_validators()
+
+        # SCPI transaction map is added in v0.18 and used for commands with multiple reads like get_acquistion_data
+        if hasattr(self, "_scpi_transaction_connection_map"):
+            for slot, conn in self._connections.items():
+                self._scpi_transaction_connection_map[slot] = Ieee488_2Connection(conn)
+
+        # Disable continuous error checking
+        # Note: Not needed anymore since v0.17.0, because default debug level has changed and
+        #       start/stop sequencer has been reimplement in this class.
+        self._debug = 2
+        self._init_configuration_cache()
+
+    def _remove_slow_validators(self):
+        # TODO: this might not be needed anymore for version >= 0.18
         for slot in range(1, 21):
             module = self.modules[slot-1]
             if module.present():
                 for seq_nr in range(6):
                     seq = module.sequencers[seq_nr]
-                    # TODO: this might not be needed anymore for version >= 0.18
-                    # disable slow validators
+                    # remove slow validators
                     seq.sequence._vals = []
-        # SCPI transaction map is added in v0.18 and used for commands with multiple reads like get_acquistion_data
-        if hasattr(self, "_scpi_transaction_connection_map"):
-            from qblox_instruments.native.helpers import Ieee488_2Connection
-            for slot, conn in self._connections.items():
-                self._scpi_transaction_connection_map[slot] = Ieee488_2Connection(conn)
-        # Disable continuous error checking
-        self._debug = 2
-        self._init_configuration_cache()
+
+    def _override_transport_calls(self):
+        if qblox_version >= Version("1.1.0") and not _use_legacy:
+            # qblox-instruments v1.1.0 Cluster has attribute _scpi.
+            scpi = self._scpi
+            self._connections[None] = Ieee488_2Connection(super(Scpi, scpi))
+            scpi._write = self._write
+            scpi._write_bin = self._write_bin
+            scpi._read = self._read
+            scpi._read_bin = self._read_bin
+        else:
+            # Cluster version < v1.1.0 and legacy are subclasses Ieee488_2
+            self._connections[None] = Ieee488_2Connection(super(ClusterScpi, self))
 
     def _write(self, cmd_str):
         conn, cmd = self._get_connection_and_remove_slot(cmd_str)
@@ -120,105 +161,18 @@ class TurboCluster(Cluster):
                     raise Exception(f"Connect extract slot index from '{cmd}'")
                 self._needs_check[slot] = True
                 return self._connections[slot], module_cmd
+
+        if None in self._connections:
+            # Send to CMM without slot
+            return self._connections[None], cmd
+        # Cluster version < v1.1.0 and legacy are subclasses of Ieee488_2
+        # There are calls to _read in __init__!
         return super(), cmd
 
-    # ------------------------------------------------------------------
-    # Versions <= v0.16 call arm_sequencer start_sequencer and stop_sequencer directly on the original
-    # `_write ` method of ClusterScpi. Thus, all calls will go to CMM. See `ClusterNative._create_module_funcrefs`.
-    # It's better and safer to have all calls to a module go directly to the module
-    # using the same socket and not some calls via another socket.
-    # ------------------------------------------------------------------
-
-    def arm_sequencer(self, slot: int | None = None, sequencer: int | None = None) -> None:
-        """
-        Prepare the indexed sequencer to start by putting it in the armed state.
-        If no sequencer index is given, all sequencers are armed. Any sequencer
-        that was already running is stopped and rearmed. If an invalid sequencer
-        index is given, an error is set in system error.
-
-        Parameters
-        ----------
-        slot : Optional[int]
-            Slot number
-        sequencer : Optional[int]
-            Sequencer index.
-
-        Returns
-        ----------
-
-        Raises
-        ----------
-        RuntimeError
-            An error is reported in system error and debug <= 1.
-            All errors are read from system error and listed in the exception.
-        """
-        if slot is None:
-            slot = ""  # Arm sequencers across all modules
-
-        if sequencer is None:
-            sequencer = ""  # Arm all sequencers within a module
-
-        return self._write(f"SLOT{slot}:SEQuencer{sequencer}:ARM")
-
-    def start_sequencer(self, slot: int | None = None, sequencer: int | None = None) -> None:
-        """
-        Start the indexed sequencer, thereby putting it in the running state.
-        If an invalid sequencer index is given or the indexed sequencer was not
-        yet armed, an error is set in system error. If no sequencer index is
-        given, all armed sequencers are started and any sequencer not in the armed
-        state is ignored. However, if no sequencer index is given and no
-        sequencers are armed, and error is set in system error.
-
-        Parameters
-        ----------
-        slot : Optional[int]
-            Slot number
-        sequencer : Optional[int]
-            Sequencer index.
-
-        Returns
-        ----------
-
-        Raises
-        ----------
-        RuntimeError
-            An error is reported in system error and debug <= 1.
-            All errors are read from system error and listed in the exception.
-        """
-        if slot is None:
-            slot = ""  # Arm sequencers across all modules
-
-        if sequencer is None:
-            sequencer = ""  # Arm all sequencers within a module
-
-        return self._write(f"SLOT{slot}:SEQuencer{sequencer}:START")
-
-    def stop_sequencer(self, slot: int | None = None, sequencer: int | None = None) -> None:
-        """
-        Stop the indexed sequencer, thereby putting it in the stopped state. If
-        an invalid sequencer index is given, an error is set in system error. If
-        no sequencer index is given, all sequencers are stopped.
-
-        Parameters
-        ----------
-        slot : Optional[int]
-            The slot index of the module being referred to.
-        sequencer : Optional[int]
-            Sequencer index.
-
-        Raises
-        ----------
-        RuntimeError
-            An error is reported in system error and debug <= 1.
-            All errors are read from system error and listed in the exception.
-        """
-        if slot is None:
-            slot = ""  # Stop sequencers across all modules
-
-        if sequencer is None:
-            sequencer = ""  # Stop all sequencers within a module
-
-        self._write(f"SLOT{slot}:SEQuencer{sequencer}:STOP")
+    # ----------------------------------------------------------------
+    # NOTE:
+    #     arm_sequencer, start_sequencer, stop_sequencer do not need to be overridden for v0.17+
+    # ----------------------------------------------------------------
 
     # ----------------------------------------------------------------
     # System error is a state per connection. Therefore TurboCluster has added the optional
@@ -261,7 +215,8 @@ class TurboCluster(Cluster):
 
         """
         if slot is None:
-            return super().get_num_system_error()
+            cmm = self._connections.get(None, super())
+            return cmm.get_num_system_error()
         else:
             if not self._needs_check.get(slot, False):
                 return 0
@@ -287,16 +242,18 @@ class TurboCluster(Cluster):
                 slots.remove(slot)
             except Exception:
                 pass
+        cmm = self._connections.get(None, self)
+
         err_count_request = "SYSTem:ERRor:COUNt?"
         get_error = "SYSTem:ERRor:NEXT?"
 
         # write all requests
         for slot in slots:
-            conn = self._connections.get(slot, self)
+            conn = self._connections.get(slot, cmm)
             conn._write(err_count_request)
         # read all responses
         for slot in slots:
-            conn = self._connections.get(slot, self)
+            conn = self._connections.get(slot, cmm)
             # read without writing command.
             response = conn._transport.readline().rstrip()
             num_err = int(response)
@@ -354,34 +311,9 @@ class TurboCluster(Cluster):
     # --------------------------------------------------------------------------------
     # The following methods are added to cache the sequencer configuration and
     # reduce the amount of configuration requests every time a setting is changed.
-    #
-    # The methods explictly call ClusterScpi, because in versions <= v0.16 the
-    # super class (ClusterNative) calls the methods via func_refs.
-    # Calls are mode to `ClusterScpi.method_xxx(self, ...)`, because method invocation on
-    # super() will result in infinite recursion (for versions <= v0.16).
     # --------------------------------------------------------------------------------
 
     def _init_configuration_cache(self):
-        if TurboCluster.use_configuration_cache:
-            # NOTE: A simple override of the methods does not work for versions <= v0.16.
-            #       These versions use Funcs to call the operations on ClusterScpi from
-            #       multiple methods in ClusterNative.
-            attr_names = [
-                "_get_sequencer_config",
-                "_set_sequencer_config",
-                "_get_sequencer_channel_map",
-                "_set_sequencer_channel_map",
-                "_get_pre_distortion_config",
-                "_set_pre_distortion_config",
-                ]
-            mod_handles = self._mod_handles
-            for slot_id in range(1, 21):
-                if slot_id in mod_handles and "func_refs" in mod_handles[slot_id]:
-                    func_refs = self._mod_handles[slot_id]["func_refs"]
-                    for name in attr_names:
-                        if name in func_refs._funcs:
-                            func_refs.register(partial(getattr(self, name), slot_id), name)
-                            # logger.debug(f"Registered {slot_id}: {name}")
         self._clear_cache()
 
     def reset(self):
@@ -425,7 +357,7 @@ class TurboCluster(Cluster):
         """
         if TurboCluster.use_configuration_cache:
             self._channel_map_cache[(slot, sequencer)] = json.dumps(sequencer_channel_map)
-        ClusterScpi._set_sequencer_channel_map(self, slot, sequencer, sequencer_channel_map)
+        super()._set_sequencer_channel_map(slot, sequencer, sequencer_channel_map)
 
     def _get_sequencer_channel_map(self, slot: int, sequencer: int) -> Any:
         """
@@ -461,11 +393,11 @@ class TurboCluster(Cluster):
             except KeyError:
                 logger.info(f"cache miss channel_map {slot}, {sequencer}")
                 pass
-            result = ClusterScpi._get_sequencer_channel_map(self, slot, sequencer)
+            result = super()._get_sequencer_channel_map(slot, sequencer)
             self._channel_map_cache[(slot, sequencer)] = json.dumps(result)
             return result
         else:
-            return ClusterScpi._get_sequencer_channel_map(self, slot, sequencer)
+            return super()._get_sequencer_channel_map(slot, sequencer)
 
     def _set_sequencer_config(
         self, slot: int, sequencer: int, sequencer_config: Any
@@ -498,7 +430,7 @@ class TurboCluster(Cluster):
 
         if TurboCluster.use_configuration_cache:
             self._sequencer_config_cache[(slot, sequencer)] = json.dumps(sequencer_config)
-        ClusterScpi._set_sequencer_config(self, slot, sequencer, sequencer_config)
+        super()._set_sequencer_config(slot, sequencer, sequencer_config)
 
     def _get_sequencer_config(self, slot: int, sequencer: int) -> Any:
         """
@@ -532,11 +464,11 @@ class TurboCluster(Cluster):
             except KeyError:
                 logger.info(f"cache miss sequencer_config {slot}, {sequencer}")
                 pass
-            result = ClusterScpi._get_sequencer_config(self, slot, sequencer)
+            result = super()._get_sequencer_config(slot, sequencer)
             self._sequencer_config_cache[(slot, sequencer)] = json.dumps(result)
             return result
         else:
-            return ClusterScpi._get_sequencer_config(self, slot, sequencer)
+            return super()._get_sequencer_config(slot, sequencer)
 
     def _set_pre_distortion_config(self, slot: int, pre_distortion_config: Any) -> None:
         """
@@ -564,7 +496,7 @@ class TurboCluster(Cluster):
         """
         if TurboCluster.use_configuration_cache:
             self._slot_predistortion_cache[slot] = json.dumps(pre_distortion_config)
-        ClusterScpi._set_pre_distortion_config(self, slot, pre_distortion_config)
+        super()._set_pre_distortion_config(slot, pre_distortion_config)
 
     def _get_pre_distortion_config(self, slot: int) -> Any:
         """
@@ -596,11 +528,11 @@ class TurboCluster(Cluster):
             except KeyError:
                 logger.info(f"cache miss predistortion {slot}")
                 pass
-            result = ClusterScpi._get_pre_distortion_config(self, slot)
+            result = super()._get_pre_distortion_config(slot)
             self._slot_predistortion_cache[slot] = json.dumps(result)
             return result
         else:
-            return ClusterScpi._get_pre_distortion_config(self, slot)
+            return super()._get_pre_distortion_config(slot)
 
 
 def readline(conn) -> str:
@@ -665,3 +597,31 @@ def _parse_sequencer_status(full_status_str: str) -> tuple([list, list, list, li
         log = []
 
     return status, state, info_flag_list, warn_flag_list, err_flag_list, log
+
+
+if not _ieee_connection_defined:
+
+    class Ieee488_2Connection:  # noqa: N801
+        """
+        Connection class to only expose public read/read_bin/write/write_bin methods.
+        """
+
+        def __init__(self, interface: Ieee488_2) -> None:
+            if not isinstance(interface, Ieee488_2):
+                raise Exception("Oops! Incompatible classes in TurboCluster")
+            self._interface = interface
+
+        def read(self, cmd_str: str) -> str:
+            return self._interface._read(cmd_str)
+
+        def read_bin(self, cmd_str: str, flush_line_end: bool = True) -> bytes:
+            return self._interface._read_bin(cmd_str, flush_line_end)
+
+        def write(self, cmd_str: str) -> None:
+            self._interface._write(cmd_str)
+
+        def write_bin(self, cmd_str: str, bin_block: bytes) -> None:
+            self._interface._write_bin(cmd_str, bin_block)
+
+        def flush_line_end(self) -> None:
+            self._interface._flush_line_end()
