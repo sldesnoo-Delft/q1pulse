@@ -452,4 +452,11 @@ output:
 Note: the q1 core has a head start of 200 ns. It starts at t = -200 ns.
 This accounts for the time the real-time executor waits in wait_sync.
 
+## Program dumps (on error)
 
+When the execution of a program fails the program of all sequencers will be written
+to the user directory `~/.q1`. The files in this directory can be opened with
+Q1ProgramBrowser of Q1Simulator.
+
+A dump can also be made manually with `q1asm_dump(cluster)`.
+This retrieves the program from cluster (using qcodes cache) and saves it.
