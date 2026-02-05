@@ -5,8 +5,6 @@ import time
 import traceback
 from collections import defaultdict
 from datetime import datetime
-from pathlib import Path
-from tempfile import TemporaryDirectory
 
 
 from q1pulse.program import Program
@@ -31,21 +29,16 @@ class Q1Instrument:
     # Postpone error checking till the end to save communication overhead.
     # System errors are only reported for SCPI errors. It's higly unlikely to
     # get an error, because everything is already checked in qblox-instruments code.
-    # Note on v0.16: Default cluster behavior is like _i_feel_lucky = True.
+    # Note since v0.16: Default cluster behavior is like _i_feel_lucky = True.
     _i_feel_lucky = True
 
     _exception_on_overload = True
 
     def __init__(self, path=None, add_traceback=True):
         check_qblox_instrument_version()
-        if path:
-            self.path = path
-        else:
-            q1dir = Path.home() / ".q1"
-            q1dir.mkdir(exist_ok=True)
-            self.temp_dir = TemporaryDirectory(dir=q1dir)
-            self.path = self.temp_dir.name
-            logger.info("Instrument upload temp dir: " + self.path) # @@@ Fix temp path
+        self.path = path
+        if path is not None:
+            logger.info("Instrument upload dir: " + path)
         self.root_instruments = set()
         self.modules: dict[str, QbloxModule] = {}
         self.controllers: dict[int, Sequencer] = {}
@@ -88,7 +81,8 @@ class Q1Instrument:
         self.root_instruments.add(root_instrument)
 
     def new_program(self, prog_name):
-        program = Program(path=os.path.join(self.path, prog_name))
+        program_path = os.path.join(self.path, prog_name) if self.path is not None else None
+        program = Program(path=program_path)
         for name, seq in self.controllers.items():
             seq_builder = ControlBuilder(name, seq.enabled_paths,
                                          seq.max_output_voltage,

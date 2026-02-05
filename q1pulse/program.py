@@ -25,7 +25,7 @@ class Program:
     def __init__(self, path=None):
         self.uuid = uuid.uuid4()
         self.sequence_builders = {}
-        self.path = path if path is not None else os.path.join("q1", "_prog")
+        self.path = path
         self.R = Registers(self, local=False)
         self.repetitions = 1
         self._q1asm = {}
@@ -68,8 +68,15 @@ class Program:
             end = time.perf_counter()
             d1 = (end-start)*1000
             start = end
-            filename = self.seq_filename(builder.name) if listing or json else None
-            g.assemble(listing=listing, json_output=json, filename=filename)
+            if listing or json:
+                if self.path is None:
+                    logger.warning("Set Q1Instrument.path or program.path for Q1ASM output to file.")
+                    g.assemble()
+                else:
+                    filename = self.seq_filename(builder.name)
+                    g.assemble(listing=listing, json_output=json, filename=filename)
+            else:
+                g.assemble()
             self._q1asm[builder.name] = g.q1asm
             end = time.perf_counter()
             d2 = (end-start)*1000
