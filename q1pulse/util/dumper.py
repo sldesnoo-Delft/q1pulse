@@ -5,12 +5,26 @@ from datetime import datetime
 from pprint import pprint
 
 import numpy as np
+from qblox_instruments import Cluster
 
 
 logger = logging.getLogger(__name__)
 
 
-def q1asm_dump(cluster, path: str = None, sync_en_only: bool = True):
+def q1asm_dump(cluster: Cluster, path: str | None = None, sync_en_only: bool = True):
+    """Writes cluster configuration including current sequences to disk.
+
+    All data are retrieved from the qcodes cache!
+    This function only works properly if called on the Cluster object
+    that was used to program the cluster.
+
+    Args:
+        cluster: cluster to get data from.
+        path: path to store the program.
+        sync_en_only:
+            If True only save sequences of sequencers with `sync_en() = True`.
+            if False try to save sequences of all sequencers.
+    """
     if path is None:
         path = os.getcwd()
 
@@ -18,7 +32,7 @@ def q1asm_dump(cluster, path: str = None, sync_en_only: bool = True):
     now = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
 
     path = os.path.join(path, f"q1program_{now}")
-    print(f"dumping cluster configuration + Q!ASM to {path}")
+    print(f"dumping cluster configuration + Q1ASM to {path}")
 
     dumper = Q1Dumper(cluster)
     dumper.save_program(path, sync_en_only)
@@ -26,22 +40,24 @@ def q1asm_dump(cluster, path: str = None, sync_en_only: bool = True):
 
 class Q1Dumper:
 
-    def __init__(self, cluster):
+    def __init__(self, cluster: Cluster):
         self._cluster = cluster
 
     def save_program(self, path: str, sync_en_only: bool = True):
-        """Stores program including current settings of the sequence builders,
-        like nco_frequency.
+        """Stores program including current settings of the sequencers.
 
         Args:
-            program: program to save.
             path: path to store the program.
+            sync_en_only:
+                If True only save sequences of sequencers with `sync_en() = True`.
+                if False try to save sequences of all sequencers.
         """
         os.makedirs(path, exist_ok=True)
 
         config = {}
+        cluster = self._cluster
 
-        for slot, module in enumerate(self._cluster.modules, 1):
+        for slot, module in enumerate(cluster.modules, 1):
             if not module.present():
                 continue
             if module.is_qcm_type:
@@ -68,7 +84,9 @@ class Q1Dumper:
                 seq_config = self._get_seq_config(sequencer, module.is_qcm_type, module.is_rf_type)
 
                 builder_config = {
+                    "instrument": cluster.name,
                     "module": module.name,
+                    "slot": module.slot_idx,
                     "seq_nr": seq_num,
                     "seq_type": seq_type,
                     "sync_en": sync_en,
@@ -79,6 +97,14 @@ class Q1Dumper:
 
         with open(os.path.join(path, "q1program.json"), "w", encoding="utf-8") as f:
             json.dump(config, f, indent=2)
+
+        # finally save snapshot. This can fail when communication to cluster is attempted.
+        try:
+            filename = f"snapshot_{cluster.name}.json"
+            with open(os.path.join(path, filename), "w", encoding="utf-8") as f:
+                json.dump(cluster.snapshot(), f, indent=1, separators=(",", ":"))
+        except Exception:
+            logger.error("Failed to save snapshot", exc_info=True)
 
     def _save_sequence(self, sequencer, name, path) -> str:
         q1asm = sequencer.sequence.cache()
