@@ -27,7 +27,7 @@ except ImportError:
 
 from qblox_instruments.ieee488_2 import Ieee488_2, IpTransport
 from qblox_instruments.pnp import resolve
-from q1pulse.util.qblox_version import check_qblox_instrument_version, qblox_version, Version
+from q1pulse.util.qblox_version import check_qblox_instrument_version
 
 from qblox_instruments import (
     SequencerStatus,
