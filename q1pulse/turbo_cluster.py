@@ -4,7 +4,7 @@ import logging
 import re
 from typing import Any
 
-_use_legacy = True
+_use_legacy = False
 
 try:
     # qblox-instruments < v1.1.0
@@ -18,7 +18,6 @@ except ImportError:
     else:
         from qblox_instruments import Cluster
         from qblox_instruments.scpi import Scpi
-        raise Exception("Not tested")
 try:
     from qblox_instruments.native.helpers import Ieee488_2Connection
     _ieee_connection_defined = True
@@ -27,7 +26,7 @@ except ImportError:
 
 from qblox_instruments.ieee488_2 import Ieee488_2, IpTransport
 from qblox_instruments.pnp import resolve
-from q1pulse.util.qblox_version import check_qblox_instrument_version
+from q1pulse.util.qblox_version import check_qblox_instrument_version, qblox_version, Version
 
 from qblox_instruments import (
     SequencerStatus,
@@ -120,14 +119,14 @@ class TurboCluster(Cluster):
         if qblox_version >= Version("1.1.0") and not _use_legacy:
             # qblox-instruments v1.1.0 Cluster has attribute _scpi.
             scpi = self._scpi
-            self._connections[None] = Ieee488_2Connection(super(Scpi, scpi))
+            self._connections[None] = super(Scpi, scpi)
             scpi._write = self._write
             scpi._write_bin = self._write_bin
             scpi._read = self._read
             scpi._read_bin = self._read_bin
         else:
             # Cluster version < v1.1.0 and legacy are subclasses Ieee488_2
-            self._connections[None] = Ieee488_2Connection(super(ClusterScpi, self))
+            self._connections[None] = super(ClusterScpi, self)
 
     def _write(self, cmd_str):
         conn, cmd = self._get_connection_and_remove_slot(cmd_str)
@@ -325,6 +324,13 @@ class TurboCluster(Cluster):
         self._sequencer_config_cache: dict[tuple[int, int], str] = {}
         self._slot_predistortion_cache: dict[int, str] = {}
 
+    def _get_scpi(self):
+        if qblox_version >= Version("1.1.0"):
+            return self._scpi
+        else:
+            return super()
+        
+
     def _set_sequencer_channel_map(
         self, slot: int, sequencer: int, sequencer_channel_map: Any
     ) -> None:
@@ -357,7 +363,7 @@ class TurboCluster(Cluster):
         """
         if TurboCluster.use_configuration_cache:
             self._channel_map_cache[(slot, sequencer)] = json.dumps(sequencer_channel_map)
-        super()._set_sequencer_channel_map(slot, sequencer, sequencer_channel_map)
+        self._get_scpi()._set_sequencer_channel_map(slot, sequencer, sequencer_channel_map)
 
     def _get_sequencer_channel_map(self, slot: int, sequencer: int) -> Any:
         """
@@ -393,11 +399,14 @@ class TurboCluster(Cluster):
             except KeyError:
                 logger.info(f"cache miss channel_map {slot}, {sequencer}")
                 pass
-            result = super()._get_sequencer_channel_map(slot, sequencer)
-            self._channel_map_cache[(slot, sequencer)] = json.dumps(result)
+        
+            result = self._get_scpi()._get_sequencer_channel_map(slot, sequencer)
+            
+            if TurboCluster.use_configuration_cache:
+                self._channel_map_cache[(slot, sequencer)] = json.dumps(result)
             return result
         else:
-            return super()._get_sequencer_channel_map(slot, sequencer)
+            return self._get_scpi()._get_sequencer_channel_map(slot, sequencer)
 
     def _set_sequencer_config(
         self, slot: int, sequencer: int, sequencer_config: Any
@@ -430,7 +439,8 @@ class TurboCluster(Cluster):
 
         if TurboCluster.use_configuration_cache:
             self._sequencer_config_cache[(slot, sequencer)] = json.dumps(sequencer_config)
-        super()._set_sequencer_config(slot, sequencer, sequencer_config)
+            
+        self._get_scpi()._set_sequencer_config(slot, sequencer, sequencer_config)
 
     def _get_sequencer_config(self, slot: int, sequencer: int) -> Any:
         """
@@ -464,11 +474,11 @@ class TurboCluster(Cluster):
             except KeyError:
                 logger.info(f"cache miss sequencer_config {slot}, {sequencer}")
                 pass
-            result = super()._get_sequencer_config(slot, sequencer)
+            result = self._get_scpi()._get_sequencer_config(slot, sequencer)
             self._sequencer_config_cache[(slot, sequencer)] = json.dumps(result)
             return result
         else:
-            return super()._get_sequencer_config(slot, sequencer)
+            return self._get_scpi()._get_sequencer_config(slot, sequencer)
 
     def _set_pre_distortion_config(self, slot: int, pre_distortion_config: Any) -> None:
         """
@@ -496,7 +506,7 @@ class TurboCluster(Cluster):
         """
         if TurboCluster.use_configuration_cache:
             self._slot_predistortion_cache[slot] = json.dumps(pre_distortion_config)
-        super()._set_pre_distortion_config(slot, pre_distortion_config)
+        self._get_scpi()._set_pre_distortion_config(slot, pre_distortion_config)
 
     def _get_pre_distortion_config(self, slot: int) -> Any:
         """
@@ -528,11 +538,11 @@ class TurboCluster(Cluster):
             except KeyError:
                 logger.info(f"cache miss predistortion {slot}")
                 pass
-            result = super()._get_pre_distortion_config(slot)
+            result = self._get_scpi()._get_pre_distortion_config(slot)
             self._slot_predistortion_cache[slot] = json.dumps(result)
             return result
         else:
-            return super()._get_pre_distortion_config(slot)
+            return self._get_scpi()._get_pre_distortion_config(slot)
 
 
 def readline(conn) -> str:
