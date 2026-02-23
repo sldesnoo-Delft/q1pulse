@@ -7,6 +7,8 @@ from pprint import pprint
 import numpy as np
 from qblox_instruments import Cluster
 
+from .reduce_snapshot import reduce_snapshot
+
 
 logger = logging.getLogger(__name__)
 
@@ -73,8 +75,8 @@ class Q1Dumper:
             for seq_num in range(6):
                 sequencer = module.sequencers[seq_num]
                 name = sequencer.label
-                if name == sequencer.name:
-                    name = f"{mod_type} {slot}:{seq_num}"
+                if name == f"sequencer{seq_num}":
+                    name = sequencer.name
                 sync_en = sequencer.sync_en.cache()
                 if sync_en_only and not sync_en:
                     continue
@@ -102,7 +104,8 @@ class Q1Dumper:
         try:
             filename = f"snapshot_{cluster.name}.json"
             with open(os.path.join(path, filename), "w", encoding="utf-8") as f:
-                json.dump(cluster.snapshot(), f, indent=1, separators=(",", ":"))
+                snapshot = reduce_snapshot(cluster.snapshot())
+                json.dump(snapshot, f, indent=1, separators=(",", ":"))
         except Exception:
             logger.error("Failed to save snapshot", exc_info=True)
 
