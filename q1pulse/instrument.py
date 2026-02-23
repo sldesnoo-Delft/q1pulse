@@ -17,6 +17,7 @@ from q1pulse.modules.modules import QcmModule, QrmModule, QbloxModule, Sequencer
 from q1pulse.modules.sequencer_states import translate_seq_status
 from q1pulse.util.delayedkeyboardinterrupt import DelayedKeyboardInterrupt
 from q1pulse.util.qblox_version import check_qblox_instrument_version
+from q1pulse.util.reduce_snapshot import reduce_snapshot
 
 logger = logging.getLogger(__name__)
 
@@ -97,13 +98,14 @@ class Q1Instrument:
 
         return program
 
-    def save_program(self, program: Program, path: str):
+    def save_program(self, program: Program, path: str, save_snapshot: bool = False):
         """Stores program including current settings of the sequence builders,
         like nco_frequency.
 
         Args:
             program: program to save.
             path: path to store the program.
+            save_snapshot: if True save the snapshot of Cluster.
         """
         os.makedirs(path, exist_ok=True)
         config = {}
@@ -124,7 +126,9 @@ class Q1Instrument:
                 seq_type = "readout"
                 if sequencer is None:
                     raise Q1InternalError(f"Sequencer {name} not found in instrument")
+            module = self.modules[sequencer.module_name]
             builder_config = {
+                "instrument": module.root_instrument.name,
                 "module": sequencer.module_name,
                 "seq_nr": sequencer.seq_nr,
                 "seq_type": seq_type,
@@ -134,19 +138,39 @@ class Q1Instrument:
                 "sequence": filename,
                 "duration": builder.end_time if q1asm is not None else None,
                 }
+            for trigger_counter in builder.trigger_counters:
+                address = trigger_counter.trigger.address
+                builder_config[f"trigger{address}_count_threshold"] = trigger_counter.threshold
+                builder_config[f"trigger{address}_threshold_invert"] = trigger_counter.invert
+
             if seq_type == "readout":
                 builder_config["in_channels"] = sequencer.in_channels
+                builder_config["integration_length_acq"] = builder.integration_length_acq
+                builder_config["thresholded_acq_rotation"] = builder.thresholded_acq_rotation
+                builder_config["thresholded_acq_threshold"] = builder.thresholded_acq_threshold
+                if builder.trigger:
+                    builder_config["thresholded_acq_trigger_address"] = builder.trigger.address
+                    builder_config["thresholded_acq_trigger_invert"] = builder.trigger.invert
+
             config[name] = builder_config
         with open(os.path.join(path, "q1program.json"), "w", encoding="utf-8") as f:
             json.dump(config, f, indent=2)
+
+        try:
+            for instrument in self.root_instruments:
+                filename = f"snapshot_{instrument.name}.json"
+                with open(os.path.join(path, filename), "w", encoding="utf-8") as f:
+                    snapshot = reduce_snapshot(instrument.snapshot())
+                    json.dump(snapshot, f, indent=1, separators=(",", ":"))
+        except Exception:
+            logger.info("Failed to save snapshot", exc_info=True)
 
     def run_program(self, program):
         self.start_program(program)
         self.wait_stopped()
 
     def load_program(self, program):
-        # @@@ check for background upload
-        # @@@ else stop if not yet stopped.
+        # TODO check for background upload else stop if not yet stopped.
 
         t_start = time.perf_counter()
 
@@ -370,7 +394,7 @@ class Q1Instrument:
                 if exc is not None:
                     traceback.print_exception(exc, file=fp)
 
-        self.save_program(self._last_started, path)
+        self.save_program(self._last_started, path, save_snapshot=True)
 
     def _disable_cluster_debug(self):
         if not self._cluster_debug_disabled and Q1Instrument._i_feel_lucky:
