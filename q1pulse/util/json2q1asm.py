@@ -68,11 +68,3 @@ def _pprint_q1asm_prog(program: str, f):
             label = ""
         line.strip(" ")
         f.write(f"{label:10} {line:40} #{lineno:04d}\n")
-
-
-if __name__ == "__main__":
-    path = "/Users/sdesnoo/Projects/_Researchers/Nicola/q1progam_20260218_140425_823577_(0, 0, 0)/q1seq_SD1.json"
-    path = "/Users/sdesnoo/Projects/_Researchers/Nicola/q1progam_20260218_140425_823577_(0, 0, 0)/q1seq_SD2.json"
-    path = "/Users/sdesnoo/Projects/_Researchers/Nicola/q1progam_20260218_140626_625933_(0,)/q1seq_SD1.json"
-
-    json2q1asm(path)
