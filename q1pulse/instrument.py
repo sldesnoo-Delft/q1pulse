@@ -255,6 +255,7 @@ class Q1Instrument:
                 duration = time.perf_counter() - t_start_seq
                 logger.debug(f"Configured {name} in {duration*1000.0:3.1f} ms")
 
+        module_scope = {}
         for name, seq in self.readouts.items():
             t_start_seq = time.perf_counter()
             module = self.modules[seq.module_name]
@@ -267,6 +268,13 @@ class Q1Instrument:
                 module.integration_length_acq(seq.seq_nr, int(readout.integration_length_acq))
                 module.nco_prop_delay(seq.seq_nr, int(readout.nco_prop_delay))
                 module.delete_acquisition_data(seq.seq_nr)
+                scope_mode = readout.scope_mode
+                if scope_mode != 'off':
+                    if module.name in module_scope:
+                        raise Exception(
+                            f"Only 1 scope can be configured per QRM. Got {name} and {module_scope[module.name]}.")
+                    module_scope[module.name] = name
+                    module.set_scope_acq(seq.seq_nr, scope_mode == "average")
                 trigger = readout.trigger
                 if trigger is not None:
                     module.set_trigger(seq.seq_nr, trigger.address, trigger.invert)
@@ -521,13 +529,13 @@ class Q1Instrument:
             return None
         return acq_data["acquisition"]["bins"]
 
-    def get_scope_data(self, sequencer_name: str, acq_name: str):
-        acq_data = self._get_acquisitions(sequencer_name, acq_name)
+    def get_scope_data(self, sequencer_name: str):
+        acq_data = self._get_acquisitions(sequencer_name, "_scope", store_scope=True)
         if acq_data is None:
             return None
         return acq_data["acquisition"]["scope"]
 
-    def _get_acquisitions(self, sequencer_name, acq_name):
+    def _get_acquisitions(self, sequencer_name, acq_name, store_scope=False):
         seq = self.readouts[sequencer_name]
         q1asm = self._loaded_q1asm[sequencer_name]
         if q1asm is None or len(q1asm["acquisitions"]) == 0:
@@ -544,12 +552,18 @@ class Q1Instrument:
             finished = module.get_acquisition_status(seq.seq_nr, timeout)
             if not finished:
                 logger.error("Acquisition not finished (according to QRM)")
+        if store_scope:
+            module.store_scope_data(seq.seq_nr, acq_name)
         with DelayedKeyboardInterrupt("get_acquisitions"):
             return module.get_acquisitions(seq.seq_nr, acq_name)
 
     def get_input_ranges(self, sequencer_name):
         """ Returns input range for both channels of sequencer.
         Value is in Vpp.
+
+        NOTE:
+            When demodulation is enabled the amplitude is internally divided by 
+            sqrt(2).
         """
         seq = self.readouts[sequencer_name]
         module = self.modules[seq.module_name]

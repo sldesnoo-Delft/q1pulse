@@ -23,6 +23,7 @@ class ReadoutBuilder(ControlBuilder):
         self._ttl_acq_input_select = None
         self._ttl_acq_auto_bin_incr_en = None
         self._ttl_acq_threshold = None
+        self._scope_mode = "off"
 
     @property
     def thresholded_acq_rotation(self):
@@ -87,6 +88,16 @@ class ReadoutBuilder(ControlBuilder):
     @ttl_acq_threshold.setter
     def ttl_acq_threshold(self, threshold):
         self._ttl_acq_threshold = threshold
+
+    @property
+    def scope_mode(self):
+        """Scope mode: 'off', 'single', or 'average'"""
+        return self._scope_mode
+
+    @scope_mode.setter
+    def scope_mode(self, value: str):
+        """Scope mode: 'off', 'single', or 'average'"""
+        self._scope_mode = value
 
     def add_acquisition_bins(self, name, num_bins):
         return self._acquisitions.add_acquisition(name, num_bins)
@@ -261,3 +272,8 @@ class ReadoutBuilder(ControlBuilder):
         if isinstance(weight, AcquisitionWeight):
             return weight
         raise Q1TypeError(f'Illegal type {weight}')
+
+    def compile(self, generator, annotate=False):
+        if self.scope_mode != "off":
+            generator.add_acquisition(Acquisition("_scope", 1))
+        super().compile(generator, annotate=annotate)
