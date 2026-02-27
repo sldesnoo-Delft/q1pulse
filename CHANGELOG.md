@@ -1,6 +1,19 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+## \[1.1.1] - 2025-02-27
+
+- Support qblox-instruments 1.1.1
+- Added scope support.
+- Added `q1pulse.util.q1asm_dump` to retrieve program from cluster (using qcodes cache).
+- Added `q1pulse.util.replay_program` to load a (dumped) program into cluster.
+- Added `q1pulse.util.json2q1asm` to convert .json file to better readable (Python syntax) .q1asm file.
+- Dump cluster program in directory `~/.q1` when error occurs.
+- Dropped support for qblox-instruments < 0.17.0
+- Removed creation of temp directories. Compilation output path must be set explicitly.
+
+## \[1.1.0] - Failed and deleted.
+
 ## \[1.0.5] - 2026-01-12
 
 - Fixed sequencer name in status/error reporting

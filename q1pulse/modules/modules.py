@@ -195,10 +195,19 @@ class QbloxModule:
                 return
         except Exception:
             logger.debug(f"No cache value for {full_name}")
-        result = param(value)
+        param(value)
         if QbloxModule.verbose:
             logger.info(f"{full_name}={value}")
-        return result
+
+    def _mset(self, name, value, cache=True):
+        """Set module parameter using cache"""
+        param = self.pulsar.parameters[name]
+        try:
+            if cache and param.cache.valid and param.cache() == value:
+                return
+        except Exception:
+            pass
+        param(value)
 
     def invalidate_cache(self, seq_nr, param_name):
         seq = getattr(self.pulsar, f"sequencer{seq_nr}")
@@ -435,8 +444,12 @@ class QrmModule(QbloxModule):
         else:
             return self.pulsar.get_acquisitions(seq_nr)[acq_name]
 
-    def get_scope_data(self, seq_nr: int, acq_name: str):
-        if qblox_version >= Version("0.18"):
-            return self.pulsar.get_acquisitions(seq_nr, as_numpy=True)[acq_name]["acquisition"]["scope"]
-        else:
-            return self.pulsar.get_acquisitions(seq_nr)[acq_name]["acquisition"]["scope"]
+    def set_scope_acq(self, seq_nr: int, average: bool = False):
+        self._mset("scope_acq_sequencer_select", seq_nr)
+        self._mset("scope_acq_trigger_mode_path0", "sequencer")
+        self._mset("scope_acq_trigger_mode_path1", "sequencer")
+        self._mset("scope_acq_avg_mode_en_path0", average)
+        self._mset("scope_acq_avg_mode_en_path1", average)
+
+    def store_scope_data(self, seq_nr: int, acq_name: str):
+        self.pulsar.store_scope_acquisition(seq_nr, acq_name)

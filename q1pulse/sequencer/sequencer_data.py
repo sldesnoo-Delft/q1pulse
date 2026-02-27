@@ -84,7 +84,7 @@ class AcquisitionCollection:
 
     def add_acquisition(self, name, num_bins):
         if name in self._acquisitions:
-            acquisition = self._bins[name]
+            acquisition = self._acquisitions[name]
             if acquisition.num_bins != num_bins:
                 raise Exception(f"Inconsistent number of bins in acquisition {name}: "
                                 f"{num_bins} != {acquisition.num_bins}")

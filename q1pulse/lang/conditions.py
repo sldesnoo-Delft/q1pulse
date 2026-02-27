@@ -127,7 +127,7 @@ class ConditionalBlockStatement(MultiBranchStatement):
 
     def add_branch(self, branch_sequence):
         operator = branch_sequence.operator
-        if branch_sequence in [branch.operator for branch in self.branches]:
+        if operator in [branch.operator for branch in self.branches]:
             raise Q1SyntaxError(f'Duplicate operator {operator.name}')
         self.branches.append(branch_sequence)
         self._check_operators()
@@ -194,6 +194,7 @@ class ConditionalBlockStatement(MultiBranchStatement):
         for counter in self.counters:
             mask |= 1 << (counter.address-1)
         generator.enter_conditional(self.time)
+        # TODO: optimize branches. Minimize extra time at end. Check fit at start.
         for branch in self.branches:
             generator.set_condition(mask, branch.operator.value)
             branch.compile(generator, annotate=False)  # TODO: move annotate flag to generator.

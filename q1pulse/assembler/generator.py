@@ -8,6 +8,7 @@ from functools import wraps
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 
+from q1pulse.sequencer.sequencer_data import Acquisition
 from .generator_data import GeneratorData
 from .instruction_queue import InstructionQueue, Instruction, PendingUpdate, MIN_WAIT, CLOCK_PERIOD
 from .registers import SequencerRegisters
@@ -756,6 +757,9 @@ class Q1asmGenerator(InstructionQueue, GeneratorBase):
             line_label = None
             lines += [line]
         return lines
+
+    def add_acquisition(self, acquisition: Acquisition):
+        self._data.translate_acquisition(acquisition)
 
     def assemble(self, listing=False, json_output=False, filename=None):
         if listing:

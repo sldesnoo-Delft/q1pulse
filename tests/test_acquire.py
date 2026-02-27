@@ -69,7 +69,6 @@ instrument.run_program(p)
 
 plot_output([qcm0, qrm1])
 
-# @@@ program should return data.
 data_n = instrument.get_acquisition_bins('R1', 'non-weighed')
 data_w = instrument.get_acquisition_bins('R1', 'weighed')
 
