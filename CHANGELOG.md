@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
-## \[1.1.0] - 2025-02-27
+## \[1.1.1] - 2025-02-27
 
 - Support qblox-instruments 1.1.1
 - Added scope support.
@@ -11,6 +11,8 @@ All notable changes to Q1Pulse will be documented in this file.
 - Dump cluster program in directory `~/.q1` when error occurs.
 - Dropped support for qblox-instruments < 0.17.0
 - Removed creation of temp directories. Compilation output path must be set explicitly.
+
+## \[1.1.0] - Failed and deleted.
 
 ## \[1.0.5] - 2026-01-12
 
