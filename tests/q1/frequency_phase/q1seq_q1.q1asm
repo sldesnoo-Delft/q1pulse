@@ -1,0 +1,47 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           0,R0       # L0001 R0: _zero
+           wait_sync      100        # L0002 t=0
+# --START-- (t=0) 
+_start:    reset_ph                  # L0003 @ 0
+# awg_offset = 1.0, None t=0 
+           set_awg_offs   32767,0    # L0004 @ 0
+# set_freq 10000000.0 t=0 
+           set_freq       40000000   # L0005 @ 0
+           upd_param      100        # L0006 t=0
+# phase_delta 0.5 t=100 
+           set_ph_delta   250000000  # L0007 @ 100
+           upd_param      100        # L0008 t=100
+# awg_offset = 0.0, None t=200 
+           set_awg_offs   0,0        # L0009 @ 200
+# phase_delta -0.5 t=200 
+           set_ph_delta   750000000  # L0010 @ 200
+           upd_param      100        # L0011 t=200
+# set_phase 0.0 t=300 
+           set_ph         0          # L0012 @ 300
+# awg_offset = 1.0, None t=300 
+# ------:  set_awg_offs   32767,0    # @ 300 = overwritten =
+# awg_offset = 1.0, None t=300 
+# -- Overwrites set_awg_offs at 300 -- 
+           set_awg_offs   32767,0    # L0013 @ 300
+# set_freq -10000000.0 t=300 
+           set_freq       -40000000  # L0014 @ 300
+           upd_param      100        # L0015 t=300
+# phase_delta 0.5 t=400 
+           set_ph_delta   250000000  # L0016 @ 400
+           upd_param      100        # L0017 t=400
+# awg_offset = 0.0, None t=500 
+           set_awg_offs   0,0        # L0018 @ 500
+           upd_param      20         # L0019 t=500
+# --END-- 
+           stop                      # L0020 
+"""
+
