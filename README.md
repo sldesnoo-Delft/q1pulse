@@ -59,24 +59,24 @@ This simple program shows the use of program object and sequence objects.
     qcm1 = cluster.module1
     qrm2 = cluster.module2
 
-    instrument = Q1Instrument('cluster1')
+    instrument = Q1Instrument("cluster1")
     instrument.add_qcm(qcm1)
     instrument.add_qrm(qrm2)
     # create named control and readout channels
-    instrument.add_control('P1', qcm1.name, [0])
-    instrument.add_control('P2', qcm1.name, [1])
-    instrument.add_readout('R1', qrm2.name, [], in_channels=[0,1])
+    instrument.add_control("P1", qcm1.name, [0])
+    instrument.add_control("P2", qcm1.name, [1])
+    instrument.add_readout("R1", qrm2.name, [], in_channels=[0,1])
 
-    p = instrument.new_program('ramp')
+    p = instrument.new_program("ramp")
 
     # sequencer P1
     P1 = p.P1
     # sequencer P2 using indexer
-    P2 = p['P2']
+    P2 = p["P2"]
     # sequencer R1 (readout)
     R1 = p.R1
 
-    R1.add_acquisition_bins('default', 100)
+    R1.add_acquisition_bins("default", 100)
     # 60 ns acquisition
     R1.integration_length_acq = 60
 
@@ -98,7 +98,7 @@ This simple program shows the use of program object and sequence objects.
         P1.block_pulse(40, -0.1)
         # ramp from 0.05 to 0.4 in 60 ns. Start 20 ns after begin of parallel section
         P2.ramp(60, 0.05, 0.40, t_offset=20)
-        R1.acquire('default', 'increment')
+        R1.acquire("default", "increment")
         p.wait(100)
 
     p.repetitions = 100
@@ -106,7 +106,7 @@ This simple program shows the use of program object and sequence objects.
 
     instrument.run_program(p)
 
-    data = instrument.get_acquisition_bins('R1', 'default')
+    data = instrument.get_acquisition_bins("R1", "default")
 ```
 
 ### Output channels and sequencer instructions
@@ -137,25 +137,25 @@ For every sequencer Q1Instrument configures:
     instrument.add_qcm(qcm0)
     instrument.add_qrm(qrm1)
     # add sequencers with output channels
-    instrument.add_control('q1', qcm0.name, \[0,1])
-    instrument.add_control('P1', qcm0.name, \[2])
-    instrument.add_control('P2', qcm0.name, \[3])
-    instrument.add_readout('R1', qrm1.name, \[1])
+    instrument.add_control("q1", qcm0.name, \[0,1])
+    instrument.add_control("P1", qcm0.name, \[2])
+    instrument.add_control("P2", qcm0.name, \[3])
+    instrument.add_readout("R1", qrm1.name, \[1])
 
-    p = instrument.new_program('my_q1_program')
+    p = instrument.new_program("my_q1_program")
     ...
 
     instrument.start_program(p)
     instrument.wait_stopped()
 
     # input ranges in Vpp
-    in_range = instrument.get_input_ranges('R1')
+    in_range = instrument.get_input_ranges("R1")
 
-    data = instrument.get_acquisition_bins('R1', 'default')
+    data = instrument.get_acquisition_bins("R1", "default")
 
     # Get data in Volt
-    path0 = np.require(bin_data['integration']['path0'], dtype=float) / (t_integration*in_range[0]/2)
-    path1 = np.require(bin_data['integration']['path1'], dtype=float) / (t_integration*in_range[1]/2)
+    path0 = np.require(bin_data["integration"]["path0"], dtype=float) / (t_integration*in_range[0]/2)
+    path1 = np.require(bin_data["integration"]["path1"], dtype=float) / (t_integration*in_range[1]/2)
 
 ```
 
@@ -248,20 +248,20 @@ Where needed and as far as possible the compiler inserts additional Q1ASM instru
 signed int operations.
 
 ### Expressions
-The following Python operations are supported: `+`, `-`, `<<`, `>>` and bitwise `&`, `|`, `~`.
+The following Python operations are supported: `+`, `-`, `<<`, `>>`, `*` and bitwise `&`, `|`, `~`.
 Evaluation order is determined by the Python operator rules.
-The (unsigned) logical shift right is available as function `lsr()`
+The (unsigned) logical shift right is available as function `lsr(lhs, rhs)` and method `reg.lsr(rhs)`.
 
 Notes:
 - The shift right operator does a **signed** arithmetic shift right, just like Python does.
-  The signed shift is emulated.
+  (For Q1ASM ISA v1.0 (FW \< v3.0) the signed shift is emulated).
 - Python has no logical shift right. The function `lsr` is added for this purpose.
 - There is no overflow checking on integer and fixed point operations.
   So, 1.0 + 0.5 gives -0.5.
+- Multiplication is only supported for Q1ASM ISA v2.0.
 
-Multiplication and division operators are not implemented, because the emulation with
-Q1ASM would take too long to be practical. The emulated multiplication of two 32-bit values
-would take more than 1 microsecond.
+Division operators are not implemented, because the emulation with
+Q1ASM would take too long to be practical.
 
 ### Example
 
@@ -289,6 +289,57 @@ would take more than 1 microsecond.
     p.wait(p.R.c + 10)
     P1.block_pulse(p.R.d, P1.Rs.amplitude)
 ```
+
+## Program parameters / externally visible variables
+
+Sequencer registers can be read and written via `qblox-instruments` with Qblox firmware 3.0 and later.
+When a register is a program is declared with `IntVariable` or `FloatVariable` then this variable is
+externally visible. It can be set before and between program executions. The variables can also
+be read after program execution.
+
+An intial value can be assigned to a variable. This initial value can have 3 different scopes:
+- init_scope "load": The initial value is set when the program is loaded and can be changed before
+program start.
+- init_scope "start": The initial value is set automatically when the program is started.
+Setting the variable with `set_variables` has no effect. A variable with init scope "start" can be used
+to keep the variable value between sequence iterations. The variable can be read after the execution
+of the program.
+- init_scope "repeat_loop": The initial value is set for each iteration of the sequence. The variable
+can be read after execution of the program.
+
+If no initial value is specified, then the variable should be set before program execution,
+otherwise it's value is undefined.
+
+Notes:
+- Assigning a value to a program variable sets the same value for all sequencers.
+- Reading the variables return the value per sequencers.
+
+### Example
+```
+p = instrument.new_program("variables")
+
+p1 = p.P1
+
+p.R.a = IntVariable(init_scope="load", initial_value=10)  # Name is "a"
+p.R.b = IntVariable()
+p.R.c = IntVariable()
+
+# floating point variable
+p.R.x = FloatVariable(init_scope="load", initial_value=0.0)
+p1.Rs.f = FloatVariable()  # Name is "f"
+
+...
+
+instrument.set_variables({
+    "b": -2,
+    "f": 0.0,
+    })
+instrument.start_program(p)
+instrument.wait_stopped()
+pprint(instrument.get_variables())
+```
+
+
 ## Loops
 Loops can be created on program level and will be executed on all sequences in parallel to
 ensure synchronized execution of all sequences.
@@ -303,6 +354,7 @@ The loops should be used with a `with` statement. The statements return a global
 be used as such.
 
 ### Example
+
 ```python
     # initialize, varying wait, readout.
     with p.loop_range(100, 1000, 10) as t_wait:
@@ -367,22 +419,22 @@ that take 4 ns to evaluate.
 ### Example
 
 ```python
-    p = instrument.new_program('feedback')
+    p = instrument.new_program("feedback")
     p.repetitions = 2
 
-    trigger1 = p.configure_trigger('R1')
+    trigger1 = p.configure_trigger("R1")
     counter1 = p.add_trigger_counter(trigger1)
 
     P1 = p.P1
     R1 = p.R1
 
     n_acq = p.repetitions
-    R1.add_acquisition_bins('measurements', n_acq)
+    R1.add_acquisition_bins("measurements", n_acq)
     R1.integration_length_acq = 100
     R1.thresholded_acq_threshold = 0.1
 
     # program
-    R1.acquire('measurements')
+    R1.acquire("measurements")
     P1.latch_reset()
     p.wait(4)
     P1.latch_enable(\[counter1])
@@ -413,14 +465,14 @@ A boolean `ignore_acq_binning_done` can be set to ignore this flag.
 ```Python
 instrument.ignore_acq_binning_done = True
 
-p = instrument.new_program('acquire_ttl')
+p = instrument.new_program("acquire_ttl")
 p.repetitions = 6
 
 R1 = p.R1
 
 N = 5
 n_acq = max(N, p.repetitions)
-R1.add_acquisition_bins('ttl', n_acq*N)
+R1.add_acquisition_bins("ttl", n_acq*N)
 R1.ttl_acq_input_select = 0
 R1.ttl_acq_auto_bin_incr_en = False
 R1.ttl_acq_threshold = 0.20 / 0.5  # Threshold at 220 mV; input range QRM (R1): +/- 0.5 V (gain = 0 dB)
@@ -440,7 +492,7 @@ The log instruction is added in a comment line and will be ignored by the Pulsar
 
 ```python
     with p.loop_array([0.1, -0.2, 0.3, -0.4, 0.5, -0.6, 0.7]) as v:
-        P2.log('amplitude', v, time=True)
+        P2.log("amplitude", v, time=True)
         P2.block_pulse(80, v)
 ```
 output:
@@ -460,3 +512,5 @@ Q1ProgramBrowser of Q1Simulator.
 
 A dump can also be made manually with `q1asm_dump(cluster)`.
 This retrieves the program from cluster (using qcodes cache) and saves it.
+
+## TODO Document utilities.

@@ -1,7 +1,14 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
-## \[1.1.1] - 2025-02-27
+# \[1.2.0] - 2026-@@@@@ NOT RELEASED
+
+- Support qblox-instruments v1.2.1 and firmware 3.0.
+- Implemented Q1ASM ISA v2.0
+- Added program variables using `instrument.set_registers()`, `instrument.get_registers`.
+
+
+## \[1.1.1] - 2026-02-27
 
 - Support qblox-instruments 1.1.1
 - Added scope support.
