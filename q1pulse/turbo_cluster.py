@@ -4,20 +4,14 @@ import logging
 import re
 from typing import Any
 
-_use_legacy = False
-
 try:
     # qblox-instruments < v1.1.0
     from qblox_instruments.scpi import Cluster as ClusterScpi
     from qblox_instruments import Cluster
 except ImportError:
     # Qblox-instruments v1.1+
-    if _use_legacy:
-        from qblox_instruments.native import ClusterLegacy as Cluster
-        from qblox_instruments.scpi.layers.cluster_mm_1_0 import Cluster as ClusterScpi
-    else:
-        from qblox_instruments import Cluster
-        from qblox_instruments.scpi import Scpi
+    from qblox_instruments import Cluster
+    from qblox_instruments.scpi import Scpi
 try:
     from qblox_instruments.native.helpers import Ieee488_2Connection
     _ieee_connection_defined = True
@@ -110,13 +104,12 @@ class TurboCluster(Cluster):
         for slot in range(1, 21):
             module = self.modules[slot-1]
             if module.present():
-                for seq_nr in range(6):
-                    seq = module.sequencers[seq_nr]
+                for seq in module.sequencers:
                     # remove slow validators
                     seq.sequence._vals = []
 
     def _override_transport_calls(self):
-        if qblox_version >= Version("1.1.0") and not _use_legacy:
+        if qblox_version >= Version("1.1.0"):
             # qblox-instruments v1.1.0 Cluster has attribute _scpi.
             scpi = self._scpi
             self._connections[None] = super(Scpi, scpi)
@@ -302,7 +295,10 @@ class TurboCluster(Cluster):
 
             for sequencer in seq_nums:
                 status_str = filereader.readline()
-                status = _convert_sequencer_status(status_str)
+                if qblox_version < Version("1.2.0"):
+                    status = _convert_sequencer_status(status_str)
+                else:
+                    status = SequencerStatus.from_scpi_str(status_str)
                 results.append((slot, sequencer, status))
             filereader.close()
         return results
@@ -329,7 +325,6 @@ class TurboCluster(Cluster):
             return self._scpi
         else:
             return super()
-        
 
     def _set_sequencer_channel_map(
         self, slot: int, sequencer: int, sequencer_channel_map: Any
@@ -399,9 +394,9 @@ class TurboCluster(Cluster):
             except KeyError:
                 logger.info(f"cache miss channel_map {slot}, {sequencer}")
                 pass
-        
+
             result = self._get_scpi()._get_sequencer_channel_map(slot, sequencer)
-            
+
             if TurboCluster.use_configuration_cache:
                 self._channel_map_cache[(slot, sequencer)] = json.dumps(result)
             return result
@@ -439,7 +434,7 @@ class TurboCluster(Cluster):
 
         if TurboCluster.use_configuration_cache:
             self._sequencer_config_cache[(slot, sequencer)] = json.dumps(sequencer_config)
-            
+
         self._get_scpi()._set_sequencer_config(slot, sequencer, sequencer_config)
 
     def _get_sequencer_config(self, slot: int, sequencer: int) -> Any:
@@ -565,49 +560,48 @@ def readline(conn) -> str:
     return buffer.getvalue().decode().rstrip()
 
 
-def _convert_sequencer_status(state_str: str):
-    status, state, info_flags, warn_flags, err_flags, log = _parse_sequencer_status(state_str)
+if qblox_version < Version("1.2.0"):
+    def _convert_sequencer_status(state_str: str):
+        status, state, info_flags, warn_flags, err_flags, log = _parse_sequencer_status(state_str)
 
-    state_tuple = SequencerStatus(
-        SequencerStatuses[status],
-        SequencerStates[state],
-        [SequencerStatusFlags[flag] for flag in info_flags],
-        [SequencerStatusFlags[flag] for flag in warn_flags],
-        [SequencerStatusFlags[flag] for flag in err_flags],
-        log,
-    )
-    return state_tuple
+        state_tuple = SequencerStatus(
+            SequencerStatuses[status],
+            SequencerStates[state],
+            [SequencerStatusFlags[flag] for flag in info_flags],
+            [SequencerStatusFlags[flag] for flag in warn_flags],
+            [SequencerStatusFlags[flag] for flag in err_flags],
+            log,
+        )
+        return state_tuple
 
+    def _parse_sequencer_status(full_status_str: str) -> tuple[str, str, list, list, list, list]:
+        full_status_list = re.sub(" |-", "_", full_status_str).split(";")
 
-def _parse_sequencer_status(full_status_str: str) -> tuple([list, list, list, list]):
-    full_status_list = re.sub(" |-", "_", full_status_str).split(";")
+        # STATUS;STATE;INFO_FLAGS;WARN_FLAGS;ERR_FLAGS;LOG
+        status = full_status_list[0]  # They are always present
+        state = full_status_list[1]  # They are always present
 
-    # STATUS;STATE;INFO_FLAGS;WARN_FLAGS;ERR_FLAGS;LOG
-    status = full_status_list[0]  # They are always present
-    state = full_status_list[1]  # They are always present
+        if full_status_list[2] != "":
+            info_flag_list = full_status_list[2].split(",")[:-1]
+        else:
+            info_flag_list = []
 
-    if full_status_list[2] != "":
-        info_flag_list = full_status_list[2].split(",")[:-1]
-    else:
-        info_flag_list = []
+        if full_status_list[3] != "":
+            warn_flag_list = full_status_list[3].split(",")[:-1]
+        else:
+            warn_flag_list = []
 
-    if full_status_list[3] != "":
-        warn_flag_list = full_status_list[3].split(",")[:-1]
-    else:
-        warn_flag_list = []
+        if full_status_list[4] != "":
+            err_flag_list = full_status_list[4].split(",")[:-1]
+        else:
+            err_flag_list = []
 
-    if full_status_list[4] != "":
-        err_flag_list = full_status_list[4].split(",")[:-1]
-    else:
-        err_flag_list = []
+        if full_status_list[5] != "":
+            log = full_status_list[5]
+        else:
+            log = []
 
-    if full_status_list[5] != "":
-        log = full_status_list[5]
-    else:
-        log = []
-
-    return status, state, info_flag_list, warn_flag_list, err_flag_list, log
-
+        return status, state, info_flag_list, warn_flag_list, err_flag_list, log
 
 if not _ieee_connection_defined:
 
