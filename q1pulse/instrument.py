@@ -62,10 +62,11 @@ class Q1Instrument:
         self.modules[module.name] = QrmModule(module)
         self._add_root_instrument(module.root_instrument)
 
-    def add_control(self, name, module_name, channels, nco_frequency=None):
+    def add_control(self, name, module_name, channels, nco_frequency=None, real_mode: bool = False):
         sequencer = self.modules[module_name].get_sequencer(channels)
         sequencer.nco_frequency = nco_frequency
         sequencer.label = name
+        sequencer.real_mode = real_mode
         self.controllers[name] = sequencer
 
     def add_readout(self, name, module_name, out_channels=[],
@@ -137,6 +138,7 @@ class Q1Instrument:
                 "seq_type": seq_type,
                 "out_channels": sequencer.channels,
                 "nco": builder.nco_frequency,
+                "real_mode": sequencer.real_mode,
                 "paths": builder.enabled_paths,
                 "sequence": filename,
                 "duration": builder.end_time if q1asm is not None else None,
@@ -351,6 +353,7 @@ class Q1Instrument:
                 module.enable_seq(seq)
                 prog_seq = program[name]
                 module.set_nco(seq.seq_nr, prog_seq.nco_frequency)
+                module.set_real_mode(seq.seq_nr, seq.real_mode)
                 if prog_seq.modifies_frequency:
                     module.invalidate_cache(seq.seq_nr, "nco_freq")
                 if prog_seq.mixer_gain_ratio is not None:

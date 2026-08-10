@@ -208,6 +208,7 @@ Composite instructions:
 - block_pulse
 - shaped_pulse
 - ramp: creates ramp on 1 output (2)
+- ramp_2paths: creates ramps on 2 paths (a.o. useful for sequencer real mode)
 - chirp: a linear sweep of the frequency (using IQ modulation)
 
 Notes:
@@ -310,12 +311,21 @@ can be read after execution of the program.
 If no initial value is specified, then the variable should be set before program execution,
 otherwise it's value is undefined.
 
+The `name` of the variable in `set_registers` and `get_registers` is the name used in the program:
+```Python
+p.q1.Rs.freq_q1 = IntVariable()  # Name is "freq_q1"
+...
+instrument.set_variables({
+    "freq_q1": 123_456_789,  # Hz
+    }
+```
+
 Notes:
 - Assigning a value to a program variable sets the same value for all sequencers.
 - Reading the variables return the value per sequencers.
 
 ### Example
-```
+```Python
 p = instrument.new_program("variables")
 
 p1 = p.P1
@@ -483,6 +493,21 @@ bin_index = 0 if R1.ttl_acq_auto_bin_incr_en else "increment"
 R1.acquire_ttl_interval("ttl", bin_index, 500, t_offset=160)
 
 p.wait(2000)
+```
+
+## Sequencer real mode
+
+Sequencer real mode modules path 0 of the sequencer with the NCO and then adds path 1.
+The result is output "I" of the sequencer.
+
+Sequencer real mode can be used on a control sequencer with the argument `real_mode=True`.
+Note that ramps on the real mode sequencer should be created with `ramp_2paths`, otherwise only
+path 0, the modulated path, is used.
+
+```Python
+instrument.add_control('P1', qcm0.name, [0], nco_frequency=50e6, real_mode=True)
+
+P1.ramp_2paths(40, v_start0=0.0, v_end0=0.0, v_start1=0.0, v_end1=0.25)
 ```
 
 ## Logging with Q1Simulator

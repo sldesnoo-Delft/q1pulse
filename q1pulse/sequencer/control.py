@@ -172,115 +172,206 @@ class ControlBuilder(SequenceBuilder):
             self.wait(duration)
 
     def ramp(self, duration, v_start, v_end, v_after=0.0, t_offset=0):
+        self._ramp(duration, v_start, v_end, None, None, v_after0=v_after, v_after1=None, t_offset=t_offset)
+
+    def ramp_2paths(self, duration, v_start0, v_end0, v_start1, v_end1, v_after0=0.0, v_after1=0.0, t_offset=0):
+        self._ramp(duration, v_start0, v_end0, v_start1, v_end1,
+                   v_after0=v_after0, v_after1=v_after1, t_offset=t_offset)
+
+    def _ramp(self, duration, v_start0, v_end0, v_start1, v_end1, v_after0, v_after1, t_offset):
         if isinstance(duration, (Register, Expression)):
             raise Q1TypeError('Ramp duration cannot be a variable or expression; '
                               'Unroll loop using Python for-loop.')
-
+        two_paths = v_start1 is not None
         ramp_loop_time = 100
-        self.add_comment(f'ramp({duration}, {v_start}, {v_end})')
+        if two_paths:
+            self.add_comment(f'ramp_2paths({duration}, {v_start0}, {v_end0}, {v_start1}, {v_end1})')
+        else:
+            self.add_comment(f'ramp({duration}, {v_start0}, {v_end0})')
         with self._local_timeline(t_offset=t_offset, duration=duration):
             if duration <= ramp_loop_time:
                 # w_ramp is a wave from 0 to 1.0
                 w_ramp = self._waves.get_ramp(duration)
-                self.set_gain(v_end - v_start)
-                self.set_offset(v_start)
-                self.play(w_ramp)
+                if not two_paths:
+                    self.set_gain(v_end0 - v_start0)
+                    self.set_offset(v_start0)
+                    self.play(w_ramp)
+                else:
+                    self.set_gain(v_end0 - v_start0, v_end1-v_start1)
+                    self.set_offset(v_start0, v_start1)
+                    self.play(w_ramp, w_ramp)
                 self.wait(duration)
-            elif (isinstance(v_start, (Register, Expression))
-                  or isinstance(v_end, (Register, Expression))):
+            elif (isinstance(v_start0, (Register, Expression))
+                  or isinstance(v_end0, (Register, Expression))
+                  or isinstance(v_start1, (Register, Expression))
+                  or isinstance(v_end1, (Register, Expression))):
                 # divide duration till smallest integer larger than or equal to 100
                 shift = 0
                 wave_duration = duration
                 while wave_duration > 200 and wave_duration % 2 == 0:
                     wave_duration >>= 1
                     shift += 1
-                self.Rs._ramp_step = (v_end - v_start) # TODO @@@v2: Use multiplication by 1/duration.
-                if shift >= 1:
-                    self.Rs._ramp_step >>= shift
                 # w_ramp is a wave from 0 to 1.0
                 w_ramp = self._waves.get_ramp(wave_duration)
-                self.Rs._ramp_offset = v_start
-                self.set_gain(self.Rs._ramp_step)
-                with self._seq_repeat(1 << shift):
-                    self.set_offset(self.Rs._ramp_offset)
-                    self.play(w_ramp)
-                    self.Rs._ramp_offset += self.Rs._ramp_step
-                    self.wait(wave_duration)
+                if not two_paths:
+                    self.Rs._ramp_step = (v_end0 - v_start0) # TODO @@@v2: Use multiplication by 1/duration.
+                    if shift >= 1:
+                        self.Rs._ramp_step >>= shift
+                    self.Rs._ramp_offset = v_start0
+                    self.set_gain(self.Rs._ramp_step)
+                    with self._seq_repeat(1 << shift):
+                        self.set_offset(self.Rs._ramp_offset)
+                        self.play(w_ramp)
+                        self.Rs._ramp_offset += self.Rs._ramp_step
+                        self.wait(wave_duration)
+                else:
+                    self.Rs._ramp_step0 = (v_end0 - v_start0) # TODO @@@v2: Use multiplication by 1/duration.
+                    self.Rs._ramp_step1 = (v_end1 - v_start1)
+                    if shift >= 1:
+                        self.Rs._ramp_step0 >>= shift
+                        self.Rs._ramp_step1 >>= shift
+                    # w_ramp is a wave from 0 to 1.0
+                    self.Rs._ramp_offset1 = v_start1
+                    self.Rs._ramp_offset0 = v_start0
+                    self.set_gain(self.Rs._ramp_step0, self.Rs._ramp_step1)
+                    with self._seq_repeat(1 << shift):
+                        self.set_offset(self.Rs._ramp_offset0, self.Rs._ramp_offset1)
+                        self.play(w_ramp, w_ramp)
+                        self.Rs._ramp_offset0 += self.Rs._ramp_step0
+                        self.wait(wave_duration)
             else:
                 margin = SequenceBuilder.MIN_DURATION
                 wave_duration = ramp_loop_time + margin
-                step = (v_end - v_start) * ramp_loop_time / duration
+                step0 = (v_end0 - v_start0) * ramp_loop_time / duration
+                if two_paths:
+                    step1 = (v_end1 - v_start1) * ramp_loop_time / duration
+
                 # step is a fixed point value in q1asm.  Resolution is 1/65536 of LSB output.
                 lsb = 1/(2**15)
-                if abs(step) > lsb:
-                    gain = step * wave_duration / ramp_loop_time
-                    min_lsb_steps = 2**6
-                    if abs(step) < lsb*min_lsb_steps:
-                        # decrease ramp, increase gain for better accuracy
-                        w_ramp = self._waves.get_ramp(wave_duration, stop=1/min_lsb_steps)
-                        gain *= min_lsb_steps
-                    else:
-                        w_ramp = self._waves.get_ramp(wave_duration)
+                if abs(step0) > lsb or (two_paths and abs(step1) > lsb):
                     n, rem = divmod(duration, ramp_loop_time)
                     if 0 < rem < SequenceBuilder.MIN_DURATION:
                         # increase remaining duration above minimum
                         n -= 1
                         rem += ramp_loop_time
 
-                    #  Unroll loop for small n. Loop generates 7 instructions. Unrolled 2 instructions per iteration.
-                    if n <= 3:
-                        self.set_gain(gain)
-                        for i in range(n):
-                            self.set_offset(v_start + i*step)
-                            self.play(w_ramp)
-                            self.wait(ramp_loop_time)
+                    min_lsb_steps = 2**6
+                    gain0 = step0 * wave_duration / ramp_loop_time
+                    if 0 < abs(step0) < lsb*min_lsb_steps:
+                        # decrease ramp, increase gain for better accuracy
+                        w_ramp0 = self._waves.get_ramp(wave_duration, stop=1/min_lsb_steps)
+                        gain0 *= min_lsb_steps
                     else:
-                        self.Rs._ramp_offset = v_start
-                        self.set_gain(gain)
-                        with self._seq_repeat(n):
-                            self.set_offset(self.Rs._ramp_offset)
-                            self.play(w_ramp)
-                            self.Rs._ramp_offset += step
-                            self.wait(ramp_loop_time)
-                    if rem > 0:
-                        # Use immediate value to reduce amount of instructions.
-                        self.set_offset(v_start + n*step)
-                        self.play(w_ramp)
-                        self.wait(rem)
-                    self.set_gain(0.0)
+                        w_ramp0 = self._waves.get_ramp(wave_duration)
+                    if not two_paths:
+                        # Unroll loop for small n. Loop generates 7 instr. Unrolled 2 instr. per iteration.
+                        if n <= 3:
+                            self.set_gain(gain0)
+                            for i in range(n):
+                                self.set_offset(v_start0 + i*step0)
+                                self.play(w_ramp0)
+                                self.wait(ramp_loop_time)
+                        else:
+                            self.Rs._ramp_offset = v_start0
+                            self.set_gain(gain0)
+                            with self._seq_repeat(n):
+                                self.set_offset(self.Rs._ramp_offset)
+                                self.play(w_ramp0)
+                                self.Rs._ramp_offset += step0
+                                self.wait(ramp_loop_time)
+                        if rem > 0:
+                            # Use immediate value to reduce amount of instructions.
+                            self.set_offset(v_start0 + n*step0)
+                            self.play(w_ramp0)
+                            self.wait(rem)
+                        self.set_gain(0.0)
+                    else:
+                        gain1 = step1 * wave_duration / ramp_loop_time
+                        if 0 < abs(step1) < lsb*min_lsb_steps:
+                            # decrease ramp, increase gain for better accuracy
+                            w_ramp1 = self._waves.get_ramp(wave_duration, stop=1/min_lsb_steps)
+                            gain1 *= min_lsb_steps
+                        else:
+                            w_ramp1 = self._waves.get_ramp(wave_duration)
+                        #  Unroll loop for small n. Loop generates 7 instructions. Unrolled 2 instructions per iteration.
+                        if n <= 3:
+                            self.set_gain(gain0, gain1)
+                            for i in range(n):
+                                self.set_offset(v_start0 + i*step0, v_start1 + i*step1)
+                                self.play(w_ramp0, w_ramp1)
+                                self.wait(ramp_loop_time)
+                        else:
+                            self.Rs._ramp_offset0 = v_start0
+                            self.Rs._ramp_offset1 = v_start1
+                            self.set_gain(gain0, gain1)
+                            with self._seq_repeat(n):
+                                self.set_offset(self.Rs._ramp_offset0, self.Rs._ramp_offset1)
+                                self.play(w_ramp0, w_ramp1)
+                                self.Rs._ramp_offset0 += step0
+                                self.Rs._ramp_offset1 += step1
+                                self.wait(ramp_loop_time)
+                        if rem > 0:
+                            # Use immediate value to reduce amount of instructions.
+                            self.set_offset(v_start0 + n*step0, v_start1 + n*step1)
+                            self.play(w_ramp0, w_ramp1)
+                            self.wait(rem)
+                        self.set_gain(0.0, 0.0)
                 else:
                     # steps of 1 LSB
                     min_step = lsb
-                    n_steps = int(abs(v_end - v_start) / min_step)
+                    n_steps0 = int(abs(v_end0 - v_start0) / min_step)
+                    if two_paths:
+                        n_steps1 = int(abs(v_end1 - v_start1) / min_step)
+                        n_steps = 2 * max(n_steps0, n_steps1)
+                    else:
+                        n_steps = n_steps0
                     if n_steps == 0:
                         n = 0
                         rem = duration
                     else:
-                        # minimum time multiple of 4 ns
-                        t_step = int(duration / n_steps / 4) * 4
+                        t_step = int(duration / n_steps)
                         n, rem = divmod(duration, t_step)
                         if 0 < rem < SequenceBuilder.MIN_DURATION:
                             # increase remaining duration above minimum
                             n -= 1
                             rem += ramp_loop_time
-                        step = (v_end - v_start) * t_step / duration
-                    self.Rs._ramp_offset = v_start
-                    if n > 0:
-                        with self._seq_repeat(n):
-                            self.set_offset(self.Rs._ramp_offset)
-                            self.Rs._ramp_offset += step
-                            self.wait(t_step)
-                    if rem > 0:
-                        # Use immediate value to reduce amount of instructions.
-                        self.set_offset(v_start + n*step)
-                        self.wait(rem)
+                        step0 = (v_end0 - v_start0) * t_step / duration
+                        if two_paths:
+                            step1 = (v_end1 - v_start1) * t_step / duration
+                    if not two_paths:
+                        self.Rs._ramp_offset = v_start0
+                        if n > 0:
+                            with self._seq_repeat(n):
+                                self.set_offset(self.Rs._ramp_offset)
+                                self.Rs._ramp_offset += step0
+                                self.wait(t_step)
+                        if rem > 0:
+                            # Use immediate value to reduce amount of instructions.
+                            self.set_offset(v_start0 + n*step0)
+                            self.wait(rem)
+                    else:
+                        self.Rs._ramp_offset0 = v_start0
+                        self.Rs._ramp_offset1 = v_start1
+                        if n > 0:
+                            with self._seq_repeat(n):
+                                self.set_offset(self.Rs._ramp_offset0, self.Rs._ramp_offset1)
+                                self.Rs._ramp_offset0 += step0
+                                self.Rs._ramp_offset1 += step1
+                                self.wait(t_step)
+                        if rem > 0:
+                            # Use immediate value to reduce amount of instructions.
+                            self.set_offset(v_start0 + n*step0)
+                            self.set_offset(v_start1 + n*step1)
+                            self.wait(rem)
 
-            if v_after is not None:
-                # set constant value
-                self.set_offset(v_after)
+            # set constant value
+            if not two_paths:
+                if v_after0 is not None:
+                    self.set_offset(v_after0)
             else:
-                # assume there will be another instruction setting offset
-                pass
+                if v_after0 is not None or v_after1 is not None:
+                    self.set_offset(v_after0, v_after1)
+            # otherwise: assume there will be another instruction setting offset
 
     def chirp(self, duration, amplitude, f_start, f_end, t_offset=0):
         if isinstance(duration, (Register, Expression)):

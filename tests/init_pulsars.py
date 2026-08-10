@@ -16,8 +16,10 @@ if not qc.Station.default:
 else:
     station = qc.Station.default
 
+
+_simulator_isa_v2 = True
+
 _use_simulator = True
-_simulator_isa_v2 = False
 _use_dummy = False
 q1asm_isa_v2: bool | None = None
 

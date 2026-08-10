@@ -24,6 +24,7 @@ class Sequencer:
     in_channels: list[int] | None = None
     label: str | None = None
     isa_version: tuple[int, int] = (1, 0)
+    real_mode: bool = False
 
     @property
     def enabled_paths(self) -> list[int]:
@@ -166,6 +167,14 @@ class QbloxModule:
         self._sset(seq_nr, "mod_en_awg", nco_frequency is not None)
         if nco_frequency is not None:
             self._sset(seq_nr, "nco_freq", nco_frequency)
+
+    def set_real_mode(self, seq_nr, enable):
+        seq = getattr(self.pulsar, f"sequencer{seq_nr}")
+        if "real_mode_en" in seq.parameters:
+            self._sset(seq_nr, "real_mode_en", enable)
+        else:
+            if enable:
+                raise NotImplementedError("`real_mode_en` is not available on sequencer")
 
     def set_mixer_gain_ratio(self, seq_nr, value):
         self._sset(seq_nr, "mixer_corr_gain_ratio", value)

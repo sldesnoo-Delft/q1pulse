@@ -22,16 +22,16 @@ _start:    reset_ph                  # L0004 @ 0
 local_0:   asr            R2,16,R4   # L0007 temp R4
            nop                       # L0008  set_awg_offs wait for R4
            set_awg_offs   R4,R0      # L0009 @ 0
-           upd_param      100        # L0010 t=0
-# Rs._ramp_offset:float = Rs._ramp_offset + 3.0395136778115502e-05 
-           add            R2,65273,R2 # L0011 
-# endloop t=100 
+           upd_param      101        # L0010 t=0
+# Rs._ramp_offset:float = Rs._ramp_offset + 3.069908814589666e-05 
+           add            R2,65925,R2 # L0011 
+# endloop t=101 
            sub            R3,1,R3    # L0012 
            jg             @local_0   # L0013 
-#     --- loop duration: 6500 
-# awg_offset = 0.0009756838905775078, None t=6500 
-           set_awg_offs   31,0       # L0014 @ 6500
-           upd_param      80         # L0015 t=6500
+#     --- loop duration: 6565 
+# awg_offset = 0.000995440729483283, None t=6565 
+           set_awg_offs   32,0       # L0014 @ 6565
+           upd_param      15         # L0015 t=6565
 # awg_offset = 0.0, None t=6580 
            set_awg_offs   0,0        # L0016 @ 6580
            upd_param      100        # L0017 t=6580
