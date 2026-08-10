@@ -18,7 +18,7 @@ _start:    reset_ph                  # L0005 @ 0
            acquire        0,R1,20    # L0006 t=0
            add            R1,1,R1    # L0007 
            latch_rst      480        # L0008 t=20
-# Start conditional block 
+# Start conditional block at 500 
            set_cond       1,1,2,4    # L0009 
 # Condition end time: 500 
            wait           4          # L0010 t=500

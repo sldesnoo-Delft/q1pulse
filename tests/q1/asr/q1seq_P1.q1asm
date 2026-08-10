@@ -19,31 +19,29 @@ _start:    reset_ph                  # L0003 @ 0
            move           2,R2       # L0006 R2: R.b
 # R.c:int = R.a >> 2 
 #          --- emulate signed ASR 
-           and            R1,2147483648,R4 # L0007 temp R4
-           asr            R1,2,R3    # L0008 
-           jlt            R4,2147483648,@asr_end0 # L0009 
-           or             R3,3758096384,R3 # L0010 
+           asr            R1,2,R3    # L0007 R3: R.c
+           jlt            R1,2147483648,@asr_end0 # L0008 
+           or             R3,3758096384,R3 # L0009 
 # R.d:int = R.a >> R.b 
 #          --- emulate signed ASR 
-asr_end0:  and            R1,2147483648,R5 # L0011 temp R6
-           asr            R1,R2,R4   # L0012 
-           asr            R5,R2,R5   # L0013 
-           nop                       # L0014  sub wait for R5
-           sub            R0,R5,R6   # L0015 
-           nop                       # L0016  or wait for R6
-           or             R4,R6,R4   # L0017 
+asr_end0:  and            R1,2147483648,R5 # L0010 temp R6
+           asr            R1,R2,R4   # L0011 
+           asr            R5,R2,R5   # L0012 
+           nop                       # L0013  sub wait for R5
+           sub            R0,R5,R6   # L0014 
+           nop                       # L0015  or wait for R6
+           or             R4,R6,R4   # L0016 
 # R.e:int = -9 
-           move           4294967287,R5 # L0018 R5: R.e
+           move           4294967287,R5 # L0017 R5: R.e
 # R.f:int = R.e >> 1 
 #          --- emulate signed ASR 
-           nop                       # L0019  and wait for R5
-           and            R5,2147483648,R7 # L0020 temp R7
-           asr            R5,1,R6    # L0021 
-           jlt            R7,2147483648,@asr_end1 # L0022 
-           or             R6,3221225472,R6 # L0023 
+           nop                       # L0018  asr wait for R5
+           asr            R5,1,R6    # L0019 R6: R.f
+           jlt            R5,2147483648,@asr_end1 # L0020 
+           or             R6,3221225472,R6 # L0021 
 # R.h:int = -5 
-asr_end1:  move           4294967291,R7 # L0024 R7: R.h
+asr_end1:  move           4294967291,R7 # L0022 R7: R.h
 # --END-- 
-           stop                      # L0025 
+           stop                      # L0023 
 """
 
