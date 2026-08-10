@@ -800,7 +800,7 @@ class Q1asmGenerator(InstructionQueue):
             reg = "none"
         else:
             raise Q1TypeError("Only registers and None can be logged")
-        self.add_comment(f"Q1Sim:log '{msg}',{reg},{opt}")
+        self.add_comment(f'Q1Sim:log "{msg}",{reg},{opt}')
 
     def _format_line(self, label, mnemonic, args, wait_after, comment, line_nr,
                      compact=False):

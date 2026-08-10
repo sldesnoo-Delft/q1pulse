@@ -58,7 +58,7 @@ loop_1:    nop                       # L0035  add wait for R2
            add            R2,2,R2    # L0036 
            upd_param      4          # L0037 t=420
 # log "t_wait",R._var1,TR 
-#Q1Sim:log 't_wait',R3,TR 
+#Q1Sim:log "t_wait",R3,TR 
 # wait(R._var1) t=420 
            sub            R3,4,R4    # L0038 R4: _waittime
 #          --- check for negative wait time 
@@ -75,7 +75,7 @@ wait1:     wait           65532      # L0045
            jge            R4,65535,@wait1 # L0048 
 endwait1:  wait           R4         # L0049 
 # log "after",None,T 
-#Q1Sim:log 'after',none,T 
+#Q1Sim:log "after",none,T 
 # block_pulse(20, 0.25, None) 
 # awg_offset = 0.25, None t=420 
            set_awg_offs   8191,0     # L0050 @ 420
