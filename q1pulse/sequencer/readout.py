@@ -8,11 +8,11 @@ from .sequencer_data import (
 
 
 class ReadoutBuilder(ControlBuilder):
-    MIN_ACQUISITION_INTERVAL = 300
+    MIN_ACQUISITION_INTERVAL = 300 # @@@ update for v1.0.0.
 
     def __init__(self, name, enabled_paths, max_output_voltage,
-                 nco_frequency=None):
-        super().__init__(name, enabled_paths, max_output_voltage, nco_frequency)
+                 nco_frequency=None, isa_version=None):
+        super().__init__(name, enabled_paths, max_output_voltage, nco_frequency, isa_version)
         self._acquisitions = AcquisitionCollection()
         self._weights = WeightCollection()
         self._integration_length_acq = 4

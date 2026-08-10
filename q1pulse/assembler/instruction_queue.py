@@ -34,10 +34,14 @@ MAX_WAIT = (1 << 16) - 1
 
 class InstructionQueue:
     _check_time_reg = True
-    emulate_signed = True
+    emulate_signed = True  # Only used for ISA v1!
 
-    def __init__(self, add_comments=False):
+    def __init__(self, add_comments=False, isa_version=(1, 0)):
         self.add_comments = add_comments
+        self.isa_version = isa_version
+        if isa_version not in [(1, 0), (2, 0)]:
+            raise Exception(f"Unsupport ISA version {isa_version}")
+        self.isa_v2 = isa_version[0] == 2
         self._init_section = []
         self._instructions = []
         self._reg_comment = None
@@ -187,7 +191,7 @@ class InstructionQueue:
                 # rem_wait 1, 2 or 3 => 65533, 65534, 65535
                 n_max -= 1
                 rem_wait += MAX_WAIT_STEP
-            if n_max <= 2:
+            if n_max <= 3:
                 for _ in range(n_max):
                     self._add_instruction('wait', MAX_WAIT_STEP)
             else:
@@ -197,7 +201,11 @@ class InstructionQueue:
                     label = f'wait{self._wait_loop_cnt}'
                     self.set_label(label)
                     self._add_instruction('wait', MAX_WAIT_STEP)
-                    self._add_instruction('loop', wait_reg, '@'+label)
+                    if self.isa_v2:
+                        self._add_instruction('sub', wait_reg, 1, wait_reg)
+                        self._add_instruction('jg', '@'+label)
+                    else:
+                        self._add_instruction('loop', wait_reg, '@'+label)
             self._n_rt_instructions += n_max
             if rem_wait > 0:
                 self._add_instruction('wait', rem_wait)
@@ -220,7 +228,13 @@ class InstructionQueue:
         if self._check_time_reg:
             self.add_comment('         --- check for negative wait time')
             continue_label = f'waitc{self._wait_loop_cnt}'
-            if self.emulate_signed:
+            if self.isa_v2:
+                self._add_instruction('cmp', wait_reg, MIN_WAIT)
+                self._add_instruction('jge', '@'+continue_label)
+            elif less_then_65us:
+                self._add_instruction('jlt', wait_reg, MAX_WAIT, '@'+continue_label)
+                self._add_instruction('illegal', comment='larger than 65 us')
+            elif self.emulate_signed:
                 self.add_comment('         --- emulate signed wait time')
                 with self.temp_regs(1) as temp_reg:
                     self._add_reg_instruction('xor', wait_reg, 0x8000_0000, temp_reg)
@@ -228,20 +242,26 @@ class InstructionQueue:
             else:
                 self._add_instruction('jge', wait_reg, MIN_WAIT, '@'+continue_label)
             self._add_instruction('illegal', comment='wait time < 4 ns')
-            if less_then_65us:
-                self._add_instruction('jlt', wait_reg, MAX_WAIT, '@'+continue_label)
-                self._add_instruction('illegal', comment='larger than 65 us')
             self.set_label(continue_label)
 
         # FIXME: NO Looping allowed inside conditional, because number rt_instructions cannot be counted properly.
         if not less_then_65us:
             loop_label = f'wait{self._wait_loop_cnt}'
             end_label = f'endwait{self._wait_loop_cnt}'
-            self._add_instruction('jlt', wait_reg, MAX_WAIT, '@'+end_label)
-            self.set_label(loop_label)
-            self._add_instruction('wait', MAX_WAIT_STEP)
-            self._add_reg_instruction('sub', wait_reg, MAX_WAIT_STEP, wait_reg)
-            self._add_instruction('jge', wait_reg, MAX_WAIT, '@'+loop_label)
+            if self.isa_v2:
+                self._add_reg_instruction('cmp', wait_reg, MAX_WAIT)
+                self._add_instruction('jle', '@'+end_label)
+                self.set_label(loop_label)
+                self._add_reg_instruction('sub', wait_reg, MAX_WAIT_STEP, wait_reg)
+                self._add_instruction('wait', MAX_WAIT_STEP)
+                self._add_reg_instruction('cmp', wait_reg, MAX_WAIT)
+                self._add_instruction('jg', '@'+loop_label)
+            else:
+                self._add_instruction('jlt', wait_reg, MAX_WAIT, '@'+end_label)
+                self.set_label(loop_label)
+                self._add_instruction('wait', MAX_WAIT_STEP)
+                self._add_reg_instruction('sub', wait_reg, MAX_WAIT_STEP, wait_reg)
+                self._add_instruction('jge', wait_reg, MAX_WAIT, '@'+loop_label)
             self.set_label(end_label)
 
         self._add_instruction('wait', wait_reg)

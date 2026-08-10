@@ -6,14 +6,15 @@ from contextlib import contextmanager
 from numbers import Number
 
 from .lang.conditions import CounterFlags
-from .lang.exceptions import Q1InternalError, Q1ValueError
+from .lang.exceptions import Q1InternalError, Q1ValueError, Q1SyntaxError
 from .lang.triggers import TriggerCounter, Trigger
 from .lang.math_expressions import Expression
 from .lang.timeline import Timeline
 from .lang.registers import Registers
 from .lang.register import Register
-from .lang.register_statements import RegisterAssignment
+from .lang.register_statements import RegisterAssignment, AllocateVariable
 from .lang.loops import RangeLoop, LinspaceLoop, ArrayLoop
+from .lang.program_variables import Variable
 from .assembler.generator import Q1asmGenerator
 
 logger = logging.getLogger(__name__)
@@ -26,9 +27,12 @@ class Program:
         self.uuid = uuid.uuid4()
         self.sequence_builders = {}
         self.path = path
+        # NOTE: global registers are added to ALL sequencers.
         self.R = Registers(self, local=False)
         self.repetitions = 1
         self._q1asm = {}
+        self._q1registers: dict[str, dict[str, str]] = {}
+        self._var_registers: dict[str, dict[str, str]] = {}  # variable registers per sequencer with short name!
         self._loop_cnt = 0
         self._triggers = []
         # shared timeline for all sequencers
@@ -59,9 +63,10 @@ class Program:
         self._q1asm = {}
 
         start_compile = time.perf_counter()
-        for builder in self.sequence_builders.values():
+        for name, builder in self.sequence_builders.items():
             g = Q1asmGenerator(add_comments=add_comments,
-                               optimize=optimize)
+                               optimize=optimize,
+                               isa_version=builder.isa_version)
             g.repetitions = self.repetitions
             start = time.perf_counter()
             builder.compile(g, annotate=annotate)
@@ -73,37 +78,63 @@ class Program:
                     logger.warning("Set Q1Instrument.path or program.path for Q1ASM output to file.")
                     g.assemble()
                 else:
-                    filename = self.seq_filename(builder.name)
+                    filename = self.seq_filename(name)
                     g.assemble(listing=listing, json_output=json, filename=filename)
             else:
                 g.assemble()
-            self._q1asm[builder.name] = g.q1asm
+            self._q1asm[name] = g.q1asm
+            self._q1registers[name] = g.registers
+
+            duplicate_variables = set(self.R.variables.keys()) & set(builder.Rs.variables.keys())
+            if duplicate_variables:
+                raise Q1SyntaxError(f"Duplicate variable names: {duplicate_variables}")
+            variable_name_mapping = {name: f"R.{name}" for name in self.R.variables}
+            variable_name_mapping |= {name: f"Rs.{name}" for name in builder.Rs.variables}
+            self._var_registers[name] = {
+                short_name: g.registers[name] for short_name, name in variable_name_mapping.items()
+                }
+
             end = time.perf_counter()
             d2 = (end-start)*1000
             if Program.verbose:
-                logger.debug(f"compile {builder.name} {d1:5.2f} {d2:5.2f} ms")
+                logger.debug(f"compile {name} {d1:5.2f} {d2:5.2f} ms")
         duration = time.perf_counter() - start_compile
         logger.debug(f"Total compilation {duration*1000:5.2f} ms")
 
     def q1asm(self, name):
         return self._q1asm[name]
 
+    def list_variables(self) -> dict[str, dict[str, Variable]]:
+        res = {}
+        res["program"] = self.R.variables
+        for name, builder in self.sequence_builders.items():
+            res[name] = builder.Rs.variables
+        return res
+
+    @property
+    def register_mapping(self) -> dict[str, dict[str, str]]:
+        return self._q1registers
+
+    @property
+    def variable_register_mapping(self) -> dict[str, dict[str, str]]:
+        return self._var_registers
+
     def _add_statement(self, statement, init_section=False):
-        if not isinstance(statement, RegisterAssignment):
-            raise Q1InternalError(f"Illegal statement for program {statement}")
+        if not isinstance(statement, RegisterAssignment | AllocateVariable):
+            raise Q1InternalError(f"Illegal statement for program: {statement}")
         for builder in self.sequence_builders.values():
             builder._add_statement(statement, init_section=init_section)
 
     def loop_range(self, start_stop, stop=None, step=None):
-        ''' range loop '''
+        """ range loop """
         return self.__loop(RangeLoop(self._loop_cnt, start_stop, stop, step))
 
     def loop_linspace(self, start, end, n, endpoint=True):
-        ''' repeat loop '''
+        """ repeat loop """
         return self.__loop(LinspaceLoop(self._loop_cnt, start, end, n, endpoint))
 
     def loop_array(self, values):
-        ''' array loop '''
+        """ array loop """
         return self.__loop(ArrayLoop(self._loop_cnt, values))
 
     @contextmanager

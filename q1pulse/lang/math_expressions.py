@@ -4,6 +4,7 @@ import numpy as np
 
 from .exceptions import Q1TypeError
 
+
 class Operand(ABC):
 
     @property
@@ -29,6 +30,15 @@ class Operand(ABC):
         if self.dtype == float:
             return Subtraction(0.0, self)
         return NotImplemented
+
+    def __mul__(self, lhs):
+        return Multiply(self, lhs)
+
+    def __rmul__(self, rhs):
+        return Multiply(rhs, self)
+
+    def lsr(self, rhs):
+        return Lsr(self, rhs)
 
     def __lshift__(self, rhs):
         return Asl(self, rhs)
@@ -57,8 +67,27 @@ class Operand(ABC):
     def __invert__(self):
         return BitwiseNot(self)
 
-    def asfloat(self):
+    def asfloat(self):  # @@@ __float__ ??
         return CastFloat(self)
+
+    def __lt__(self, lhs):
+        ...
+
+    def __le__(self, lhs):
+        ...
+
+    def __eq__(self, lhs):
+        ...
+
+    def __ne__(self, lhs):
+        ...
+
+    def __ge__(self, lhs):
+        ...
+
+    def __gt__(self, lhs):
+        ...
+
 
 def get_dtype(value):
     if isinstance(value, (int, np.integer)):
@@ -75,11 +104,13 @@ def get_dtype(value):
 
     return None
 
+
 class Expression(Operand, ABC):
 
     @abstractmethod
     def evaluate(self, generator, destination=None):
         pass
+
 
 class UnaryExpression(Expression):
     def __init__(self, operator, rhs):
@@ -114,7 +145,6 @@ class UnaryExpression(Expression):
 
     def __repr__(self):
         return f'{self.operator}{self.rhs}'
-
 
 
 class BinaryExpression(Expression):
@@ -172,6 +202,7 @@ class Addition(BinaryExpression):
                               f'{lhs_dtype.__name__} <> {rhs_dtype.__name__}')
         return lhs_dtype
 
+
 class Subtraction(BinaryExpression):
     def __init__(self, lhs, rhs):
         super().__init__(lhs, '-', rhs)
@@ -187,6 +218,27 @@ class Subtraction(BinaryExpression):
                               f'{lhs_dtype.__name__} <> {rhs_dtype.__name__}')
         return lhs_dtype
 
+
+class Multiply(BinaryExpression):
+    def __init__(self, lhs, rhs):
+        super().__init__(lhs, '*', rhs)
+
+    def _evaluate(self, generator, destination, lhs, rhs):
+        if self.dtype == int:
+            # TODO @@@ signed or unsigned?
+            generator.mul32l(lhs, rhs, destination, signed=True)
+        else:
+            generator.mul32h(lhs, rhs, destination, signed=True)
+
+    def _get_dtype(self):
+        lhs_dtype = get_dtype(self.lhs)
+        rhs_dtype = get_dtype(self.rhs)
+        if lhs_dtype != rhs_dtype:
+            raise Q1TypeError(f'incompatible data types: {self}, '
+                              f'{lhs_dtype.__name__} <> {rhs_dtype.__name__}')
+        return lhs_dtype
+
+
 class Lsr(BinaryExpression):
     def __init__(self, lhs, rhs):
         super().__init__(lhs, 'unsigned >>', rhs)
@@ -200,6 +252,7 @@ class Lsr(BinaryExpression):
             raise Q1TypeError(f'Shift requires integer number of bits {rhs_dtype.__name__}')
         return get_dtype(self.lhs)
 
+
 class Asr(BinaryExpression):
     def __init__(self, lhs, rhs):
         super().__init__(lhs, '>>', rhs)
@@ -212,6 +265,7 @@ class Asr(BinaryExpression):
         if rhs_dtype != int:
             raise Q1TypeError(f'Shift requires integer number of bits {self}')
         return get_dtype(self.lhs)
+
 
 class Asl(BinaryExpression):
     def __init__(self, lhs, rhs):
@@ -238,12 +292,14 @@ class Bitwise(BinaryExpression, ABC):
             raise Q1TypeError(f'Bitwise operation requires integer values {self}')
         return int
 
+
 class BitwiseAnd(Bitwise):
     def __init__(self, lhs, rhs):
         super().__init__(lhs, '&', rhs)
 
     def _evaluate(self, generator, destination, lhs, rhs):
         generator.bits_and(lhs, rhs, destination)
+
 
 class BitwiseOr(Bitwise):
     def __init__(self, lhs, rhs):
@@ -252,12 +308,14 @@ class BitwiseOr(Bitwise):
     def _evaluate(self, generator, destination, lhs, rhs):
         generator.bits_or(lhs, rhs, destination)
 
+
 class BitwiseXor(Bitwise):
     def __init__(self, lhs, rhs):
         super().__init__(lhs, '^', rhs)
 
     def _evaluate(self, generator, destination, lhs, rhs):
         generator.bits_xor(lhs, rhs, destination)
+
 
 class BitwiseNot(UnaryExpression, ABC):
     def __init__(self, rhs):
@@ -272,6 +330,7 @@ class BitwiseNot(UnaryExpression, ABC):
     def _evaluate(self, generator, destination, rhs):
         generator.bits_not(rhs, destination)
 
+
 class CastFloat(UnaryExpression, ABC):
     def __init__(self, rhs):
         super().__init__('float ', rhs)
@@ -279,10 +338,9 @@ class CastFloat(UnaryExpression, ABC):
     def _get_dtype(self):
         rhs_dtype = get_dtype(self.rhs)
         if rhs_dtype != int:
-            raise Q1TypeError(f'Float cast requires integer value')
+            raise Q1TypeError(f'Float cast requires integer value {self}')
         return float
 
     def _evaluate(self, generator, destination, rhs):
         if destination != rhs:
             generator.move(rhs, destination)
-

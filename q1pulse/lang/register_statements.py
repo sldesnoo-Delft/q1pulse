@@ -1,6 +1,7 @@
 from .base import Statement
 from .math_expressions import Expression, get_dtype
 
+
 class RegisterAssignment(Statement):
     def __init__(self, destination, value_or_expression, allocate=False):
         self.destination = destination
@@ -11,7 +12,7 @@ class RegisterAssignment(Statement):
 
     def __repr__(self):
         dtype = self.destination.dtype.__name__
-        return f'{self.destination}:{dtype} = {self.value_or_expression}'
+        return f"{self.destination}:{dtype} = {self.value_or_expression}"
 
     def write_instruction(self, generator):
         if self.allocate:
@@ -25,3 +26,13 @@ class RegisterAssignment(Statement):
             generator.move(self.value_or_expression, self.destination)
 
 
+class AllocateVariable(Statement):
+    def __init__(self, register):
+        self.register = register
+
+    def __repr__(self):
+        dtype = self.register.dtype.__name__
+        return f"var {self.register}:{dtype}"
+
+    def write_instruction(self, generator):
+        generator.allocate_reg(self.register.name, static=True)

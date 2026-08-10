@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 
 class ControlBuilder(SequenceBuilder):
     def __init__(self, name, enabled_paths, max_output_voltage,
-                 nco_frequency=None):
-        super().__init__(name)
+                 nco_frequency=None, isa_version=None):
+        super().__init__(name, isa_version)
         self._enabled_paths = enabled_paths
         self.max_output_voltage = max_output_voltage
         self._nco_frequency = nco_frequency
@@ -188,13 +188,13 @@ class ControlBuilder(SequenceBuilder):
                 self.wait(duration)
             elif (isinstance(v_start, (Register, Expression))
                   or isinstance(v_end, (Register, Expression))):
-                # divide duration till smallest multiple of 4 larger than or equal to 100
+                # divide duration till smallest integer larger than or equal to 100
                 shift = 0
                 wave_duration = duration
-                while wave_duration > 200 and wave_duration % 8 == 0:
+                while wave_duration > 200 and wave_duration % 2 == 0:
                     wave_duration >>= 1
                     shift += 1
-                self.Rs._ramp_step = (v_end - v_start)
+                self.Rs._ramp_step = (v_end - v_start) # TODO @@@v2: Use multiplication by 1/duration.
                 if shift >= 1:
                     self.Rs._ramp_step >>= shift
                 # w_ramp is a wave from 0 to 1.0
@@ -314,15 +314,15 @@ class ControlBuilder(SequenceBuilder):
                 n -= 1
                 rem += chirp_loop_time
 
-            # TODO: remove workaround when fixed in firmware
-            # Temporarily set NCO frequency for phase shift workaround.
-            nco_freq = self.nco_frequency
-            self.nco_frequency = f_start
-
             self.Rs._freq = int(f_start)
             self.set_gain(amplitude, amplitude)
             if n > 0:
-                with self._seq_repeat(n):
+                self.set_frequency(self.Rs._freq)
+                self.play(w_chirpI, w_chirpQ)
+                self.Rs._freq += f_step
+                self.wait(chirp_loop_time)
+            if n > 1:
+                with self._seq_repeat(n-1):
                     self.shift_phase(delta_phase)
                     self.set_frequency(self.Rs._freq)
                     self.play(w_chirpI, w_chirpQ)
@@ -334,7 +334,7 @@ class ControlBuilder(SequenceBuilder):
                 self.play(w_chirpI, w_chirpQ)
                 self.wait(rem)
             self.set_gain(0.0)
-            self.nco_frequency = nco_freq
+            self.set_frequency(self.nco_frequency)
 
     def _translate_wave(self, wave):
         if wave is None:

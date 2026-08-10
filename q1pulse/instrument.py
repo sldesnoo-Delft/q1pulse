@@ -45,7 +45,8 @@ class Q1Instrument:
         self.controllers: dict[int, Sequencer] = {}
         self.readouts: dict[int, Sequencer] = {}
         self._loaded_q1asm: dict[str, dict] = {}
-        self._loaded_program_uuid = None
+        self._loaded_program: Program | None = None
+        self._program_variables_initialized = False
         self._last_started = None
         self._running = False
         SequenceBuilder.add_traceback_to_instructions = add_traceback
@@ -87,13 +88,15 @@ class Q1Instrument:
         for name, seq in self.controllers.items():
             seq_builder = ControlBuilder(name, seq.enabled_paths,
                                          seq.max_output_voltage,
-                                         seq.nco_frequency)
+                                         seq.nco_frequency,
+                                         isa_version=seq.isa_version)
             program.add_sequence_builder(seq_builder)
 
         for name, seq in self.readouts.items():
             seq_builder = ReadoutBuilder(name, seq.enabled_paths,
                                          seq.max_output_voltage,
-                                         seq.nco_frequency)
+                                         seq.nco_frequency,
+                                         isa_version=seq.isa_version)
             program.add_sequence_builder(seq_builder)
 
         return program
@@ -193,7 +196,113 @@ class Q1Instrument:
         t = (time.perf_counter() - t_start) * 1000
         logger.info(f"Duration (async) upload: ({t:5.3f}ms)")
 
-        self._loaded_program_uuid = program.uuid
+        self._loaded_program = program
+        self._program_variables_initialized = False
+
+    def _initialize_variables(self):
+        if not self._program_variables_initialized:
+            program = self._loaded_program
+            all_variables = program.list_variables()
+            mapping = program.variable_register_mapping
+            sequencers = {**self.controllers, **self.readouts}
+            for seq_name, seq in sequencers.items():
+                init_vars = {
+                    var_name: variable
+                    for var_name, variable in (all_variables["program"] | all_variables[seq_name]).items()
+                    if variable.init_scope == 'load' and variable.initial_value is not None
+                    }
+                if seq_name in mapping:
+                    seq_registers = mapping[seq_name]
+                    registers = {}
+                    for var_name, variable in init_vars.items():
+                        reg_value = variable.value2q1asm(variable.initial_value)
+                        registers[seq_registers[var_name]] = reg_value
+                    if not registers:
+                        continue
+                    module = self.modules[seq.module_name]
+                    with DelayedKeyboardInterrupt("write initial registers"):
+                        module.set_sequencer_registers(seq.seq_nr, registers)
+        self._program_variables_initialized = True
+
+    def set_variables(self, variables: dict[str, float | int]):
+        """Sets variables for the currently loaded program."""
+
+        if self._running:
+            self.dump_program(self._last_started, "stop", "Not properly stopped")
+            self.stop_program()
+
+        self._initialize_variables()
+
+        # TODO Cleanup !!! => the complicating part is duplicate names in program and sequencer!
+        program = self._loaded_program
+        all_variables = program.list_variables()
+        mapping = program.variable_register_mapping
+        sequencers = {**self.controllers, **self.readouts}
+        for seq_name, seq in sequencers.items():
+            if seq_name in mapping:
+                seq_registers = mapping[seq_name]
+                registers = {}
+                for var_name, value in variables.items():
+                    variable = all_variables[seq_name].get(var_name)
+                    if variable is None:
+                        variable = all_variables["program"].get(var_name)
+                    if variable is None:
+                        continue
+                    reg_value = variable.value2q1asm(value)
+                    registers[seq_registers[var_name]] = reg_value
+
+                if not registers:
+                    continue
+                module = self.modules[seq.module_name]
+                with DelayedKeyboardInterrupt("write registers"):
+                    module.set_sequencer_registers(seq.seq_nr, registers)
+
+    def get_variables(self,
+                      variables: list[str] | None = None,
+                      program: Program | None = None,
+                      ) -> dict[str, dict[str, float | int]]:
+        """Returns the values for names variables per sequencer.
+        If the program is not specified, then the currently loaded program is used.
+        When background program loading is used, then the correct program should be passed
+        as argument.
+        """
+        # TODO Cleanup !!!
+        program = program or self._loaded_program
+        all_variables = program.list_variables()
+        if variables is None:
+            variables = set()
+            for seq_name, seq_variables in all_variables.items():
+                variables |= seq_variables.keys()
+            variables = sorted(variables)
+
+        mapping = program.variable_register_mapping
+        res: dict[str, dict[str, float | int]] = {}
+        sequencers = {**self.controllers, **self.readouts}
+        for seq_name, seq in sequencers.items():
+            if seq_name in mapping:
+                seq_registers = mapping[seq_name]
+                registers = [
+                    seq_registers[var_name]
+                    for var_name in variables
+                    if var_name in seq_registers
+                    ]
+                res[seq_name] = {}
+                if not registers:
+                    continue
+                module = self.modules[seq.module_name]
+                with DelayedKeyboardInterrupt("read registers"):
+                    reg_values = module.get_sequencer_registers(seq.seq_nr, registers)
+                # convert uint to int/float.
+                for var_name in variables:
+                    variable = all_variables[seq_name].get(var_name)
+                    if variable is None:
+                        variable = all_variables["program"].get(var_name)
+                    if variable is None:
+                        continue
+                    value = variable.value2python(reg_values[seq_registers[var_name]])
+                    res[seq_name][var_name] = value
+
+        return res
 
     def start_program(self, program):
         self._disable_cluster_debug()
@@ -202,9 +311,10 @@ class Q1Instrument:
             self.dump_program(self._last_started, "stop", "Not properly stopped")
             self.stop_program()
 
-        if program.uuid != self._loaded_program_uuid:
+        if self._loaded_program is None or program.uuid != self._loaded_program.uuid:
             self.load_program(program)
 
+        self._initialize_variables()
         # Store for debugging / dumping
         self._last_started = program
 
@@ -562,7 +672,7 @@ class Q1Instrument:
         Value is in Vpp.
 
         NOTE:
-            When demodulation is enabled the amplitude is internally divided by 
+            When demodulation is enabled the amplitude is internally divided by
             sqrt(2).
         """
         seq = self.readouts[sequencer_name]

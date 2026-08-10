@@ -23,6 +23,7 @@ class Sequencer:
     nco_frequency: float | None = None
     in_channels: list[int] | None = None
     label: str | None = None
+    isa_version: tuple[int, int] = (1, 0)
 
     @property
     def enabled_paths(self) -> list[int]:
@@ -77,7 +78,8 @@ class QbloxModule:
         if any(ch not in available_channels for ch in channels):
             raise Exception(f"Illegal channel number(s) {channels}")
         seq_nr = self._allocate_seq_number()
-        return Sequencer(self.name, seq_nr, channels, self.max_output_voltage)
+        isa_version = self._get_isa_version(seq_nr)
+        return Sequencer(self.name, seq_nr, channels, self.max_output_voltage, isa_version=isa_version)
 
     def _allocate_seq_number(self):
         if self._allocated_seq == self.n_sequencers:
@@ -86,6 +88,12 @@ class QbloxModule:
         sequencer_nr = self._allocated_seq
         self._allocated_seq += 1
         return sequencer_nr
+
+    def _get_isa_version(self, seq_nr: int) -> tuple[int, int]:
+        if qblox_version >= Version("1.2.0"):
+            return self.pulsar.sequencers[seq_nr].isa_version()
+        else:
+            return (1, 0)
 
     def disable_all_out(self):
         for seq_nr in range(0, self.n_sequencers):
@@ -129,6 +137,12 @@ class QbloxModule:
     def get_sequencer_status(self, seq_nr, timeout=0):
         status = self.pulsar.get_sequencer_status(seq_nr, timeout)
         return translate_seq_status(status)
+
+    def get_sequencer_registers(self, seq_nr, registers: list[str] | None = None) -> dict[str, int]:
+        return self.pulsar.get_sequencer_registers(seq_nr, registers)
+
+    def set_sequencer_registers(self, seq_nr, registers: dict[str, int]) -> None:
+        self.pulsar.set_sequencer_registers(seq_nr, registers)
 
     def enable_sync(self, seq_nr, enable):
         self._sset(seq_nr, "sync_en", enable)

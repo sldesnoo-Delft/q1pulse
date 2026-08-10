@@ -42,8 +42,9 @@ class SequenceBuilder(BuilderBase):
 
     MIN_DURATION = 4
 
-    def __init__(self, name):
+    def __init__(self, name, isa_version):
         self.name = name
+        self.isa_version = isa_version
         self._local_loop_cnt = 0
         self.Rs = Registers(self, local=True)
         self._sequence_stack = []
