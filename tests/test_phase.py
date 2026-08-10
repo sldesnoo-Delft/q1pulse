@@ -1,9 +1,9 @@
 
 from q1pulse.instrument import Q1Instrument
 
-from init_pulsars import qcm0
+from init_pulsars import qcm0, q1asm_isa_v2
 
-instrument = Q1Instrument('q1')
+instrument = Q1Instrument('q1_v2' if q1asm_isa_v2 else 'q1')
 instrument.add_qcm(qcm0)
 instrument.add_control('P1', qcm0.name, [2])
 
@@ -21,7 +21,7 @@ p.wait(348)
 P1.set_phase(p.R.phase1)
 
 p.wait(188)
-P1.shift_phase(P1.Rs.phase2,hires_reg=False)
+P1.shift_phase(P1.Rs.phase2, hires_reg=False)
 
 p.wait(348)
 P1.shift_phase(P1.Rs.phase2 + 0.1)
@@ -31,4 +31,3 @@ p.describe()
 p.compile(listing=True, annotate=True)
 
 instrument.run_program(p)
-

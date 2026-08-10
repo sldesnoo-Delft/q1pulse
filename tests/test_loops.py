@@ -1,14 +1,14 @@
 
 from q1pulse.instrument import Q1Instrument
 
-from init_pulsars import qcm0
+from init_pulsars import qcm0, q1asm_isa_v2
 from plot_util import plot_output
 
-instrument = Q1Instrument('q1')
+instrument = Q1Instrument('q1_v2' if q1asm_isa_v2 else 'q1')
 instrument.add_qcm(qcm0)
 instrument.add_control('P1', qcm0.name, [2])
 instrument.add_control('P2', qcm0.name, [3])
-instrument.add_control('q1', qcm0.name, [0,1], nco_frequency=25e6)
+instrument.add_control('q1', qcm0.name, [0, 1], nco_frequency=25e6)
 
 p = instrument.new_program('loops')
 p.repetitions = 3
@@ -23,8 +23,8 @@ with p.loop_linspace(0.2, 1.0, 5) as amplitude:
     q1.block_pulse(40, amplitude - 0.1)
     q1.shift_phase(0.5)
 
-#p.describe()
-#print()
+# p.describe()
+# print()
 
 p.compile(listing=True, annotate=True)
 

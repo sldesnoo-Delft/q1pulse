@@ -1,0 +1,101 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           0,R0       # L0001 R0: _zero
+           move           3,R1       # L0002 R1: _repetitions
+           wait_sync      100        # L0003 t=0
+# --START-- (t=0) 
+_start:    reset_ph                  # L0004 @ 0
+# block_pulse(200, -0.1, None) 
+# awg_offset = -0.1, None t=0 
+           set_awg_offs   -3277,0    # L0005 @ 0
+           upd_param      200        # L0006 t=0
+# awg_offset = 0.0, None t=200 
+           set_awg_offs   0,0        # L0007 @ 200
+# loop_range(20, 100, 20):R._var0 t=200 
+           move           20,R2      # L0008 R2: R._var0
+           move           4,R3       # L0009 R3: R._cnt0
+# block_pulse(20, 0.8, None) 
+# awg_offset = 0.8, None t=200 
+loop_0:    set_awg_offs   26214,0    # L0010 @ 200
+           upd_param      20         # L0011 t=200
+# awg_offset = 0.0, None t=220 
+           set_awg_offs   0,0        # L0012 @ 220
+           upd_param      224        # L0013 t=220
+# wait(R._var0) t=220 
+           sub            R2,4,R4    # L0014 R4: _waittime
+#          --- check for negative wait time 
+           nop                       # L0015  cmp wait for R4
+           cmp            R4,4       # L0016 
+           jge            @waitc1    # L0017 
+           illegal                   # L0018 wait time < 4 ns
+waitc1:    cmp            R4,65535   # L0019 
+           jle            @endwait1  # L0020 
+wait1:     sub            R4,65532,R4 # L0021 
+           wait           65532      # L0022 
+           cmp            R4,65535   # L0023 
+           jg             @wait1     # L0024 
+endwait1:  wait           R4         # L0025 
+# endloop t=440 
+           add            R2,20,R2   # L0026 
+           sub            R3,1,R3    # L0027 
+           jg             @loop_0    # L0028 
+# loop_range(-2, 2, 1):R._var1 t=440 
+           move           4294967294,R2 # L0029 R2: R._var1
+           move           4,R3       # L0030 R3: R._cnt1
+# block_pulse(20, 0.2, None) 
+# awg_offset = 0.2, None t=440 
+loop_1:    set_awg_offs   6553,0     # L0031 @ 440
+           upd_param      20         # L0032 t=440
+# awg_offset = 0.0, None t=460 
+           set_awg_offs   0,0        # L0033 @ 460
+           upd_param      100        # L0034 t=460
+# endloop t=560 
+           add            R2,1,R2    # L0035 
+           sub            R3,1,R3    # L0036 
+           jg             @loop_1    # L0037 
+           upd_param      100        # L0038 t=560
+# loop_range(80, 0, -20):R._var2 t=660 
+           move           80,R2      # L0039 R2: R._var2
+           move           5,R3       # L0040 R3: R._cnt2
+# block_pulse(20, 0.1, None) 
+# awg_offset = 0.1, None t=660 
+loop_2:    set_awg_offs   3276,0     # L0041 @ 660
+           upd_param      20         # L0042 t=660
+# awg_offset = 0.0, None t=680 
+           set_awg_offs   0,0        # L0043 @ 680
+           upd_param      4          # L0044 t=680
+# wait(R._var2 + 20) t=680 
+           add            R2,20,R4   # L0045 temp R4
+           nop                       # L0046  sub wait for R4
+           sub            R4,4,R5    # L0047 R5: _waittime
+#          --- check for negative wait time 
+           nop                       # L0048  cmp wait for R5
+           cmp            R5,4       # L0049 
+           jge            @waitc2    # L0050 
+           illegal                   # L0051 wait time < 4 ns
+waitc2:    cmp            R5,65535   # L0052 
+           jle            @endwait2  # L0053 
+wait2:     sub            R5,65532,R5 # L0054 
+           wait           65532      # L0055 
+           cmp            R5,65535   # L0056 
+           jg             @wait2     # L0057 
+endwait2:  wait           R5         # L0058 
+# endloop t=680 
+           add            R2,4294967276,R2 # L0059 
+           sub            R3,1,R3    # L0060 
+           jg             @loop_2    # L0061 
+# --END-- 
+           sub            R1,1,R1    # L0062 
+           jg             @_start    # L0063 
+           upd_param      4          # L0064 t=680
+           stop                      # L0065 
+"""
+

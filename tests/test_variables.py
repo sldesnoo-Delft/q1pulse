@@ -2,9 +2,12 @@ from pprint import pprint
 from q1pulse.instrument import Q1Instrument
 from q1pulse.lang.program_variables import IntVariable, FloatVariable
 
-from init_pulsars import qcm0
+from init_pulsars import qcm0, q1asm_isa_v2
 
-instrument = Q1Instrument('q1')
+if not q1asm_isa_v2:
+    raise Exception("'test_variables' cannot be executed for Q1ASM v1.0")
+
+instrument = Q1Instrument('q1_v2' if q1asm_isa_v2 else 'q1')
 instrument.add_qcm(qcm0)
 instrument.add_control('P1', qcm0.name, [2])
 

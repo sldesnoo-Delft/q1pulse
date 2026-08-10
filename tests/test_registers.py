@@ -1,8 +1,8 @@
 from q1pulse.instrument import Q1Instrument
 
-from init_pulsars import qcm0
+from init_pulsars import qcm0, q1asm_isa_v2
 
-instrument = Q1Instrument('q1')
+instrument = Q1Instrument('q1_v2' if q1asm_isa_v2 else 'q1')
 instrument.add_qcm(qcm0)
 instrument.add_control('P1', qcm0.name, [2])
 
@@ -36,6 +36,7 @@ p.R.x -= 0.8
 p.R.y = 0.5
 p.R.z = p.R.x - p.R.y
 
+# sequencer registers
 seq.Rs.x = 9
 seq.Rs.y = seq.Rs.x + p.R.b
 
@@ -55,4 +56,3 @@ instrument.run_program(p)
 if hasattr(qcm0, 'print_registers'):
     # get result from Q1Simulator
     qcm0.print_registers(0, range(20))
-

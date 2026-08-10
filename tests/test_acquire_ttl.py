@@ -1,9 +1,9 @@
 from q1pulse.instrument import Q1Instrument
 
-from init_pulsars import qcm0, qrm1, cluster
+from init_pulsars import qcm0, qrm1, q1asm_isa_v2
 from plot_util import plot_output
 
-instrument = Q1Instrument('q1')
+instrument = Q1Instrument('q1_v2' if q1asm_isa_v2 else 'q1')
 instrument.add_qcm(qcm0)
 instrument.add_qrm(qrm1)
 instrument.add_control('P1', qcm0.name, [0])

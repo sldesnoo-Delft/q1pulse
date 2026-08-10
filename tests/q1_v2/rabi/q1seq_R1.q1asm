@@ -1,0 +1,46 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={'default': {'index': 0, 'num_bins': 20}}
+
+seq_prog="""
+# --INIT-- 
+           move           0,R0       # L0001 R0: _zero
+           move           2,R1       # L0002 R1: _repetitions
+           wait_sync      100        # L0003 t=0
+# --START-- (t=0) 
+_start:    reset_ph                  # L0004 @ 0
+           move           0,R2       # L0005 R2: Rs._acq_default
+           move           100,R3     # L0006 R3: R._var0
+           move           20,R4      # L0007 R4: R._cnt0
+loop_0:    upd_param      220        # L0008 t=0
+           move           R3,R5      # L0009 R5: _waittime
+#          --- check for negative wait time 
+           nop                       # L0010  cmp wait for R5
+           cmp            R5,4       # L0011 
+           jge            @waitc1    # L0012 
+           illegal                   # L0013 wait time < 4 ns
+waitc1:    cmp            R5,65535   # L0014 
+           jle            @endwait1  # L0015 
+wait1:     sub            R5,65532,R5 # L0016 
+           wait           65532      # L0017 
+           cmp            R5,65535   # L0018 
+           jg             @wait1     # L0019 
+endwait1:  wait           R5         # L0020 
+# acquire(default, increment) 
+           wait           300        # L0021 
+           acquire        0,R2,1900  # L0022 t=520
+           add            R2,1,R2    # L0023 
+           add            R3,100,R3  # L0024 
+           sub            R4,1,R4    # L0025 
+           jg             @loop_0    # L0026 
+# --END-- 
+           sub            R1,1,R1    # L0027 
+           jg             @_start    # L0028 
+           upd_param      4          # L0029 t=2420
+           stop                      # L0030 
+"""
+

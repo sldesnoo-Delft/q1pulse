@@ -1,0 +1,53 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           0,R0       # L0001 R0: _zero
+           move           3,R1       # L0002 R1: _repetitions
+           wait_sync      100        # L0003 t=0
+# --START-- (t=0) 
+_start:    reset_ph                  # L0004 @ 0
+           upd_param      1700       # L0005 t=0
+# R.amplitude:float = 0.125 
+           move           268435455,R2 # L0006 R2: R.amplitude
+# block_pulse(100, -0.5, None) 
+# awg_offset = -0.5, None t=1700 
+           set_awg_offs   -16384,0   # L0007 @ 1700
+           upd_param      100        # L0008 t=1700
+# awg_offset = 0.0, None t=1800 
+           set_awg_offs   0,0        # L0009 @ 1800
+           upd_param      1000       # L0010 t=1800
+# block_pulse(100, -0.25, None) 
+# awg_offset = -0.25, None t=2800 
+           set_awg_offs   -8192,0    # L0011 @ 2800
+           upd_param      100        # L0012 t=2800
+# awg_offset = 0.0, None t=2900 
+           set_awg_offs   0,0        # L0013 @ 2900
+           upd_param      65532      # L0014 t=2900
+# --- long wait 
+# --- longer wait 
+# --- very long wait 
+# block_pulse(1000, -0.75, None) 
+# awg_offset = -0.75, None t=764900 
+           set_awg_offs   -24576,0   # L0015 @ 764900
+           move           10,R3      # L0016 temp ['R3']
+wait1:     wait           65532      # L0017 
+           sub            R3,1,R3    # L0018 
+           jg             @wait1     # L0019 
+           wait           41148      # L0020 
+           upd_param      1000       # L0021 t=764900
+# awg_offset = 0.0, None t=765900 
+           set_awg_offs   0,0        # L0022 @ 765900
+# --END-- 
+           sub            R1,1,R1    # L0023 
+           jg             @_start    # L0024 
+           upd_param      4          # L0025 t=765900
+           stop                      # L0026 
+"""
+

@@ -1,14 +1,13 @@
-import init_logger
 from q1pulse.instrument import Q1Instrument
 import numpy as np
 
-from init_pulsars import qcm0, qrm1
+from init_pulsars import qcm0, qrm1, q1asm_isa_v2
 from plot_util import plot_output
 
-instrument = Q1Instrument('q1')
+instrument = Q1Instrument('q1_v2' if q1asm_isa_v2 else 'q1')
 instrument.add_qcm(qcm0)
 instrument.add_qrm(qrm1)
-instrument.add_control('q1', qcm0.name, [0,1], nco_frequency=100e6)
+instrument.add_control('q1', qcm0.name, [0, 1], nco_frequency=100e6)
 instrument.add_control('P1', qcm0.name, [2])
 instrument.add_control('P2', qcm0.name, [3])
 instrument.add_readout('R1', qrm1.name, [])

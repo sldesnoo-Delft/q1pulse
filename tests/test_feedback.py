@@ -2,15 +2,18 @@ import numpy as np
 
 from q1pulse.instrument import Q1Instrument
 
-from init_pulsars import qcm0, qrm1
+from init_pulsars import qcm0, qrm1, q1asm_isa_v2
+
 from plot_util import plot_output
+
 
 def set_mock_data(qrm, seq_nr, acq_name, data):
     seq = qrm.sequencers[seq_nr]
     if hasattr(seq, 'set_acquisition_mock_data'):
         seq.set_acquisition_mock_data([data], name=acq_name, repeat=True)
 
-instrument = Q1Instrument('q1')
+
+instrument = Q1Instrument('q1_v2' if q1asm_isa_v2 else 'q1')
 instrument.add_qcm(qcm0)
 instrument.add_qrm(qrm1)
 instrument.add_control('P1', qcm0.name, [0])
@@ -65,21 +68,20 @@ p.wait(20)
 P1.latch_enable(False)
 p.wait(20)
 
-#p.describe()
-#print()
+# p.describe()
+# print()
 
 p.compile(listing=True)
 
-#%% Set Mock data
+# %% Set Mock data
 
 set_mock_data(qrm1, 0, 'measurements',
               np.array([0.2, -0.2]) * R1.integration_length_acq)
 
-#%% Run and plot
+# %% Run and plot
 # run and get results
 instrument.run_program(p)
 
 plot_output([qcm0, qrm1])
 
 data = instrument.get_acquisition_bins('R1', 'measurements')
-

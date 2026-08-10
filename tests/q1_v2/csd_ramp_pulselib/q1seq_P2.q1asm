@@ -1,0 +1,1218 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           0,R0       # L0001 R0: _zero
+           wait_sync      100        # L0002 t=0
+# --START-- (t=0) 
+_start:    reset_ph                  # L0003 @ 0
+# block_pulse(1050000, -0.5, None) 
+# awg_offset = -0.5, None t=0 
+           set_awg_offs   -16384,0   # L0004 @ 0
+           upd_param      65532      # L0005 t=0
+# awg_offset = 0.0, None t=1050000 
+# ------:  set_awg_offs   0,0        # @ 1050000 = overwritten =
+           move           15,R1      # L0006 temp ['R1']
+wait1:     wait           65532      # L0007 
+           sub            R1,1,R1    # L0008 
+           jg             @wait1     # L0009 
+           wait           1488       # L0010 
+# block_pulse(1050000, -0.4898989898989899, None) 
+# awg_offset = -0.4898989898989899, None t=1050000 
+# -- Overwrites set_awg_offs at 1050000 -- 
+           set_awg_offs   -16053,0   # L0011 @ 1050000
+           upd_param      65532      # L0012 t=1050000
+# awg_offset = 0.0, None t=2100000 
+# ------:  set_awg_offs   0,0        # @ 2100000 = overwritten =
+           move           15,R1      # L0013 temp ['R1']
+wait2:     wait           65532      # L0014 
+           sub            R1,1,R1    # L0015 
+           jg             @wait2     # L0016 
+           wait           1488       # L0017 
+# block_pulse(1050000, -0.4797979797979798, None) 
+# awg_offset = -0.4797979797979798, None t=2100000 
+# -- Overwrites set_awg_offs at 2100000 -- 
+           set_awg_offs   -15722,0   # L0018 @ 2100000
+           upd_param      65532      # L0019 t=2100000
+# awg_offset = 0.0, None t=3150000 
+# ------:  set_awg_offs   0,0        # @ 3150000 = overwritten =
+           move           15,R1      # L0020 temp ['R1']
+wait3:     wait           65532      # L0021 
+           sub            R1,1,R1    # L0022 
+           jg             @wait3     # L0023 
+           wait           1488       # L0024 
+# block_pulse(1050000, -0.4696969696969697, None) 
+# awg_offset = -0.4696969696969697, None t=3150000 
+# -- Overwrites set_awg_offs at 3150000 -- 
+           set_awg_offs   -15391,0   # L0025 @ 3150000
+           upd_param      65532      # L0026 t=3150000
+# awg_offset = 0.0, None t=4200000 
+# ------:  set_awg_offs   0,0        # @ 4200000 = overwritten =
+           move           15,R1      # L0027 temp ['R1']
+wait4:     wait           65532      # L0028 
+           sub            R1,1,R1    # L0029 
+           jg             @wait4     # L0030 
+           wait           1488       # L0031 
+# block_pulse(1050000, -0.4595959595959596, None) 
+# awg_offset = -0.4595959595959596, None t=4200000 
+# -- Overwrites set_awg_offs at 4200000 -- 
+           set_awg_offs   -15060,0   # L0032 @ 4200000
+           upd_param      65532      # L0033 t=4200000
+# awg_offset = 0.0, None t=5250000 
+# ------:  set_awg_offs   0,0        # @ 5250000 = overwritten =
+           move           15,R1      # L0034 temp ['R1']
+wait5:     wait           65532      # L0035 
+           sub            R1,1,R1    # L0036 
+           jg             @wait5     # L0037 
+           wait           1488       # L0038 
+# block_pulse(1050000, -0.4494949494949495, None) 
+# awg_offset = -0.4494949494949495, None t=5250000 
+# -- Overwrites set_awg_offs at 5250000 -- 
+           set_awg_offs   -14730,0   # L0039 @ 5250000
+           upd_param      65532      # L0040 t=5250000
+# awg_offset = 0.0, None t=6300000 
+# ------:  set_awg_offs   0,0        # @ 6300000 = overwritten =
+           move           15,R1      # L0041 temp ['R1']
+wait6:     wait           65532      # L0042 
+           sub            R1,1,R1    # L0043 
+           jg             @wait6     # L0044 
+           wait           1488       # L0045 
+# block_pulse(1050000, -0.4393939393939394, None) 
+# awg_offset = -0.4393939393939394, None t=6300000 
+# -- Overwrites set_awg_offs at 6300000 -- 
+           set_awg_offs   -14399,0   # L0046 @ 6300000
+           upd_param      65532      # L0047 t=6300000
+# awg_offset = 0.0, None t=7350000 
+# ------:  set_awg_offs   0,0        # @ 7350000 = overwritten =
+           move           15,R1      # L0048 temp ['R1']
+wait7:     wait           65532      # L0049 
+           sub            R1,1,R1    # L0050 
+           jg             @wait7     # L0051 
+           wait           1488       # L0052 
+# block_pulse(1050000, -0.4292929292929293, None) 
+# awg_offset = -0.4292929292929293, None t=7350000 
+# -- Overwrites set_awg_offs at 7350000 -- 
+           set_awg_offs   -14068,0   # L0053 @ 7350000
+           upd_param      65532      # L0054 t=7350000
+# awg_offset = 0.0, None t=8400000 
+# ------:  set_awg_offs   0,0        # @ 8400000 = overwritten =
+           move           15,R1      # L0055 temp ['R1']
+wait8:     wait           65532      # L0056 
+           sub            R1,1,R1    # L0057 
+           jg             @wait8     # L0058 
+           wait           1488       # L0059 
+# block_pulse(1050000, -0.41919191919191917, None) 
+# awg_offset = -0.41919191919191917, None t=8400000 
+# -- Overwrites set_awg_offs at 8400000 -- 
+           set_awg_offs   -13737,0   # L0060 @ 8400000
+           upd_param      65532      # L0061 t=8400000
+# awg_offset = 0.0, None t=9450000 
+# ------:  set_awg_offs   0,0        # @ 9450000 = overwritten =
+           move           15,R1      # L0062 temp ['R1']
+wait9:     wait           65532      # L0063 
+           sub            R1,1,R1    # L0064 
+           jg             @wait9     # L0065 
+           wait           1488       # L0066 
+# block_pulse(1050000, -0.40909090909090906, None) 
+# awg_offset = -0.40909090909090906, None t=9450000 
+# -- Overwrites set_awg_offs at 9450000 -- 
+           set_awg_offs   -13406,0   # L0067 @ 9450000
+           upd_param      65532      # L0068 t=9450000
+# awg_offset = 0.0, None t=10500000 
+# ------:  set_awg_offs   0,0        # @ 10500000 = overwritten =
+           move           15,R1      # L0069 temp ['R1']
+wait10:    wait           65532      # L0070 
+           sub            R1,1,R1    # L0071 
+           jg             @wait10    # L0072 
+           wait           1488       # L0073 
+# block_pulse(1050000, -0.398989898989899, None) 
+# awg_offset = -0.398989898989899, None t=10500000 
+# -- Overwrites set_awg_offs at 10500000 -- 
+           set_awg_offs   -13075,0   # L0074 @ 10500000
+           upd_param      65532      # L0075 t=10500000
+# awg_offset = 0.0, None t=11550000 
+# ------:  set_awg_offs   0,0        # @ 11550000 = overwritten =
+           move           15,R1      # L0076 temp ['R1']
+wait11:    wait           65532      # L0077 
+           sub            R1,1,R1    # L0078 
+           jg             @wait11    # L0079 
+           wait           1488       # L0080 
+# block_pulse(1050000, -0.3888888888888889, None) 
+# awg_offset = -0.3888888888888889, None t=11550000 
+# -- Overwrites set_awg_offs at 11550000 -- 
+           set_awg_offs   -12744,0   # L0081 @ 11550000
+           upd_param      65532      # L0082 t=11550000
+# awg_offset = 0.0, None t=12600000 
+# ------:  set_awg_offs   0,0        # @ 12600000 = overwritten =
+           move           15,R1      # L0083 temp ['R1']
+wait12:    wait           65532      # L0084 
+           sub            R1,1,R1    # L0085 
+           jg             @wait12    # L0086 
+           wait           1488       # L0087 
+# block_pulse(1050000, -0.3787878787878788, None) 
+# awg_offset = -0.3787878787878788, None t=12600000 
+# -- Overwrites set_awg_offs at 12600000 -- 
+           set_awg_offs   -12413,0   # L0088 @ 12600000
+           upd_param      65532      # L0089 t=12600000
+# awg_offset = 0.0, None t=13650000 
+# ------:  set_awg_offs   0,0        # @ 13650000 = overwritten =
+           move           15,R1      # L0090 temp ['R1']
+wait13:    wait           65532      # L0091 
+           sub            R1,1,R1    # L0092 
+           jg             @wait13    # L0093 
+           wait           1488       # L0094 
+# block_pulse(1050000, -0.3686868686868687, None) 
+# awg_offset = -0.3686868686868687, None t=13650000 
+# -- Overwrites set_awg_offs at 13650000 -- 
+           set_awg_offs   -12082,0   # L0095 @ 13650000
+           upd_param      65532      # L0096 t=13650000
+# awg_offset = 0.0, None t=14700000 
+# ------:  set_awg_offs   0,0        # @ 14700000 = overwritten =
+           move           15,R1      # L0097 temp ['R1']
+wait14:    wait           65532      # L0098 
+           sub            R1,1,R1    # L0099 
+           jg             @wait14    # L0100 
+           wait           1488       # L0101 
+# block_pulse(1050000, -0.35858585858585856, None) 
+# awg_offset = -0.35858585858585856, None t=14700000 
+# -- Overwrites set_awg_offs at 14700000 -- 
+           set_awg_offs   -11751,0   # L0102 @ 14700000
+           upd_param      65532      # L0103 t=14700000
+# awg_offset = 0.0, None t=15750000 
+# ------:  set_awg_offs   0,0        # @ 15750000 = overwritten =
+           move           15,R1      # L0104 temp ['R1']
+wait15:    wait           65532      # L0105 
+           sub            R1,1,R1    # L0106 
+           jg             @wait15    # L0107 
+           wait           1488       # L0108 
+# block_pulse(1050000, -0.3484848484848485, None) 
+# awg_offset = -0.3484848484848485, None t=15750000 
+# -- Overwrites set_awg_offs at 15750000 -- 
+           set_awg_offs   -11420,0   # L0109 @ 15750000
+           upd_param      65532      # L0110 t=15750000
+# awg_offset = 0.0, None t=16800000 
+# ------:  set_awg_offs   0,0        # @ 16800000 = overwritten =
+           move           15,R1      # L0111 temp ['R1']
+wait16:    wait           65532      # L0112 
+           sub            R1,1,R1    # L0113 
+           jg             @wait16    # L0114 
+           wait           1488       # L0115 
+# block_pulse(1050000, -0.33838383838383834, None) 
+# awg_offset = -0.33838383838383834, None t=16800000 
+# -- Overwrites set_awg_offs at 16800000 -- 
+           set_awg_offs   -11089,0   # L0116 @ 16800000
+           upd_param      65532      # L0117 t=16800000
+# awg_offset = 0.0, None t=17850000 
+# ------:  set_awg_offs   0,0        # @ 17850000 = overwritten =
+           move           15,R1      # L0118 temp ['R1']
+wait17:    wait           65532      # L0119 
+           sub            R1,1,R1    # L0120 
+           jg             @wait17    # L0121 
+           wait           1488       # L0122 
+# block_pulse(1050000, -0.3282828282828283, None) 
+# awg_offset = -0.3282828282828283, None t=17850000 
+# -- Overwrites set_awg_offs at 17850000 -- 
+           set_awg_offs   -10758,0   # L0123 @ 17850000
+           upd_param      65532      # L0124 t=17850000
+# awg_offset = 0.0, None t=18900000 
+# ------:  set_awg_offs   0,0        # @ 18900000 = overwritten =
+           move           15,R1      # L0125 temp ['R1']
+wait18:    wait           65532      # L0126 
+           sub            R1,1,R1    # L0127 
+           jg             @wait18    # L0128 
+           wait           1488       # L0129 
+# block_pulse(1050000, -0.3181818181818182, None) 
+# awg_offset = -0.3181818181818182, None t=18900000 
+# -- Overwrites set_awg_offs at 18900000 -- 
+           set_awg_offs   -10427,0   # L0130 @ 18900000
+           upd_param      65532      # L0131 t=18900000
+# awg_offset = 0.0, None t=19950000 
+# ------:  set_awg_offs   0,0        # @ 19950000 = overwritten =
+           move           15,R1      # L0132 temp ['R1']
+wait19:    wait           65532      # L0133 
+           sub            R1,1,R1    # L0134 
+           jg             @wait19    # L0135 
+           wait           1488       # L0136 
+# block_pulse(1050000, -0.30808080808080807, None) 
+# awg_offset = -0.30808080808080807, None t=19950000 
+# -- Overwrites set_awg_offs at 19950000 -- 
+           set_awg_offs   -10096,0   # L0137 @ 19950000
+           upd_param      65532      # L0138 t=19950000
+# awg_offset = 0.0, None t=21000000 
+# ------:  set_awg_offs   0,0        # @ 21000000 = overwritten =
+           move           15,R1      # L0139 temp ['R1']
+wait20:    wait           65532      # L0140 
+           sub            R1,1,R1    # L0141 
+           jg             @wait20    # L0142 
+           wait           1488       # L0143 
+# block_pulse(1050000, -0.29797979797979796, None) 
+# awg_offset = -0.29797979797979796, None t=21000000 
+# -- Overwrites set_awg_offs at 21000000 -- 
+           set_awg_offs   -9765,0    # L0144 @ 21000000
+           upd_param      65532      # L0145 t=21000000
+# awg_offset = 0.0, None t=22050000 
+# ------:  set_awg_offs   0,0        # @ 22050000 = overwritten =
+           move           15,R1      # L0146 temp ['R1']
+wait21:    wait           65532      # L0147 
+           sub            R1,1,R1    # L0148 
+           jg             @wait21    # L0149 
+           wait           1488       # L0150 
+# block_pulse(1050000, -0.28787878787878785, None) 
+# awg_offset = -0.28787878787878785, None t=22050000 
+# -- Overwrites set_awg_offs at 22050000 -- 
+           set_awg_offs   -9434,0    # L0151 @ 22050000
+           upd_param      65532      # L0152 t=22050000
+# awg_offset = 0.0, None t=23100000 
+# ------:  set_awg_offs   0,0        # @ 23100000 = overwritten =
+           move           15,R1      # L0153 temp ['R1']
+wait22:    wait           65532      # L0154 
+           sub            R1,1,R1    # L0155 
+           jg             @wait22    # L0156 
+           wait           1488       # L0157 
+# block_pulse(1050000, -0.2777777777777778, None) 
+# awg_offset = -0.2777777777777778, None t=23100000 
+# -- Overwrites set_awg_offs at 23100000 -- 
+           set_awg_offs   -9103,0    # L0158 @ 23100000
+           upd_param      65532      # L0159 t=23100000
+# awg_offset = 0.0, None t=24150000 
+# ------:  set_awg_offs   0,0        # @ 24150000 = overwritten =
+           move           15,R1      # L0160 temp ['R1']
+wait23:    wait           65532      # L0161 
+           sub            R1,1,R1    # L0162 
+           jg             @wait23    # L0163 
+           wait           1488       # L0164 
+# block_pulse(1050000, -0.2676767676767676, None) 
+# awg_offset = -0.2676767676767676, None t=24150000 
+# -- Overwrites set_awg_offs at 24150000 -- 
+           set_awg_offs   -8772,0    # L0165 @ 24150000
+           upd_param      65532      # L0166 t=24150000
+# awg_offset = 0.0, None t=25200000 
+# ------:  set_awg_offs   0,0        # @ 25200000 = overwritten =
+           move           15,R1      # L0167 temp ['R1']
+wait24:    wait           65532      # L0168 
+           sub            R1,1,R1    # L0169 
+           jg             @wait24    # L0170 
+           wait           1488       # L0171 
+# block_pulse(1050000, -0.25757575757575757, None) 
+# awg_offset = -0.25757575757575757, None t=25200000 
+# -- Overwrites set_awg_offs at 25200000 -- 
+           set_awg_offs   -8441,0    # L0172 @ 25200000
+           upd_param      65532      # L0173 t=25200000
+# awg_offset = 0.0, None t=26250000 
+# ------:  set_awg_offs   0,0        # @ 26250000 = overwritten =
+           move           15,R1      # L0174 temp ['R1']
+wait25:    wait           65532      # L0175 
+           sub            R1,1,R1    # L0176 
+           jg             @wait25    # L0177 
+           wait           1488       # L0178 
+# block_pulse(1050000, -0.24747474747474746, None) 
+# awg_offset = -0.24747474747474746, None t=26250000 
+# -- Overwrites set_awg_offs at 26250000 -- 
+           set_awg_offs   -8110,0    # L0179 @ 26250000
+           upd_param      65532      # L0180 t=26250000
+# awg_offset = 0.0, None t=27300000 
+# ------:  set_awg_offs   0,0        # @ 27300000 = overwritten =
+           move           15,R1      # L0181 temp ['R1']
+wait26:    wait           65532      # L0182 
+           sub            R1,1,R1    # L0183 
+           jg             @wait26    # L0184 
+           wait           1488       # L0185 
+# block_pulse(1050000, -0.23737373737373735, None) 
+# awg_offset = -0.23737373737373735, None t=27300000 
+# -- Overwrites set_awg_offs at 27300000 -- 
+           set_awg_offs   -7779,0    # L0186 @ 27300000
+           upd_param      65532      # L0187 t=27300000
+# awg_offset = 0.0, None t=28350000 
+# ------:  set_awg_offs   0,0        # @ 28350000 = overwritten =
+           move           15,R1      # L0188 temp ['R1']
+wait27:    wait           65532      # L0189 
+           sub            R1,1,R1    # L0190 
+           jg             @wait27    # L0191 
+           wait           1488       # L0192 
+# block_pulse(1050000, -0.22727272727272724, None) 
+# awg_offset = -0.22727272727272724, None t=28350000 
+# -- Overwrites set_awg_offs at 28350000 -- 
+           set_awg_offs   -7448,0    # L0193 @ 28350000
+           upd_param      65532      # L0194 t=28350000
+# awg_offset = 0.0, None t=29400000 
+# ------:  set_awg_offs   0,0        # @ 29400000 = overwritten =
+           move           15,R1      # L0195 temp ['R1']
+wait28:    wait           65532      # L0196 
+           sub            R1,1,R1    # L0197 
+           jg             @wait28    # L0198 
+           wait           1488       # L0199 
+# block_pulse(1050000, -0.21717171717171713, None) 
+# awg_offset = -0.21717171717171713, None t=29400000 
+# -- Overwrites set_awg_offs at 29400000 -- 
+           set_awg_offs   -7117,0    # L0200 @ 29400000
+           upd_param      65532      # L0201 t=29400000
+# awg_offset = 0.0, None t=30450000 
+# ------:  set_awg_offs   0,0        # @ 30450000 = overwritten =
+           move           15,R1      # L0202 temp ['R1']
+wait29:    wait           65532      # L0203 
+           sub            R1,1,R1    # L0204 
+           jg             @wait29    # L0205 
+           wait           1488       # L0206 
+# block_pulse(1050000, -0.20707070707070707, None) 
+# awg_offset = -0.20707070707070707, None t=30450000 
+# -- Overwrites set_awg_offs at 30450000 -- 
+           set_awg_offs   -6786,0    # L0207 @ 30450000
+           upd_param      65532      # L0208 t=30450000
+# awg_offset = 0.0, None t=31500000 
+# ------:  set_awg_offs   0,0        # @ 31500000 = overwritten =
+           move           15,R1      # L0209 temp ['R1']
+wait30:    wait           65532      # L0210 
+           sub            R1,1,R1    # L0211 
+           jg             @wait30    # L0212 
+           wait           1488       # L0213 
+# block_pulse(1050000, -0.19696969696969696, None) 
+# awg_offset = -0.19696969696969696, None t=31500000 
+# -- Overwrites set_awg_offs at 31500000 -- 
+           set_awg_offs   -6455,0    # L0214 @ 31500000
+           upd_param      65532      # L0215 t=31500000
+# awg_offset = 0.0, None t=32550000 
+# ------:  set_awg_offs   0,0        # @ 32550000 = overwritten =
+           move           15,R1      # L0216 temp ['R1']
+wait31:    wait           65532      # L0217 
+           sub            R1,1,R1    # L0218 
+           jg             @wait31    # L0219 
+           wait           1488       # L0220 
+# block_pulse(1050000, -0.18686868686868685, None) 
+# awg_offset = -0.18686868686868685, None t=32550000 
+# -- Overwrites set_awg_offs at 32550000 -- 
+           set_awg_offs   -6124,0    # L0221 @ 32550000
+           upd_param      65532      # L0222 t=32550000
+# awg_offset = 0.0, None t=33600000 
+# ------:  set_awg_offs   0,0        # @ 33600000 = overwritten =
+           move           15,R1      # L0223 temp ['R1']
+wait32:    wait           65532      # L0224 
+           sub            R1,1,R1    # L0225 
+           jg             @wait32    # L0226 
+           wait           1488       # L0227 
+# block_pulse(1050000, -0.17676767676767674, None) 
+# awg_offset = -0.17676767676767674, None t=33600000 
+# -- Overwrites set_awg_offs at 33600000 -- 
+           set_awg_offs   -5793,0    # L0228 @ 33600000
+           upd_param      65532      # L0229 t=33600000
+# awg_offset = 0.0, None t=34650000 
+# ------:  set_awg_offs   0,0        # @ 34650000 = overwritten =
+           move           15,R1      # L0230 temp ['R1']
+wait33:    wait           65532      # L0231 
+           sub            R1,1,R1    # L0232 
+           jg             @wait33    # L0233 
+           wait           1488       # L0234 
+# block_pulse(1050000, -0.16666666666666663, None) 
+# awg_offset = -0.16666666666666663, None t=34650000 
+# -- Overwrites set_awg_offs at 34650000 -- 
+           set_awg_offs   -5462,0    # L0235 @ 34650000
+           upd_param      65532      # L0236 t=34650000
+# awg_offset = 0.0, None t=35700000 
+# ------:  set_awg_offs   0,0        # @ 35700000 = overwritten =
+           move           15,R1      # L0237 temp ['R1']
+wait34:    wait           65532      # L0238 
+           sub            R1,1,R1    # L0239 
+           jg             @wait34    # L0240 
+           wait           1488       # L0241 
+# block_pulse(1050000, -0.15656565656565652, None) 
+# awg_offset = -0.15656565656565652, None t=35700000 
+# -- Overwrites set_awg_offs at 35700000 -- 
+           set_awg_offs   -5131,0    # L0242 @ 35700000
+           upd_param      65532      # L0243 t=35700000
+# awg_offset = 0.0, None t=36750000 
+# ------:  set_awg_offs   0,0        # @ 36750000 = overwritten =
+           move           15,R1      # L0244 temp ['R1']
+wait35:    wait           65532      # L0245 
+           sub            R1,1,R1    # L0246 
+           jg             @wait35    # L0247 
+           wait           1488       # L0248 
+# block_pulse(1050000, -0.1464646464646464, None) 
+# awg_offset = -0.1464646464646464, None t=36750000 
+# -- Overwrites set_awg_offs at 36750000 -- 
+           set_awg_offs   -4800,0    # L0249 @ 36750000
+           upd_param      65532      # L0250 t=36750000
+# awg_offset = 0.0, None t=37800000 
+# ------:  set_awg_offs   0,0        # @ 37800000 = overwritten =
+           move           15,R1      # L0251 temp ['R1']
+wait36:    wait           65532      # L0252 
+           sub            R1,1,R1    # L0253 
+           jg             @wait36    # L0254 
+           wait           1488       # L0255 
+# block_pulse(1050000, -0.13636363636363635, None) 
+# awg_offset = -0.13636363636363635, None t=37800000 
+# -- Overwrites set_awg_offs at 37800000 -- 
+           set_awg_offs   -4469,0    # L0256 @ 37800000
+           upd_param      65532      # L0257 t=37800000
+# awg_offset = 0.0, None t=38850000 
+# ------:  set_awg_offs   0,0        # @ 38850000 = overwritten =
+           move           15,R1      # L0258 temp ['R1']
+wait37:    wait           65532      # L0259 
+           sub            R1,1,R1    # L0260 
+           jg             @wait37    # L0261 
+           wait           1488       # L0262 
+# block_pulse(1050000, -0.12626262626262624, None) 
+# awg_offset = -0.12626262626262624, None t=38850000 
+# -- Overwrites set_awg_offs at 38850000 -- 
+           set_awg_offs   -4138,0    # L0263 @ 38850000
+           upd_param      65532      # L0264 t=38850000
+# awg_offset = 0.0, None t=39900000 
+# ------:  set_awg_offs   0,0        # @ 39900000 = overwritten =
+           move           15,R1      # L0265 temp ['R1']
+wait38:    wait           65532      # L0266 
+           sub            R1,1,R1    # L0267 
+           jg             @wait38    # L0268 
+           wait           1488       # L0269 
+# block_pulse(1050000, -0.11616161616161613, None) 
+# awg_offset = -0.11616161616161613, None t=39900000 
+# -- Overwrites set_awg_offs at 39900000 -- 
+           set_awg_offs   -3807,0    # L0270 @ 39900000
+           upd_param      65532      # L0271 t=39900000
+# awg_offset = 0.0, None t=40950000 
+# ------:  set_awg_offs   0,0        # @ 40950000 = overwritten =
+           move           15,R1      # L0272 temp ['R1']
+wait39:    wait           65532      # L0273 
+           sub            R1,1,R1    # L0274 
+           jg             @wait39    # L0275 
+           wait           1488       # L0276 
+# block_pulse(1050000, -0.10606060606060602, None) 
+# awg_offset = -0.10606060606060602, None t=40950000 
+# -- Overwrites set_awg_offs at 40950000 -- 
+           set_awg_offs   -3476,0    # L0277 @ 40950000
+           upd_param      65532      # L0278 t=40950000
+# awg_offset = 0.0, None t=42000000 
+# ------:  set_awg_offs   0,0        # @ 42000000 = overwritten =
+           move           15,R1      # L0279 temp ['R1']
+wait40:    wait           65532      # L0280 
+           sub            R1,1,R1    # L0281 
+           jg             @wait40    # L0282 
+           wait           1488       # L0283 
+# block_pulse(1050000, -0.09595959595959591, None) 
+# awg_offset = -0.09595959595959591, None t=42000000 
+# -- Overwrites set_awg_offs at 42000000 -- 
+           set_awg_offs   -3145,0    # L0284 @ 42000000
+           upd_param      65532      # L0285 t=42000000
+# awg_offset = 0.0, None t=43050000 
+# ------:  set_awg_offs   0,0        # @ 43050000 = overwritten =
+           move           15,R1      # L0286 temp ['R1']
+wait41:    wait           65532      # L0287 
+           sub            R1,1,R1    # L0288 
+           jg             @wait41    # L0289 
+           wait           1488       # L0290 
+# block_pulse(1050000, -0.0858585858585858, None) 
+# awg_offset = -0.0858585858585858, None t=43050000 
+# -- Overwrites set_awg_offs at 43050000 -- 
+           set_awg_offs   -2814,0    # L0291 @ 43050000
+           upd_param      65532      # L0292 t=43050000
+# awg_offset = 0.0, None t=44100000 
+# ------:  set_awg_offs   0,0        # @ 44100000 = overwritten =
+           move           15,R1      # L0293 temp ['R1']
+wait42:    wait           65532      # L0294 
+           sub            R1,1,R1    # L0295 
+           jg             @wait42    # L0296 
+           wait           1488       # L0297 
+# block_pulse(1050000, -0.07575757575757575, None) 
+# awg_offset = -0.07575757575757575, None t=44100000 
+# -- Overwrites set_awg_offs at 44100000 -- 
+           set_awg_offs   -2483,0    # L0298 @ 44100000
+           upd_param      65532      # L0299 t=44100000
+# awg_offset = 0.0, None t=45150000 
+# ------:  set_awg_offs   0,0        # @ 45150000 = overwritten =
+           move           15,R1      # L0300 temp ['R1']
+wait43:    wait           65532      # L0301 
+           sub            R1,1,R1    # L0302 
+           jg             @wait43    # L0303 
+           wait           1488       # L0304 
+# block_pulse(1050000, -0.06565656565656564, None) 
+# awg_offset = -0.06565656565656564, None t=45150000 
+# -- Overwrites set_awg_offs at 45150000 -- 
+           set_awg_offs   -2152,0    # L0305 @ 45150000
+           upd_param      65532      # L0306 t=45150000
+# awg_offset = 0.0, None t=46200000 
+# ------:  set_awg_offs   0,0        # @ 46200000 = overwritten =
+           move           15,R1      # L0307 temp ['R1']
+wait44:    wait           65532      # L0308 
+           sub            R1,1,R1    # L0309 
+           jg             @wait44    # L0310 
+           wait           1488       # L0311 
+# block_pulse(1050000, -0.055555555555555525, None) 
+# awg_offset = -0.055555555555555525, None t=46200000 
+# -- Overwrites set_awg_offs at 46200000 -- 
+           set_awg_offs   -1821,0    # L0312 @ 46200000
+           upd_param      65532      # L0313 t=46200000
+# awg_offset = 0.0, None t=47250000 
+# ------:  set_awg_offs   0,0        # @ 47250000 = overwritten =
+           move           15,R1      # L0314 temp ['R1']
+wait45:    wait           65532      # L0315 
+           sub            R1,1,R1    # L0316 
+           jg             @wait45    # L0317 
+           wait           1488       # L0318 
+# block_pulse(1050000, -0.045454545454545414, None) 
+# awg_offset = -0.045454545454545414, None t=47250000 
+# -- Overwrites set_awg_offs at 47250000 -- 
+           set_awg_offs   -1490,0    # L0319 @ 47250000
+           upd_param      65532      # L0320 t=47250000
+# awg_offset = 0.0, None t=48300000 
+# ------:  set_awg_offs   0,0        # @ 48300000 = overwritten =
+           move           15,R1      # L0321 temp ['R1']
+wait46:    wait           65532      # L0322 
+           sub            R1,1,R1    # L0323 
+           jg             @wait46    # L0324 
+           wait           1488       # L0325 
+# block_pulse(1050000, -0.035353535353535304, None) 
+# awg_offset = -0.035353535353535304, None t=48300000 
+# -- Overwrites set_awg_offs at 48300000 -- 
+           set_awg_offs   -1159,0    # L0326 @ 48300000
+           upd_param      65532      # L0327 t=48300000
+# awg_offset = 0.0, None t=49350000 
+# ------:  set_awg_offs   0,0        # @ 49350000 = overwritten =
+           move           15,R1      # L0328 temp ['R1']
+wait47:    wait           65532      # L0329 
+           sub            R1,1,R1    # L0330 
+           jg             @wait47    # L0331 
+           wait           1488       # L0332 
+# block_pulse(1050000, -0.025252525252525193, None) 
+# awg_offset = -0.025252525252525193, None t=49350000 
+# -- Overwrites set_awg_offs at 49350000 -- 
+           set_awg_offs   -828,0     # L0333 @ 49350000
+           upd_param      65532      # L0334 t=49350000
+# awg_offset = 0.0, None t=50400000 
+# ------:  set_awg_offs   0,0        # @ 50400000 = overwritten =
+           move           15,R1      # L0335 temp ['R1']
+wait48:    wait           65532      # L0336 
+           sub            R1,1,R1    # L0337 
+           jg             @wait48    # L0338 
+           wait           1488       # L0339 
+# block_pulse(1050000, -0.015151515151515138, None) 
+# awg_offset = -0.015151515151515138, None t=50400000 
+# -- Overwrites set_awg_offs at 50400000 -- 
+           set_awg_offs   -497,0     # L0340 @ 50400000
+           upd_param      65532      # L0341 t=50400000
+# awg_offset = 0.0, None t=51450000 
+# ------:  set_awg_offs   0,0        # @ 51450000 = overwritten =
+           move           15,R1      # L0342 temp ['R1']
+wait49:    wait           65532      # L0343 
+           sub            R1,1,R1    # L0344 
+           jg             @wait49    # L0345 
+           wait           1488       # L0346 
+# block_pulse(1050000, -0.0050505050505050275, None) 
+# awg_offset = -0.0050505050505050275, None t=51450000 
+# -- Overwrites set_awg_offs at 51450000 -- 
+           set_awg_offs   -166,0     # L0347 @ 51450000
+           upd_param      65532      # L0348 t=51450000
+# awg_offset = 0.0, None t=52500000 
+# ------:  set_awg_offs   0,0        # @ 52500000 = overwritten =
+           move           15,R1      # L0349 temp ['R1']
+wait50:    wait           65532      # L0350 
+           sub            R1,1,R1    # L0351 
+           jg             @wait50    # L0352 
+           wait           1488       # L0353 
+# block_pulse(1050000, 0.005050505050505083, None) 
+# awg_offset = 0.005050505050505083, None t=52500000 
+# -- Overwrites set_awg_offs at 52500000 -- 
+           set_awg_offs   165,0      # L0354 @ 52500000
+           upd_param      65532      # L0355 t=52500000
+# awg_offset = 0.0, None t=53550000 
+# ------:  set_awg_offs   0,0        # @ 53550000 = overwritten =
+           move           15,R1      # L0356 temp ['R1']
+wait51:    wait           65532      # L0357 
+           sub            R1,1,R1    # L0358 
+           jg             @wait51    # L0359 
+           wait           1488       # L0360 
+# block_pulse(1050000, 0.015151515151515249, None) 
+# awg_offset = 0.015151515151515249, None t=53550000 
+# -- Overwrites set_awg_offs at 53550000 -- 
+           set_awg_offs   496,0      # L0361 @ 53550000
+           upd_param      65532      # L0362 t=53550000
+# awg_offset = 0.0, None t=54600000 
+# ------:  set_awg_offs   0,0        # @ 54600000 = overwritten =
+           move           15,R1      # L0363 temp ['R1']
+wait52:    wait           65532      # L0364 
+           sub            R1,1,R1    # L0365 
+           jg             @wait52    # L0366 
+           wait           1488       # L0367 
+# block_pulse(1050000, 0.025252525252525304, None) 
+# awg_offset = 0.025252525252525304, None t=54600000 
+# -- Overwrites set_awg_offs at 54600000 -- 
+           set_awg_offs   827,0      # L0368 @ 54600000
+           upd_param      65532      # L0369 t=54600000
+# awg_offset = 0.0, None t=55650000 
+# ------:  set_awg_offs   0,0        # @ 55650000 = overwritten =
+           move           15,R1      # L0370 temp ['R1']
+wait53:    wait           65532      # L0371 
+           sub            R1,1,R1    # L0372 
+           jg             @wait53    # L0373 
+           wait           1488       # L0374 
+# block_pulse(1050000, 0.03535353535353536, None) 
+# awg_offset = 0.03535353535353536, None t=55650000 
+# -- Overwrites set_awg_offs at 55650000 -- 
+           set_awg_offs   1158,0     # L0375 @ 55650000
+           upd_param      65532      # L0376 t=55650000
+# awg_offset = 0.0, None t=56700000 
+# ------:  set_awg_offs   0,0        # @ 56700000 = overwritten =
+           move           15,R1      # L0377 temp ['R1']
+wait54:    wait           65532      # L0378 
+           sub            R1,1,R1    # L0379 
+           jg             @wait54    # L0380 
+           wait           1488       # L0381 
+# block_pulse(1050000, 0.045454545454545525, None) 
+# awg_offset = 0.045454545454545525, None t=56700000 
+# -- Overwrites set_awg_offs at 56700000 -- 
+           set_awg_offs   1489,0     # L0382 @ 56700000
+           upd_param      65532      # L0383 t=56700000
+# awg_offset = 0.0, None t=57750000 
+# ------:  set_awg_offs   0,0        # @ 57750000 = overwritten =
+           move           15,R1      # L0384 temp ['R1']
+wait55:    wait           65532      # L0385 
+           sub            R1,1,R1    # L0386 
+           jg             @wait55    # L0387 
+           wait           1488       # L0388 
+# block_pulse(1050000, 0.05555555555555558, None) 
+# awg_offset = 0.05555555555555558, None t=57750000 
+# -- Overwrites set_awg_offs at 57750000 -- 
+           set_awg_offs   1820,0     # L0389 @ 57750000
+           upd_param      65532      # L0390 t=57750000
+# awg_offset = 0.0, None t=58800000 
+# ------:  set_awg_offs   0,0        # @ 58800000 = overwritten =
+           move           15,R1      # L0391 temp ['R1']
+wait56:    wait           65532      # L0392 
+           sub            R1,1,R1    # L0393 
+           jg             @wait56    # L0394 
+           wait           1488       # L0395 
+# block_pulse(1050000, 0.06565656565656575, None) 
+# awg_offset = 0.06565656565656575, None t=58800000 
+# -- Overwrites set_awg_offs at 58800000 -- 
+           set_awg_offs   2151,0     # L0396 @ 58800000
+           upd_param      65532      # L0397 t=58800000
+# awg_offset = 0.0, None t=59850000 
+# ------:  set_awg_offs   0,0        # @ 59850000 = overwritten =
+           move           15,R1      # L0398 temp ['R1']
+wait57:    wait           65532      # L0399 
+           sub            R1,1,R1    # L0400 
+           jg             @wait57    # L0401 
+           wait           1488       # L0402 
+# block_pulse(1050000, 0.0757575757575758, None) 
+# awg_offset = 0.0757575757575758, None t=59850000 
+# -- Overwrites set_awg_offs at 59850000 -- 
+           set_awg_offs   2482,0     # L0403 @ 59850000
+           upd_param      65532      # L0404 t=59850000
+# awg_offset = 0.0, None t=60900000 
+# ------:  set_awg_offs   0,0        # @ 60900000 = overwritten =
+           move           15,R1      # L0405 temp ['R1']
+wait58:    wait           65532      # L0406 
+           sub            R1,1,R1    # L0407 
+           jg             @wait58    # L0408 
+           wait           1488       # L0409 
+# block_pulse(1050000, 0.08585858585858586, None) 
+# awg_offset = 0.08585858585858586, None t=60900000 
+# -- Overwrites set_awg_offs at 60900000 -- 
+           set_awg_offs   2813,0     # L0410 @ 60900000
+           upd_param      65532      # L0411 t=60900000
+# awg_offset = 0.0, None t=61950000 
+# ------:  set_awg_offs   0,0        # @ 61950000 = overwritten =
+           move           15,R1      # L0412 temp ['R1']
+wait59:    wait           65532      # L0413 
+           sub            R1,1,R1    # L0414 
+           jg             @wait59    # L0415 
+           wait           1488       # L0416 
+# block_pulse(1050000, 0.09595959595959602, None) 
+# awg_offset = 0.09595959595959602, None t=61950000 
+# -- Overwrites set_awg_offs at 61950000 -- 
+           set_awg_offs   3144,0     # L0417 @ 61950000
+           upd_param      65532      # L0418 t=61950000
+# awg_offset = 0.0, None t=63000000 
+# ------:  set_awg_offs   0,0        # @ 63000000 = overwritten =
+           move           15,R1      # L0419 temp ['R1']
+wait60:    wait           65532      # L0420 
+           sub            R1,1,R1    # L0421 
+           jg             @wait60    # L0422 
+           wait           1488       # L0423 
+# block_pulse(1050000, 0.10606060606060608, None) 
+# awg_offset = 0.10606060606060608, None t=63000000 
+# -- Overwrites set_awg_offs at 63000000 -- 
+           set_awg_offs   3475,0     # L0424 @ 63000000
+           upd_param      65532      # L0425 t=63000000
+# awg_offset = 0.0, None t=64050000 
+# ------:  set_awg_offs   0,0        # @ 64050000 = overwritten =
+           move           15,R1      # L0426 temp ['R1']
+wait61:    wait           65532      # L0427 
+           sub            R1,1,R1    # L0428 
+           jg             @wait61    # L0429 
+           wait           1488       # L0430 
+# block_pulse(1050000, 0.11616161616161624, None) 
+# awg_offset = 0.11616161616161624, None t=64050000 
+# -- Overwrites set_awg_offs at 64050000 -- 
+           set_awg_offs   3806,0     # L0431 @ 64050000
+           upd_param      65532      # L0432 t=64050000
+# awg_offset = 0.0, None t=65100000 
+# ------:  set_awg_offs   0,0        # @ 65100000 = overwritten =
+           move           15,R1      # L0433 temp ['R1']
+wait62:    wait           65532      # L0434 
+           sub            R1,1,R1    # L0435 
+           jg             @wait62    # L0436 
+           wait           1488       # L0437 
+# block_pulse(1050000, 0.1262626262626263, None) 
+# awg_offset = 0.1262626262626263, None t=65100000 
+# -- Overwrites set_awg_offs at 65100000 -- 
+           set_awg_offs   4137,0     # L0438 @ 65100000
+           upd_param      65532      # L0439 t=65100000
+# awg_offset = 0.0, None t=66150000 
+# ------:  set_awg_offs   0,0        # @ 66150000 = overwritten =
+           move           15,R1      # L0440 temp ['R1']
+wait63:    wait           65532      # L0441 
+           sub            R1,1,R1    # L0442 
+           jg             @wait63    # L0443 
+           wait           1488       # L0444 
+# block_pulse(1050000, 0.13636363636363646, None) 
+# awg_offset = 0.13636363636363646, None t=66150000 
+# -- Overwrites set_awg_offs at 66150000 -- 
+           set_awg_offs   4468,0     # L0445 @ 66150000
+           upd_param      65532      # L0446 t=66150000
+# awg_offset = 0.0, None t=67200000 
+# ------:  set_awg_offs   0,0        # @ 67200000 = overwritten =
+           move           15,R1      # L0447 temp ['R1']
+wait64:    wait           65532      # L0448 
+           sub            R1,1,R1    # L0449 
+           jg             @wait64    # L0450 
+           wait           1488       # L0451 
+# block_pulse(1050000, 0.14646464646464652, None) 
+# awg_offset = 0.14646464646464652, None t=67200000 
+# -- Overwrites set_awg_offs at 67200000 -- 
+           set_awg_offs   4799,0     # L0452 @ 67200000
+           upd_param      65532      # L0453 t=67200000
+# awg_offset = 0.0, None t=68250000 
+# ------:  set_awg_offs   0,0        # @ 68250000 = overwritten =
+           move           15,R1      # L0454 temp ['R1']
+wait65:    wait           65532      # L0455 
+           sub            R1,1,R1    # L0456 
+           jg             @wait65    # L0457 
+           wait           1488       # L0458 
+# block_pulse(1050000, 0.15656565656565657, None) 
+# awg_offset = 0.15656565656565657, None t=68250000 
+# -- Overwrites set_awg_offs at 68250000 -- 
+           set_awg_offs   5130,0     # L0459 @ 68250000
+           upd_param      65532      # L0460 t=68250000
+# awg_offset = 0.0, None t=69300000 
+# ------:  set_awg_offs   0,0        # @ 69300000 = overwritten =
+           move           15,R1      # L0461 temp ['R1']
+wait66:    wait           65532      # L0462 
+           sub            R1,1,R1    # L0463 
+           jg             @wait66    # L0464 
+           wait           1488       # L0465 
+# block_pulse(1050000, 0.16666666666666674, None) 
+# awg_offset = 0.16666666666666674, None t=69300000 
+# -- Overwrites set_awg_offs at 69300000 -- 
+           set_awg_offs   5461,0     # L0466 @ 69300000
+           upd_param      65532      # L0467 t=69300000
+# awg_offset = 0.0, None t=70350000 
+# ------:  set_awg_offs   0,0        # @ 70350000 = overwritten =
+           move           15,R1      # L0468 temp ['R1']
+wait67:    wait           65532      # L0469 
+           sub            R1,1,R1    # L0470 
+           jg             @wait67    # L0471 
+           wait           1488       # L0472 
+# block_pulse(1050000, 0.1767676767676768, None) 
+# awg_offset = 0.1767676767676768, None t=70350000 
+# -- Overwrites set_awg_offs at 70350000 -- 
+           set_awg_offs   5792,0     # L0473 @ 70350000
+           upd_param      65532      # L0474 t=70350000
+# awg_offset = 0.0, None t=71400000 
+# ------:  set_awg_offs   0,0        # @ 71400000 = overwritten =
+           move           15,R1      # L0475 temp ['R1']
+wait68:    wait           65532      # L0476 
+           sub            R1,1,R1    # L0477 
+           jg             @wait68    # L0478 
+           wait           1488       # L0479 
+# block_pulse(1050000, 0.18686868686868696, None) 
+# awg_offset = 0.18686868686868696, None t=71400000 
+# -- Overwrites set_awg_offs at 71400000 -- 
+           set_awg_offs   6123,0     # L0480 @ 71400000
+           upd_param      65532      # L0481 t=71400000
+# awg_offset = 0.0, None t=72450000 
+# ------:  set_awg_offs   0,0        # @ 72450000 = overwritten =
+           move           15,R1      # L0482 temp ['R1']
+wait69:    wait           65532      # L0483 
+           sub            R1,1,R1    # L0484 
+           jg             @wait69    # L0485 
+           wait           1488       # L0486 
+# block_pulse(1050000, 0.19696969696969702, None) 
+# awg_offset = 0.19696969696969702, None t=72450000 
+# -- Overwrites set_awg_offs at 72450000 -- 
+           set_awg_offs   6454,0     # L0487 @ 72450000
+           upd_param      65532      # L0488 t=72450000
+# awg_offset = 0.0, None t=73500000 
+# ------:  set_awg_offs   0,0        # @ 73500000 = overwritten =
+           move           15,R1      # L0489 temp ['R1']
+wait70:    wait           65532      # L0490 
+           sub            R1,1,R1    # L0491 
+           jg             @wait70    # L0492 
+           wait           1488       # L0493 
+# block_pulse(1050000, 0.20707070707070718, None) 
+# awg_offset = 0.20707070707070718, None t=73500000 
+# -- Overwrites set_awg_offs at 73500000 -- 
+           set_awg_offs   6785,0     # L0494 @ 73500000
+           upd_param      65532      # L0495 t=73500000
+# awg_offset = 0.0, None t=74550000 
+# ------:  set_awg_offs   0,0        # @ 74550000 = overwritten =
+           move           15,R1      # L0496 temp ['R1']
+wait71:    wait           65532      # L0497 
+           sub            R1,1,R1    # L0498 
+           jg             @wait71    # L0499 
+           wait           1488       # L0500 
+# block_pulse(1050000, 0.21717171717171724, None) 
+# awg_offset = 0.21717171717171724, None t=74550000 
+# -- Overwrites set_awg_offs at 74550000 -- 
+           set_awg_offs   7116,0     # L0501 @ 74550000
+           upd_param      65532      # L0502 t=74550000
+# awg_offset = 0.0, None t=75600000 
+# ------:  set_awg_offs   0,0        # @ 75600000 = overwritten =
+           move           15,R1      # L0503 temp ['R1']
+wait72:    wait           65532      # L0504 
+           sub            R1,1,R1    # L0505 
+           jg             @wait72    # L0506 
+           wait           1488       # L0507 
+# block_pulse(1050000, 0.2272727272727273, None) 
+# awg_offset = 0.2272727272727273, None t=75600000 
+# -- Overwrites set_awg_offs at 75600000 -- 
+           set_awg_offs   7447,0     # L0508 @ 75600000
+           upd_param      65532      # L0509 t=75600000
+# awg_offset = 0.0, None t=76650000 
+# ------:  set_awg_offs   0,0        # @ 76650000 = overwritten =
+           move           15,R1      # L0510 temp ['R1']
+wait73:    wait           65532      # L0511 
+           sub            R1,1,R1    # L0512 
+           jg             @wait73    # L0513 
+           wait           1488       # L0514 
+# block_pulse(1050000, 0.23737373737373746, None) 
+# awg_offset = 0.23737373737373746, None t=76650000 
+# -- Overwrites set_awg_offs at 76650000 -- 
+           set_awg_offs   7778,0     # L0515 @ 76650000
+           upd_param      65532      # L0516 t=76650000
+# awg_offset = 0.0, None t=77700000 
+# ------:  set_awg_offs   0,0        # @ 77700000 = overwritten =
+           move           15,R1      # L0517 temp ['R1']
+wait74:    wait           65532      # L0518 
+           sub            R1,1,R1    # L0519 
+           jg             @wait74    # L0520 
+           wait           1488       # L0521 
+# block_pulse(1050000, 0.24747474747474751, None) 
+# awg_offset = 0.24747474747474751, None t=77700000 
+# -- Overwrites set_awg_offs at 77700000 -- 
+           set_awg_offs   8109,0     # L0522 @ 77700000
+           upd_param      65532      # L0523 t=77700000
+# awg_offset = 0.0, None t=78750000 
+# ------:  set_awg_offs   0,0        # @ 78750000 = overwritten =
+           move           15,R1      # L0524 temp ['R1']
+wait75:    wait           65532      # L0525 
+           sub            R1,1,R1    # L0526 
+           jg             @wait75    # L0527 
+           wait           1488       # L0528 
+# block_pulse(1050000, 0.2575757575757577, None) 
+# awg_offset = 0.2575757575757577, None t=78750000 
+# -- Overwrites set_awg_offs at 78750000 -- 
+           set_awg_offs   8440,0     # L0529 @ 78750000
+           upd_param      65532      # L0530 t=78750000
+# awg_offset = 0.0, None t=79800000 
+# ------:  set_awg_offs   0,0        # @ 79800000 = overwritten =
+           move           15,R1      # L0531 temp ['R1']
+wait76:    wait           65532      # L0532 
+           sub            R1,1,R1    # L0533 
+           jg             @wait76    # L0534 
+           wait           1488       # L0535 
+# block_pulse(1050000, 0.26767676767676774, None) 
+# awg_offset = 0.26767676767676774, None t=79800000 
+# -- Overwrites set_awg_offs at 79800000 -- 
+           set_awg_offs   8771,0     # L0536 @ 79800000
+           upd_param      65532      # L0537 t=79800000
+# awg_offset = 0.0, None t=80850000 
+# ------:  set_awg_offs   0,0        # @ 80850000 = overwritten =
+           move           15,R1      # L0538 temp ['R1']
+wait77:    wait           65532      # L0539 
+           sub            R1,1,R1    # L0540 
+           jg             @wait77    # L0541 
+           wait           1488       # L0542 
+# block_pulse(1050000, 0.2777777777777778, None) 
+# awg_offset = 0.2777777777777778, None t=80850000 
+# -- Overwrites set_awg_offs at 80850000 -- 
+           set_awg_offs   9102,0     # L0543 @ 80850000
+           upd_param      65532      # L0544 t=80850000
+# awg_offset = 0.0, None t=81900000 
+# ------:  set_awg_offs   0,0        # @ 81900000 = overwritten =
+           move           15,R1      # L0545 temp ['R1']
+wait78:    wait           65532      # L0546 
+           sub            R1,1,R1    # L0547 
+           jg             @wait78    # L0548 
+           wait           1488       # L0549 
+# block_pulse(1050000, 0.28787878787878796, None) 
+# awg_offset = 0.28787878787878796, None t=81900000 
+# -- Overwrites set_awg_offs at 81900000 -- 
+           set_awg_offs   9433,0     # L0550 @ 81900000
+           upd_param      65532      # L0551 t=81900000
+# awg_offset = 0.0, None t=82950000 
+# ------:  set_awg_offs   0,0        # @ 82950000 = overwritten =
+           move           15,R1      # L0552 temp ['R1']
+wait79:    wait           65532      # L0553 
+           sub            R1,1,R1    # L0554 
+           jg             @wait79    # L0555 
+           wait           1488       # L0556 
+# block_pulse(1050000, 0.297979797979798, None) 
+# awg_offset = 0.297979797979798, None t=82950000 
+# -- Overwrites set_awg_offs at 82950000 -- 
+           set_awg_offs   9764,0     # L0557 @ 82950000
+           upd_param      65532      # L0558 t=82950000
+# awg_offset = 0.0, None t=84000000 
+# ------:  set_awg_offs   0,0        # @ 84000000 = overwritten =
+           move           15,R1      # L0559 temp ['R1']
+wait80:    wait           65532      # L0560 
+           sub            R1,1,R1    # L0561 
+           jg             @wait80    # L0562 
+           wait           1488       # L0563 
+# block_pulse(1050000, 0.3080808080808082, None) 
+# awg_offset = 0.3080808080808082, None t=84000000 
+# -- Overwrites set_awg_offs at 84000000 -- 
+           set_awg_offs   10095,0    # L0564 @ 84000000
+           upd_param      65532      # L0565 t=84000000
+# awg_offset = 0.0, None t=85050000 
+# ------:  set_awg_offs   0,0        # @ 85050000 = overwritten =
+           move           15,R1      # L0566 temp ['R1']
+wait81:    wait           65532      # L0567 
+           sub            R1,1,R1    # L0568 
+           jg             @wait81    # L0569 
+           wait           1488       # L0570 
+# block_pulse(1050000, 0.31818181818181823, None) 
+# awg_offset = 0.31818181818181823, None t=85050000 
+# -- Overwrites set_awg_offs at 85050000 -- 
+           set_awg_offs   10426,0    # L0571 @ 85050000
+           upd_param      65532      # L0572 t=85050000
+# awg_offset = 0.0, None t=86100000 
+# ------:  set_awg_offs   0,0        # @ 86100000 = overwritten =
+           move           15,R1      # L0573 temp ['R1']
+wait82:    wait           65532      # L0574 
+           sub            R1,1,R1    # L0575 
+           jg             @wait82    # L0576 
+           wait           1488       # L0577 
+# block_pulse(1050000, 0.3282828282828284, None) 
+# awg_offset = 0.3282828282828284, None t=86100000 
+# -- Overwrites set_awg_offs at 86100000 -- 
+           set_awg_offs   10757,0    # L0578 @ 86100000
+           upd_param      65532      # L0579 t=86100000
+# awg_offset = 0.0, None t=87150000 
+# ------:  set_awg_offs   0,0        # @ 87150000 = overwritten =
+           move           15,R1      # L0580 temp ['R1']
+wait83:    wait           65532      # L0581 
+           sub            R1,1,R1    # L0582 
+           jg             @wait83    # L0583 
+           wait           1488       # L0584 
+# block_pulse(1050000, 0.33838383838383845, None) 
+# awg_offset = 0.33838383838383845, None t=87150000 
+# -- Overwrites set_awg_offs at 87150000 -- 
+           set_awg_offs   11088,0    # L0585 @ 87150000
+           upd_param      65532      # L0586 t=87150000
+# awg_offset = 0.0, None t=88200000 
+# ------:  set_awg_offs   0,0        # @ 88200000 = overwritten =
+           move           15,R1      # L0587 temp ['R1']
+wait84:    wait           65532      # L0588 
+           sub            R1,1,R1    # L0589 
+           jg             @wait84    # L0590 
+           wait           1488       # L0591 
+# block_pulse(1050000, 0.3484848484848485, None) 
+# awg_offset = 0.3484848484848485, None t=88200000 
+# -- Overwrites set_awg_offs at 88200000 -- 
+           set_awg_offs   11419,0    # L0592 @ 88200000
+           upd_param      65532      # L0593 t=88200000
+# awg_offset = 0.0, None t=89250000 
+# ------:  set_awg_offs   0,0        # @ 89250000 = overwritten =
+           move           15,R1      # L0594 temp ['R1']
+wait85:    wait           65532      # L0595 
+           sub            R1,1,R1    # L0596 
+           jg             @wait85    # L0597 
+           wait           1488       # L0598 
+# block_pulse(1050000, 0.3585858585858587, None) 
+# awg_offset = 0.3585858585858587, None t=89250000 
+# -- Overwrites set_awg_offs at 89250000 -- 
+           set_awg_offs   11750,0    # L0599 @ 89250000
+           upd_param      65532      # L0600 t=89250000
+# awg_offset = 0.0, None t=90300000 
+# ------:  set_awg_offs   0,0        # @ 90300000 = overwritten =
+           move           15,R1      # L0601 temp ['R1']
+wait86:    wait           65532      # L0602 
+           sub            R1,1,R1    # L0603 
+           jg             @wait86    # L0604 
+           wait           1488       # L0605 
+# block_pulse(1050000, 0.36868686868686873, None) 
+# awg_offset = 0.36868686868686873, None t=90300000 
+# -- Overwrites set_awg_offs at 90300000 -- 
+           set_awg_offs   12081,0    # L0606 @ 90300000
+           upd_param      65532      # L0607 t=90300000
+# awg_offset = 0.0, None t=91350000 
+# ------:  set_awg_offs   0,0        # @ 91350000 = overwritten =
+           move           15,R1      # L0608 temp ['R1']
+wait87:    wait           65532      # L0609 
+           sub            R1,1,R1    # L0610 
+           jg             @wait87    # L0611 
+           wait           1488       # L0612 
+# block_pulse(1050000, 0.3787878787878789, None) 
+# awg_offset = 0.3787878787878789, None t=91350000 
+# -- Overwrites set_awg_offs at 91350000 -- 
+           set_awg_offs   12412,0    # L0613 @ 91350000
+           upd_param      65532      # L0614 t=91350000
+# awg_offset = 0.0, None t=92400000 
+# ------:  set_awg_offs   0,0        # @ 92400000 = overwritten =
+           move           15,R1      # L0615 temp ['R1']
+wait88:    wait           65532      # L0616 
+           sub            R1,1,R1    # L0617 
+           jg             @wait88    # L0618 
+           wait           1488       # L0619 
+# block_pulse(1050000, 0.38888888888888895, None) 
+# awg_offset = 0.38888888888888895, None t=92400000 
+# -- Overwrites set_awg_offs at 92400000 -- 
+           set_awg_offs   12743,0    # L0620 @ 92400000
+           upd_param      65532      # L0621 t=92400000
+# awg_offset = 0.0, None t=93450000 
+# ------:  set_awg_offs   0,0        # @ 93450000 = overwritten =
+           move           15,R1      # L0622 temp ['R1']
+wait89:    wait           65532      # L0623 
+           sub            R1,1,R1    # L0624 
+           jg             @wait89    # L0625 
+           wait           1488       # L0626 
+# block_pulse(1050000, 0.3989898989898991, None) 
+# awg_offset = 0.3989898989898991, None t=93450000 
+# -- Overwrites set_awg_offs at 93450000 -- 
+           set_awg_offs   13074,0    # L0627 @ 93450000
+           upd_param      65532      # L0628 t=93450000
+# awg_offset = 0.0, None t=94500000 
+# ------:  set_awg_offs   0,0        # @ 94500000 = overwritten =
+           move           15,R1      # L0629 temp ['R1']
+wait90:    wait           65532      # L0630 
+           sub            R1,1,R1    # L0631 
+           jg             @wait90    # L0632 
+           wait           1488       # L0633 
+# block_pulse(1050000, 0.40909090909090917, None) 
+# awg_offset = 0.40909090909090917, None t=94500000 
+# -- Overwrites set_awg_offs at 94500000 -- 
+           set_awg_offs   13405,0    # L0634 @ 94500000
+           upd_param      65532      # L0635 t=94500000
+# awg_offset = 0.0, None t=95550000 
+# ------:  set_awg_offs   0,0        # @ 95550000 = overwritten =
+           move           15,R1      # L0636 temp ['R1']
+wait91:    wait           65532      # L0637 
+           sub            R1,1,R1    # L0638 
+           jg             @wait91    # L0639 
+           wait           1488       # L0640 
+# block_pulse(1050000, 0.4191919191919192, None) 
+# awg_offset = 0.4191919191919192, None t=95550000 
+# -- Overwrites set_awg_offs at 95550000 -- 
+           set_awg_offs   13736,0    # L0641 @ 95550000
+           upd_param      65532      # L0642 t=95550000
+# awg_offset = 0.0, None t=96600000 
+# ------:  set_awg_offs   0,0        # @ 96600000 = overwritten =
+           move           15,R1      # L0643 temp ['R1']
+wait92:    wait           65532      # L0644 
+           sub            R1,1,R1    # L0645 
+           jg             @wait92    # L0646 
+           wait           1488       # L0647 
+# block_pulse(1050000, 0.4292929292929294, None) 
+# awg_offset = 0.4292929292929294, None t=96600000 
+# -- Overwrites set_awg_offs at 96600000 -- 
+           set_awg_offs   14067,0    # L0648 @ 96600000
+           upd_param      65532      # L0649 t=96600000
+# awg_offset = 0.0, None t=97650000 
+# ------:  set_awg_offs   0,0        # @ 97650000 = overwritten =
+           move           15,R1      # L0650 temp ['R1']
+wait93:    wait           65532      # L0651 
+           sub            R1,1,R1    # L0652 
+           jg             @wait93    # L0653 
+           wait           1488       # L0654 
+# block_pulse(1050000, 0.43939393939393945, None) 
+# awg_offset = 0.43939393939393945, None t=97650000 
+# -- Overwrites set_awg_offs at 97650000 -- 
+           set_awg_offs   14398,0    # L0655 @ 97650000
+           upd_param      65532      # L0656 t=97650000
+# awg_offset = 0.0, None t=98700000 
+# ------:  set_awg_offs   0,0        # @ 98700000 = overwritten =
+           move           15,R1      # L0657 temp ['R1']
+wait94:    wait           65532      # L0658 
+           sub            R1,1,R1    # L0659 
+           jg             @wait94    # L0660 
+           wait           1488       # L0661 
+# block_pulse(1050000, 0.4494949494949496, None) 
+# awg_offset = 0.4494949494949496, None t=98700000 
+# -- Overwrites set_awg_offs at 98700000 -- 
+           set_awg_offs   14729,0    # L0662 @ 98700000
+           upd_param      65532      # L0663 t=98700000
+# awg_offset = 0.0, None t=99750000 
+# ------:  set_awg_offs   0,0        # @ 99750000 = overwritten =
+           move           15,R1      # L0664 temp ['R1']
+wait95:    wait           65532      # L0665 
+           sub            R1,1,R1    # L0666 
+           jg             @wait95    # L0667 
+           wait           1488       # L0668 
+# block_pulse(1050000, 0.45959595959595967, None) 
+# awg_offset = 0.45959595959595967, None t=99750000 
+# -- Overwrites set_awg_offs at 99750000 -- 
+           set_awg_offs   15059,0    # L0669 @ 99750000
+           upd_param      65532      # L0670 t=99750000
+# awg_offset = 0.0, None t=100800000 
+# ------:  set_awg_offs   0,0        # @ 100800000 = overwritten =
+           move           15,R1      # L0671 temp ['R1']
+wait96:    wait           65532      # L0672 
+           sub            R1,1,R1    # L0673 
+           jg             @wait96    # L0674 
+           wait           1488       # L0675 
+# block_pulse(1050000, 0.4696969696969697, None) 
+# awg_offset = 0.4696969696969697, None t=100800000 
+# -- Overwrites set_awg_offs at 100800000 -- 
+           set_awg_offs   15390,0    # L0676 @ 100800000
+           upd_param      65532      # L0677 t=100800000
+# awg_offset = 0.0, None t=101850000 
+# ------:  set_awg_offs   0,0        # @ 101850000 = overwritten =
+           move           15,R1      # L0678 temp ['R1']
+wait97:    wait           65532      # L0679 
+           sub            R1,1,R1    # L0680 
+           jg             @wait97    # L0681 
+           wait           1488       # L0682 
+# block_pulse(1050000, 0.4797979797979799, None) 
+# awg_offset = 0.4797979797979799, None t=101850000 
+# -- Overwrites set_awg_offs at 101850000 -- 
+           set_awg_offs   15721,0    # L0683 @ 101850000
+           upd_param      65532      # L0684 t=101850000
+# awg_offset = 0.0, None t=102900000 
+# ------:  set_awg_offs   0,0        # @ 102900000 = overwritten =
+           move           15,R1      # L0685 temp ['R1']
+wait98:    wait           65532      # L0686 
+           sub            R1,1,R1    # L0687 
+           jg             @wait98    # L0688 
+           wait           1488       # L0689 
+# block_pulse(1050000, 0.48989898989898994, None) 
+# awg_offset = 0.48989898989898994, None t=102900000 
+# -- Overwrites set_awg_offs at 102900000 -- 
+           set_awg_offs   16052,0    # L0690 @ 102900000
+           upd_param      65532      # L0691 t=102900000
+# awg_offset = 0.0, None t=103950000 
+# ------:  set_awg_offs   0,0        # @ 103950000 = overwritten =
+           move           15,R1      # L0692 temp ['R1']
+wait99:    wait           65532      # L0693 
+           sub            R1,1,R1    # L0694 
+           jg             @wait99    # L0695 
+           wait           1488       # L0696 
+# block_pulse(1050000, 0.5, None) 
+# awg_offset = 0.5, None t=103950000 
+# -- Overwrites set_awg_offs at 103950000 -- 
+           set_awg_offs   16383,0    # L0697 @ 103950000
+           upd_param      65532      # L0698 t=103950000
+# awg_offset = 0.0, None t=105000000 
+           set_awg_offs   0,0        # L0699 @ 105000000
+           move           15,R1      # L0700 temp ['R1']
+wait100:   wait           65532      # L0701 
+           sub            R1,1,R1    # L0702 
+           jg             @wait100   # L0703 
+           wait           1488       # L0704 
+           upd_param      4          # L0705 t=105000000
+# --END-- 
+           stop                      # L0706 
+"""
+

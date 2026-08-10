@@ -1,10 +1,10 @@
 
 from q1pulse.instrument import Q1Instrument
 
-from init_pulsars import qcm0, qrm1
+from init_pulsars import qcm0, qrm1, q1asm_isa_v2
 from plot_util import plot_output
 
-instrument = Q1Instrument('q1')
+instrument = Q1Instrument('q1_v2' if q1asm_isa_v2 else 'q1')
 instrument.add_qcm(qcm0)
 instrument.add_qrm(qrm1)
 instrument.add_control('P1', qcm0.name, [2])
@@ -14,12 +14,12 @@ instrument.add_readout('R1', qrm1.name, [1])
 p = instrument.new_program('csd')
 P1 = p.P1
 P2 = p.P2
-R1 = p['R1'] # using alternative notation
+R1 = p['R1']  # using alternative notation
 
 N = 100
 R1.add_acquisition_bins('default', N*N)
 
-gates=[P1, P2] # alternative notation: ['P1', 'P2']
+gates = [P1, P2]  # alternative notation: ['P1', 'P2']
 t_measure = 2000
 t_acqdelay = 500
 t_step = t_measure + t_acqdelay

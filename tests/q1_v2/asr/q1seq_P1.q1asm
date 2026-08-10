@@ -1,0 +1,34 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           0,R0       # L0001 R0: _zero
+           wait_sync      100        # L0002 t=0
+# --START-- (t=0) 
+_start:    reset_ph                  # L0003 @ 0
+           upd_param      4          # L0004 t=0
+# R.a:int = 9 
+           move           9,R1       # L0005 R1: R.a
+# R.b:int = 2 
+           move           2,R2       # L0006 R2: R.b
+# R.c:int = R.a >> 2 
+           asr            R1,2,R3    # L0007 R3: R.c
+# R.d:int = R.a >> R.b 
+           asr            R1,R2,R4   # L0008 R4: R.d
+# R.e:int = -9 
+           move           4294967287,R5 # L0009 R5: R.e
+# R.f:int = R.e >> 1 
+           nop                       # L0010  asr wait for R5
+           asr            R5,1,R6    # L0011 R6: R.f
+# R.h:int = -5 
+           move           4294967291,R7 # L0012 R7: R.h
+# --END-- 
+           stop                      # L0013 
+"""
+

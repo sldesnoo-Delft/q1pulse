@@ -2,14 +2,14 @@ import numpy as np
 import matplotlib.pyplot as pt
 from q1pulse.instrument import Q1Instrument
 
-from init_pulsars import qcm0, qrm1
+from init_pulsars import qcm0, qrm1, q1asm_isa_v2
 from plot_util import plot_output
 
-instrument = Q1Instrument('q1')
+instrument = Q1Instrument('q1_v2' if q1asm_isa_v2 else 'q1')
 instrument.add_qcm(qcm0)
 instrument.add_qrm(qrm1)
-instrument.add_control('q1', qcm0.name, [0,1], nco_frequency=200e6)
-instrument.add_control('q2', qrm1.name, [0,1], nco_frequency=200e6)
+instrument.add_control('q1', qcm0.name, [0, 1], nco_frequency=200e6)
+instrument.add_control('q2', qrm1.name, [0, 1], nco_frequency=200e6)
 instrument.add_control('P1', qcm0.name, [2])
 instrument.add_control('P2', qcm0.name, [3])
 instrument.add_readout('R1', qrm1.name, [], nco_frequency=200e6)
@@ -34,13 +34,13 @@ R1.integration_length_acq = 400
 with p.loop_range(N):
 
     with p.parallel():
-#        q1.block_pulse(600, 0.1)
+        # q1.block_pulse(600, 0.1)
         q2.block_pulse(600, 0.5)
         R1.acquire('default', 'increment', t_offset=160)
         p.wait(1000)
     p.wait(50_000-1620)
 
-#p.describe()
+# p.describe()
 
 p.compile(listing=True)
 
@@ -50,11 +50,11 @@ plot_output([qcm0, qrm1])
 
 data = instrument.get_acquisition_bins('R1', 'default')
 
-#pprint(data)
+# pprint(data)
 I = np.array(data['integration']['path0'])/R1.integration_length_acq
 Q = np.array(data['integration']['path1'])/R1.integration_length_acq
 c = I + 1j*Q
-#for i in range(N):
+# for i in range(N):
 #    print(f'{I[i]:6.3f}, {Q[i]:6.3f}, {abs(c[i]):6.3f}, {np.angle(c[i])/np.pi:5.3f}')
 
 pt.figure()

@@ -1,0 +1,66 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           0,R0       # L0001 R0: _zero
+# var R.a:int 
+# var R.b:int 
+# var R.c:int 
+# var R.x:float 
+# var R.y:float 
+# var Rs.v1:int 
+# var Rs.v2:float 
+           wait_sync      100        # L0002 t=0
+# --START-- (t=0) 
+_start:    reset_ph                  # L0003 @ 0
+           upd_param      1000       # L0004 t=0
+# awg_offset = 0.0, None t=1000 
+           set_awg_offs   0,0        # L0005 @ 1000
+           upd_param      4          # L0006 t=1000
+# R.b:int = R.a + 1 
+           add            R30,1,R31  # L0007 R36: Rs.v2
+# R.b:int = 5 + R.a + 1 
+           add            5,R30,R1   # L0008 temp R1
+           nop                       # L0009  add wait for R1
+           add            R1,1,R31   # L0010 
+# R.c:int = R.a * R.b 
+           nop                       # L0011  muls32l wait for R31
+           muls32l        R30,R31,R32 # L0012 
+# R.x:float = R.x - 0.8 
+           sub            R33,1717986918,R33 # L0013 
+# R.y:float = 0.5 
+           move           1073741823,R34 # L0014 
+# R.z:float = R.x - R.y 
+           nop                       # L0015  sub wait for R34
+           sub            R33,R34,R1 # L0016 R1: R.z
+# Rs.p1:int = 9 
+           move           9,R2       # L0017 R2: Rs.p1
+# Rs.q1:int = Rs.p1 + R.b 
+           nop                       # L0018  add wait for R2
+           add            R2,R31,R3  # L0019 R3: Rs.q1
+# Rs.v1:int = Rs.q1 + R.a 
+           nop                       # L0020  add wait for R3
+           add            R3,R30,R35 # L0021 
+# Rs.v2:float = R.x * R.y 
+           muls32h        R33,R34,R36 # L0022 
+# Rs.a1:int = 3 
+           move           3,R4       # L0023 R4: Rs.a1
+# Rs.b1:int = Rs.a1 & 5 
+           nop                       # L0024  and wait for R4
+           and            R4,5,R5    # L0025 R5: Rs.b1
+# Rs.c1:int = Rs.a1 | 5 
+           or             R4,5,R6    # L0026 R6: Rs.c1
+# Rs.d1:int = 5 ^ Rs.a1 
+           xor            R4,5,R7    # L0027 R7: Rs.d1
+# Rs.e1:int = ~Rs.a1 
+           not            R4,R8      # L0028 R8: Rs.e1
+# --END-- 
+           stop                      # L0029 
+"""
+

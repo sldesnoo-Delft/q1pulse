@@ -1,0 +1,63 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           0,R0       # L0001 R0: _zero
+           wait_sync      100        # L0002 t=0
+# --START-- (t=0) 
+_start:    reset_ph                  # L0003 @ 0
+           upd_param      200        # L0004 t=0
+# Rs.rnd:int = 1 
+           move           1,R1       # L0005 R1: Rs.rnd
+# loop_range(0, 10, 1):R._var0 t=200 
+           move           0,R2       # L0006 R2: R._var0
+           move           10,R3      # L0007 R3: R._cnt0
+# Rs.rnd:int = Rs.rnd ^ Rs.rnd << 13 
+loop_0:    asl            R1,13,R4   # L0008 temp R4
+           nop                       # L0009  xor wait for R4
+           xor            R1,R4,R1   # L0010 
+# Rs.rnd:int = Rs.rnd ^ Rs.rnd unsigned >> 17 
+           nop                       # L0011  lsr wait for R1
+           lsr            R1,17,R4   # L0012 temp R4
+           nop                       # L0013  xor wait for R4
+           xor            R1,R4,R1   # L0014 
+# Rs.rnd:int = Rs.rnd ^ Rs.rnd << 5 
+           nop                       # L0015  asl wait for R1
+           asl            R1,5,R4    # L0016 temp R4
+           nop                       # L0017  xor wait for R4
+           xor            R1,R4,R1   # L0018 
+# log "RND",Rs.rnd,TR 
+#Q1Sim:log "RND",R1,TR 
+# Rs.clifford:int = Rs.rnd unsigned >> 2 + Rs.rnd unsigned >> 1 unsigned >> 27 
+           nop                       # L0019  lsr wait for R1
+           lsr            R1,2,R6    # L0020 temp R6
+           lsr            R1,1,R7    # L0021 temp R7
+           nop                       # L0022  add wait for R7
+           add            R6,R7,R5   # L0023 
+           nop                       # L0024  lsr wait for R5
+           lsr            R5,27,R4   # L0025 
+# log "CLF",Rs.clifford,TR 
+#Q1Sim:log "CLF",R4,TR 
+# block_pulse(252, float Rs.rnd, None) 
+# awg_offset = float Rs.rnd, None t=200 
+           asr            R5,16,R5   # L0026 temp R5
+           nop                       # L0027  set_awg_offs wait for R5
+           set_awg_offs   R5,R0      # L0028 @ 200
+           upd_param      252        # L0029 t=200
+# awg_offset = 0.0, None t=452 
+           set_awg_offs   0,0        # L0030 @ 452
+# endloop t=452 
+           add            R2,1,R2    # L0031 
+           sub            R3,1,R3    # L0032 
+           jg             @loop_0    # L0033 
+           upd_param      4          # L0034 t=452
+# --END-- 
+           stop                      # L0035 
+"""
+

@@ -2,14 +2,14 @@ import numpy as np
 import matplotlib.pyplot as pt
 from q1pulse.instrument import Q1Instrument
 
-from init_pulsars import qcm0, qrm1
+from init_pulsars import qcm0, qrm1, q1asm_isa_v2
 from plot_util import plot_output
 
-instrument = Q1Instrument('q1')
+instrument = Q1Instrument('q1_v2' if q1asm_isa_v2 else 'q1')
 instrument.add_qcm(qcm0)
 instrument.add_qrm(qrm1)
 instrument.add_control('P1', qcm0.name, [0])
-instrument.add_control('q1', qrm1.name, [0,1], nco_frequency=200e6)
+instrument.add_control('q1', qrm1.name, [0, 1], nco_frequency=200e6)
 instrument.add_readout('R1', qrm1.name, [], nco_frequency=200e6)
 
 qrm1.in0_gain(0)
@@ -28,7 +28,7 @@ R1.integration_length_acq = 500
 
 rabi_amplitude = 0.1
 q1.Rs.phase_shift = 0.001
-p.R.bin=0
+p.R.bin = 0
 with p.loop_range(N):
 
     with p.parallel():
@@ -48,11 +48,11 @@ plot_output([qcm0, qrm1])
 
 data = instrument.get_acquisition_bins('R1', 'default')
 
-#pprint(data)
+# pprint(data)
 I = np.array(data['integration']['path0'])
 Q = np.array(data['integration']['path1'])
 c = I + 1j*Q
-#for i in range(N):
+# for i in range(N):
 #    print(f'{I[i]:6.3f}, {Q[i]:6.3f}, {abs(c[i]):6.3f}, {np.angle(c[i])/np.pi:5.3f}')
 
 pt.figure()

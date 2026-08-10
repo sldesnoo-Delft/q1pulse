@@ -3,15 +3,17 @@ import scipy.signal as signal
 
 from q1pulse.instrument import Q1Instrument
 
-from init_pulsars import qcm0, qrm1
+from init_pulsars import qcm0, qrm1, q1asm_isa_v2
 from plot_util import plot_output
+
 
 def set_mock_data(qrm, seq_nr, acq_name, data):
     seq = qrm.sequencers[seq_nr]
     if hasattr(seq, 'set_acquisition_mock_data'):
         seq.set_acquisition_mock_data([data], name=acq_name, repeat=True)
 
-instrument = Q1Instrument('q1')
+
+instrument = Q1Instrument('q1_v2' if q1asm_isa_v2 else 'q1')
 instrument.add_qcm(qcm0)
 instrument.add_qrm(qrm1)
 instrument.add_control('P1', qcm0.name, [0])
@@ -37,7 +39,7 @@ n_acq = N*N*p.repetitions
 R1.add_acquisition_bins('non-weighed', n_acq)
 R1.add_acquisition_bins('weighed', n_acq)
 R1.add_weight('gaus100', signal.windows.gaussian(100, 12))
-#R1.add_weight('gaus100', np.ones(100))
+# R1.add_weight('gaus100', np.ones(100))
 R1.integration_length_acq = 100
 
 
@@ -65,12 +67,12 @@ with p.loop_linspace(-v1_max, v1_max, N) as v1:
 
         p.wait(1100)
 
-#p.describe()
-#print()
+# p.describe()
+# print()
 
 p.compile(listing=True, annotate=True)
 
-#%% Set Mock data
+# %% Set Mock data
 data0 = np.linspace(-v1_max, v1_max, N).repeat(N)
 data1 = np.tile(np.linspace(-v2_max, v2_max, N), N)
 
@@ -81,7 +83,7 @@ set_mock_data(qrm1, 1, 'non-weighed',
               np.array([data0, data1]).T * R1.integration_length_acq)
 set_mock_data(qrm1, 1, 'weighed', (data0 + 1j*data1)/2)
 
-#%% Run and plot
+# %% Run and plot
 # run and get results
 instrument.run_program(p)
 
@@ -90,10 +92,10 @@ plot_output([qcm0, qrm1])
 data_n = instrument.get_acquisition_bins('R1', 'non-weighed')
 data_w = instrument.get_acquisition_bins('R1', 'weighed')
 
-dn0 = np.array(data_n['integration']['path0']).reshape((p.repetitions,N,N))/R1.integration_length_acq*vmax_in
-dn1 = np.array(data_n['integration']['path1']).reshape((p.repetitions,N,N))/R1.integration_length_acq*vmax_in
-dw0 = np.array(data_w['integration']['path0']).reshape((p.repetitions,N,N))*vmax_in
-dw1 = np.array(data_w['integration']['path1']).reshape((p.repetitions,N,N))*vmax_in
+dn0 = np.array(data_n['integration']['path0']).reshape((p.repetitions, N, N))/R1.integration_length_acq*vmax_in
+dn1 = np.array(data_n['integration']['path1']).reshape((p.repetitions, N, N))/R1.integration_length_acq*vmax_in
+dw0 = np.array(data_w['integration']['path0']).reshape((p.repetitions, N, N))*vmax_in
+dw1 = np.array(data_w['integration']['path1']).reshape((p.repetitions, N, N))*vmax_in
 
 with np.printoptions(precision=2, threshold=1000):
     print('non-weighed')

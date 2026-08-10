@@ -1,0 +1,35 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           0,R0       # L0001 R0: _zero
+           wait_sync      100        # L0002 t=0
+# --START-- (t=0) 
+_start:    reset_ph                  # L0003 @ 0
+           move           2147483,R1 # L0004 R1: Rs.phase_shift
+           move           0,R2       # L0005 R2: R.bin
+           move           0,R3       # L0006 R3: R._var0
+           move           1000,R4    # L0007 R4: R._cnt0
+# block_pulse(600, 0.1, None) 
+loop_0:    set_awg_offs   3276,0     # L0008 @ 0
+           upd_param      600        # L0009 t=0
+           set_awg_offs   0,0        # L0010 @ 600
+           add            R2,1,R2    # L0011 
+           mulu32h        R1,1000000000,R1 # L0012 
+           nop                       # L0013  set_ph_delta wait for R1
+           set_ph_delta   R1         # L0014 @ 600
+           upd_param      500        # L0015 t=600
+           add            R3,1,R3    # L0016 
+           sub            R4,1,R4    # L0017 
+           jg             @loop_0    # L0018 
+           upd_param      4          # L0019 t=1100
+# --END-- 
+           stop                      # L0020 
+"""
+

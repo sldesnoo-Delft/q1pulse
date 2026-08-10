@@ -1,0 +1,74 @@
+waveforms={
+    }
+
+weights={
+    }
+
+acquisitions={}
+
+seq_prog="""
+# --INIT-- 
+           move           0,R0       # L0001 R0: _zero
+           wait_sync      100        # L0002 t=0
+# --START-- (t=0) 
+_start:    reset_ph                  # L0003 @ 0
+           upd_param      1000       # L0004 t=0
+# awg_offset = 0.0, None t=1000 
+           set_awg_offs   0,0        # L0005 @ 1000
+           upd_param      4          # L0006 t=1000
+# R.a:int = 10 
+           move           10,R1      # L0007 R1: R.a
+# R.b:int = R.a + 1 
+           nop                       # L0008  add wait for R1
+           add            R1,1,R2    # L0009 R2: R.b
+# R.b:int = 5 + R.a + 1 
+           add            5,R1,R3    # L0010 temp R3
+           nop                       # L0011  add wait for R3
+           add            R3,1,R2    # L0012 
+# R.c:int = R.b + R.a 
+           nop                       # L0013  add wait for R2
+           add            R2,R1,R3   # L0014 R3: R.c
+# R.c:int = R.c + 5 
+           nop                       # L0015  add wait for R3
+           add            R3,5,R3    # L0016 
+# R.c:int = R.c - 17 
+           nop                       # L0017  sub wait for R3
+           sub            R3,17,R3   # L0018 
+# R.d:int = 1 - R.a 
+           sub            1,R1,R4    # L0019 R4: R.d
+# R.e:int = R.a << 2 
+           asl            R1,2,R5    # L0020 R5: R.e
+# R.f:int = R.a >> 2 
+           asr            R1,2,R6    # L0021 R6: R.f
+# R.h:int = R.d >> 2 
+           asr            R4,2,R7    # L0022 R7: R.h
+# R.x:float = 1.0 
+           move           2147483647,R8 # L0023 R8: R.x
+# R.x:float = R.x - 0.8 
+           nop                       # L0024  sub wait for R8
+           sub            R8,1717986918,R8 # L0025 
+# R.y:float = 0.5 
+           move           1073741823,R9 # L0026 R9: R.y
+# R.z:float = R.x - R.y 
+           nop                       # L0027  sub wait for R9
+           sub            R8,R9,R10  # L0028 R10: R.z
+# Rs.x:int = 9 
+           move           9,R11      # L0029 R11: Rs.x
+# Rs.y:int = Rs.x + R.b 
+           nop                       # L0030  add wait for R11
+           add            R11,R2,R12 # L0031 R12: Rs.y
+# Rs.a:int = 3 
+           move           3,R13      # L0032 R13: Rs.a
+# Rs.b:int = Rs.a & 5 
+           nop                       # L0033  and wait for R13
+           and            R13,5,R14  # L0034 R14: Rs.b
+# Rs.c:int = Rs.a | 5 
+           or             R13,5,R15  # L0035 R15: Rs.c
+# Rs.d:int = 5 ^ Rs.a 
+           xor            R13,5,R16  # L0036 R16: Rs.d
+# Rs.e:int = ~Rs.a 
+           not            R13,R17    # L0037 R17: Rs.e
+# --END-- 
+           stop                      # L0038 
+"""
+

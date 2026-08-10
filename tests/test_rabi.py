@@ -1,17 +1,17 @@
 import numpy as np
 from q1pulse.instrument import Q1Instrument
 
-from init_pulsars import qcm0, qrm1
+from init_pulsars import qcm0, qrm1, q1asm_isa_v2
 from plot_util import plot_output
 
-instrument = Q1Instrument('q1')
+instrument = Q1Instrument('q1_v2' if q1asm_isa_v2 else 'q1')
 instrument.add_qcm(qcm0)
 instrument.add_qrm(qrm1)
-instrument.add_control('q1', qcm0.name, [0,1], nco_frequency=200e6)
+instrument.add_control('q1', qcm0.name, [0, 1], nco_frequency=200e6)
 instrument.add_control('P1', qcm0.name, [2])
 instrument.add_control('P2', qcm0.name, [3])
 instrument.add_readout('R1', qrm1.name, [], nco_frequency=200e6)
-instrument.add_control('Ro1', qrm1.name, [0,1], nco_frequency=200e6)
+instrument.add_control('Ro1', qrm1.name, [0, 1], nco_frequency=200e6)
 
 qrm1.in0_gain(0)
 qrm1.in1_gain(0)
@@ -28,7 +28,7 @@ Ro1 = p['Ro1']
 R1.add_acquisition_bins('default', 20)
 R1.integration_length_acq = 400
 
-gates=['P1', 'P2']
+gates = ['P1', 'P2']
 v_init = [0.220, 0.040]
 v_manip = [0.0, 0.0]
 v_read = [-0.050, 0.060]
@@ -37,7 +37,7 @@ readout_amplitude = 0.1
 
 R1.reset_bin_counter('default')
 with p.loop_range(100, 2001, 100) as t_pulse:
-    #init
+    # init
     p.block_pulse(200, gates, v_init)
     p.wait(20)
 
@@ -54,7 +54,7 @@ with p.loop_range(100, 2001, 100) as t_pulse:
     p.wait(1000)
 p.set_offsets(gates, [0.0, 0.0])
 
-#p.describe()
+# p.describe()
 
 p.compile(listing=True)
 

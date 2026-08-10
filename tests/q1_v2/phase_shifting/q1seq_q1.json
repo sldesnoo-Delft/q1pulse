@@ -1,0 +1,1 @@
+{"waveforms":{},"weights":{},"acquisitions":{},"program":" move 0,R0\n wait_sync 100\n_start: reset_ph \n move 2147483,R1\n move 0,R2\n move 0,R3\n move 1000,R4\nloop_0: set_awg_offs 3276,0\n upd_param 600\n set_awg_offs 0,0\n add R2,1,R2\n mulu32h R1,1000000000,R1\n nop \n set_ph_delta R1\n upd_param 500\n add R3,1,R3\n sub R4,1,R4\n jg @loop_0\n upd_param 4\n stop "}
