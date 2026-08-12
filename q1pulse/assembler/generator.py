@@ -609,17 +609,18 @@ class Q1asmGenerator(InstructionQueue):
         acq_index = self._data.translate_acquisition(acquisition)
         weight0 = self._data.translate_weight(weight0)
         weight1 = self._data.translate_weight(weight1)
+        instruction = "acquire_weighted" if self.isa_v2 else "acquire_weighed"
         # q1asm has no instruction for acquire_weighed imm,reg,imm,imm,imme.
         # Use acquire_weighed imm,reg,reg,reg,imm instead
         if not isinstance(bin_index, Number):
             with self._registers.temp_regs(2) as (rw0, rw1):
                 self.move(weight0, rw0)
                 self.move(weight1, rw1)
-                self._add_rt_command("acquire_weighed",
+                self._add_rt_command(instruction,
                                      acq_index, bin_index, rw0, rw1,
                                      time=time, updating=True)
         else:
-            self._add_rt_command("acquire_weighed",
+            self._add_rt_command(instruction,
                                  acq_index, bin_index, weight0, weight1,
                                  time=time, updating=True)
         self._contains_io_instr = True
