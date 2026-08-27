@@ -45,7 +45,7 @@ class QbloxModule:
         # check module is present in slot.
         if hasattr(pulsar, "present"):
             if not pulsar.present():
-                raise Exception("No module in slot {pulsar.slot_idx}")
+                raise Exception(f"No module in slot {pulsar.slot_idx}")
         self.pulsar = pulsar
         self._allocated_seq = 0
         with DelayedKeyboardInterrupt("module.__init__"):
@@ -140,7 +140,17 @@ class QbloxModule:
         return translate_seq_status(status)
 
     def get_sequencer_registers(self, seq_nr, registers: list[str] | None = None) -> dict[str, int]:
-        return self.pulsar.get_sequencer_registers(seq_nr, registers)
+        # WORKAROUND for bug in QBI
+        if registers:
+            res = {}
+            print("Registers", registers)
+            # seq = self.pulsar.sequencers[seq_nr]
+            for reg in registers:
+                res.update(self.pulsar.get_sequencer_registers(seq_nr, [reg]))
+                # res.update(seq.get_registers([reg]))
+            return res
+        else:                      
+            return self.pulsar.get_sequencer_registers(seq_nr, registers)
 
     def set_sequencer_registers(self, seq_nr, registers: dict[str, int]) -> None:
         self.pulsar.set_sequencer_registers(seq_nr, registers)
