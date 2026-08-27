@@ -311,7 +311,7 @@ class Q1Instrument:
 
         if self._running:
             self.dump_program(self._last_started, "stop", "Not properly stopped")
-            self.stop_program()
+            self.stop_program(all_zero=True)
 
         if self._loaded_program is None or program.uuid != self._loaded_program.uuid:
             self.load_program(program)
@@ -471,20 +471,32 @@ class Q1Instrument:
                 raise Exception(f"Q1 failures (see logging):\n {errors}")
             duration = time.perf_counter() - self._t_start
             logger.debug(f"Ready after {duration*1000:.1f} ms")
+            all_okay = True
+        except KeyboardInterrupt:
+            all_okay = False
+            raise
         except Exception as ex:
+            all_okay = False
             logger.error("Exception", exc_info=True)
             self.dump_program(self._last_started, "q1error", "Exception in stop", ex)
             raise
         finally:
-            self.stop_program()
+            self.stop_program(all_zero=not all_okay)
 
-    def stop_program(self) -> None:
+    def stop_program(self, all_zero: bool = False) -> None:
         with DelayedKeyboardInterrupt("stop sequencers"):
             logger.debug("Stop sequencers")
             # for instrument in self.root_instruments:
             #     instrument.stop_sequencer()
             for module in self.modules.values():
                 module.stop_sequencers()
+            if all_zero:
+                sequencers = {**self.controllers, **self.readouts}
+                for name, seq in sequencers.items():
+                    module = self.modules[seq.module_name]
+                    if module.enabled(seq.seq_nr):
+                        module.set_awg_offsets(seq.seq_nr, 0.0, 0.0)
+                
         self._running = False
 
     def dump_program(
