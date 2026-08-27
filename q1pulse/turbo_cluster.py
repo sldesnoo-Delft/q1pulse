@@ -77,21 +77,30 @@ class TurboCluster(Cluster):
         self._connections: dict[int | None, Ieee488_2] = {}
         self._needs_check: dict[int, bool] = {}
         self._clear_cache()
-        for slot in range(1, 21):
-            ip_config = resolve(f"{self._ip_address}/{slot}")
-            transport = IpTransport(ip_config.address, ip_config.scpi_port, timeout=5.0)
-            self._connections[slot] = Ieee488_2(transport)
+        if qblox_version < Version("1.3.0"):
+            for slot in range(1, 21):
+                ip_config = resolve(f"{self._ip_address}/{slot}")
+                transport = IpTransport(ip_config.address, ip_config.scpi_port, timeout=5.0)
+                self._connections[slot] = Ieee488_2(transport)
 
         super().__init__(name, identifier, port, debug=debug)
 
-        self._override_transport_calls()
+        if qblox_version >= Version("1.3.0"):
+            print("WARNING: TurboCluster has not been tested with qblox-instruments >= v1.3.0. "
+                  "It's SLOWER than qblox-instruments v1.2.2 !!")
+            scpi = self._scpi
+            self._connections[None] = super(Scpi, scpi)
+            for slot in range(1, 21):
+                if self.modules[slot-1].present():
+                    self._connections[slot] = scpi._slot_connections[slot]
+        else:
+            self._override_transport_calls()
+            # SCPI transaction map is added in v0.18 and used for commands with multiple reads like get_acquistion_data
+            if hasattr(self, "_scpi_transaction_connection_map"):
+                for slot, conn in self._connections.items():
+                    self._scpi_transaction_connection_map[slot] = Ieee488_2Connection(conn)
 
         self._remove_slow_validators()
-
-        # SCPI transaction map is added in v0.18 and used for commands with multiple reads like get_acquistion_data
-        if hasattr(self, "_scpi_transaction_connection_map"):
-            for slot, conn in self._connections.items():
-                self._scpi_transaction_connection_map[slot] = Ieee488_2Connection(conn)
 
         # Disable continuous error checking
         # Note: Not needed anymore since v0.17.0, because default debug level has changed and
@@ -247,7 +256,12 @@ class TurboCluster(Cluster):
         for slot in slots:
             conn = self._connections.get(slot, cmm)
             # read without writing command.
-            response = conn._transport.readline().rstrip()
+            transport = conn._transport
+            if qblox_version >= Version("1.3.0"):
+                line = transport._run_in_loop(transport.readline()).decode("utf-8")
+            else:
+                line = transport.readline()
+            response = line.rstrip()
             num_err = int(response)
             for _ in range(num_err):
                 error = conn._read(get_error)
@@ -290,17 +304,26 @@ class TurboCluster(Cluster):
 
         # read all responses
         for slot, seq_nums in sequencers.items():
+            if len(seq_nums) == 0:
+                continue
             conn = self._connections[slot]
-            filereader = conn._transport._socket.makefile()
-
-            for sequencer in seq_nums:
-                status_str = filereader.readline()
-                if qblox_version < Version("1.2.0"):
-                    status = _convert_sequencer_status(status_str)
-                else:
+            if qblox_version >= Version("1.3.0"):
+                transport = conn._transport
+                for _ in seq_nums:
+                    status_str = transport._run_in_loop(transport._reader.readline()).decode("utf-8")
                     status = SequencerStatus.from_scpi_str(status_str)
-                results.append((slot, sequencer, status))
-            filereader.close()
+                    results.append((slot, sequencer, status))
+            else:
+                filereader = conn._transport._socket.makefile()
+
+                for sequencer in seq_nums:
+                    status_str = filereader.readline()
+                    if qblox_version < Version("1.2.0"):
+                        status = _convert_sequencer_status(status_str)
+                    else:
+                        status = SequencerStatus.from_scpi_str(status_str)
+                    results.append((slot, sequencer, status))
+                filereader.close()
         return results
 
     # --------------------------------------------------------------------------------
