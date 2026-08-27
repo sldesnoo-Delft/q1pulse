@@ -66,7 +66,7 @@ class FloatVariable(Variable):
 
 
 def _u32_int(value):
-    return np.int32(np.uint64(value))
+    return np.int32(np.int64(value))
 
 
 def _32_float(value):
