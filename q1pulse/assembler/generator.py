@@ -875,6 +875,7 @@ class Q1asmGenerator(InstructionQueue):
             # no RT instructions (other than reset_ph): program does nothing
             logger.debug("No RT IO statements")
             self.q1asm = None
+            self.n_q1asm_instructions = 0
         else:
             d = self._data.get_data_dict()
             d["program"] = self._q1asm_prog(compact=True)
