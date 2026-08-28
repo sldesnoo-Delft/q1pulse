@@ -56,7 +56,7 @@ class Q1SequenceError(Q1Exception):
 
 class Q1MemoryError(Q1Exception):
     '''
-    Raised when no free register is left to allocate.
+    Raised when no running out of registers, instruction, waveform, or acquisition weight memory.
     '''
 
 
