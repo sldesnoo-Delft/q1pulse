@@ -22,10 +22,19 @@ from q1pulse.util.reduce_snapshot import reduce_snapshot
 logger = logging.getLogger(__name__)
 
 
+class ForcedStopError(Exception):
+    """Raised when the only error is a FORCED STOP.
+    The Cluster sometimes returns an unexpected FORCED STOP.
+    The program can be retried after this error.
+    """
+    ...
+
+
 class Q1Instrument:
     verbose = False
     concurrent_communication = True
     ignore_acq_binning_done = False
+    retry_after_forced_stop = True
 
     # Postpone error checking till the end to save communication overhead.
     # System errors are only reported for SCPI errors. It's higly unlikely to
@@ -317,7 +326,7 @@ class Q1Instrument:
             self.load_program(program)
 
         self._initialize_variables()
-        # Store for debugging / dumping
+        # Store for debugging / dumping and retries
         self._last_started = program
 
         t_start = time.perf_counter()
@@ -432,45 +441,15 @@ class Q1Instrument:
 
     def wait_stopped(self, timeout_minutes: float = 1):
         try:
-            # Wait for completion
-            errors = {}
-            msg_level = 0
-            # list[tuple[module, sequencer]]
-            active_sequencers: list[tuple[QbloxModule, Sequencer]] = []
-            sequencers = {**self.controllers, **self.readouts}
-            for name, seq in sequencers.items():
-                module = self.modules[seq.module_name]
-                if not module.enabled(seq.seq_nr):
-                    continue
-                active_sequencers.append((module, seq))
-
-            statuses = self._get_sequencer_status_multiple(active_sequencers, timeout_minutes)
-            for (module, seq), status in zip(active_sequencers, statuses):
-                # status = self._get_sequencer_status(module, seq.seq_nr, timeout_minutes)
-                if "ACQ BINNING DONE" in status.debug_msgs:
-                    module.mark_acq_ready(seq.seq_nr)
-                logger.log(status.level, f"Status {module.slot_idx}:{seq.seq_nr} ({seq.label}): {status}")
-                msg_level = max(msg_level, status.level)
-                if status.status != "OKAY" or status.state != "STOPPED" or status.level >= logging.WARNING:
-                    errors[seq.label] = str(status)
-                    # reset awg offsets in case of any error.
-                    with DelayedKeyboardInterrupt("set offsets"):
-                        module.set_awg_offsets(seq.seq_nr, 0.0, 0.0)
-                if status.input_overloaded:
-                    if Q1Instrument._exception_on_overload:
-                        raise Q1InputOverloaded(
-                                f"INPUT OVERLOAD on {seq.label}."
-                                "\nException can be suppressed with q1pulse.set_exception_on_overload(False)")
-                    else:
-                        print(f"WARNING: input overload on {seq.label}")
-
-            if msg_level == logging.ERROR:
-                logger.error("*** Program errors ***")
-                for name, state in errors.items():
-                    logger.error(f"  {name}: {state}")
-                raise Exception(f"Q1 failures (see logging):\n {errors}")
-            duration = time.perf_counter() - self._t_start
-            logger.debug(f"Ready after {duration*1000:.1f} ms")
+            try:
+                self._wait_stopped(timeout_minutes)
+                retry = False
+            except ForcedStopError:
+                retry = self.retry_after_forced_stop
+            if retry:
+                logger.warning("Retrying execution after unexpected 'forced stop'.")
+                self.start_program(self._last_started)
+                self._wait_stopped(timeout_minutes)
             all_okay = True
         except KeyboardInterrupt:
             all_okay = False
@@ -482,6 +461,52 @@ class Q1Instrument:
             raise
         finally:
             self.stop_program(all_zero=not all_okay)
+
+    def _wait_stopped(self, timeout_minutes: float = 1):
+        # Wait for completion
+        errors = {}
+        has_critical_errors = False
+        forced_stop = False
+        active_sequencers: list[tuple[QbloxModule, Sequencer]] = []
+        sequencers = {**self.controllers, **self.readouts}
+        for name, seq in sequencers.items():
+            module = self.modules[seq.module_name]
+            if not module.enabled(seq.seq_nr):
+                continue
+            active_sequencers.append((module, seq))
+
+        statuses = self._get_sequencer_status_multiple(active_sequencers, timeout_minutes)
+        for (module, seq), status in zip(active_sequencers, statuses):
+            if "ACQ BINNING DONE" in status.debug_msgs:
+                module.mark_acq_ready(seq.seq_nr)
+            logger.log(status.level, f"Status {module.slot_idx}:{seq.seq_nr} ({seq.label}): {status}")
+            if status.status == "OKAY" and status.state == "STOPPED" and status.errors == ["FORCED STOP"]:
+                forced_stop = True
+            else:
+                has_critical_errors |= status.level >= logging.ERROR
+            if status.status != "OKAY" or status.state != "STOPPED" or status.level >= logging.WARNING:
+                errors[seq.label] = str(status)
+                # reset awg offsets in case of any error.
+                with DelayedKeyboardInterrupt("set offsets"):
+                    module.set_awg_offsets(seq.seq_nr, 0.0, 0.0)
+            if status.input_overloaded:
+                if Q1Instrument._exception_on_overload:
+                    raise Q1InputOverloaded(
+                            f"INPUT OVERLOAD on {seq.label}."
+                            "\nException can be suppressed with q1pulse.set_exception_on_overload(False)")
+                else:
+                    print(f"WARNING: input overload on {seq.label}")
+
+        duration = time.perf_counter() - self._t_start
+        logger.debug(f"Ready after {duration*1000:.1f} ms")
+
+        if has_critical_errors:
+            logger.error("*** Program errors ***")
+            for name, state in errors.items():
+                logger.error(f"  {name}: {state}")
+            raise Exception(f"Q1 failures (see logging):\n {errors}")
+        if forced_stop:
+            raise ForcedStopError()
 
     def stop_program(self, all_zero: bool = False) -> None:
         with DelayedKeyboardInterrupt("stop sequencers"):
@@ -496,7 +521,7 @@ class Q1Instrument:
                     module = self.modules[seq.module_name]
                     if module.enabled(seq.seq_nr):
                         module.set_awg_offsets(seq.seq_nr, 0.0, 0.0)
-                
+
         self._running = False
 
     def dump_program(
