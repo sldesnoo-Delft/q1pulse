@@ -1,13 +1,16 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
-# \[1.2.0] - 2026-@@@@@ NOT RELEASED
+# \[1.2.0] - 2026-08-28
 
-- Support qblox-instruments v1.2.1 and firmware 3.0.
+- Support qblox-instruments v1.2.2 and firmware 2.1.1.
 - Implemented Q1ASM ISA v2.0 (without LINQ feedback)
 - Added program variables using `instrument.set_registers()`, `instrument.get_registers`.
 - Added `real_mode_en` and `ramp_2paths`.
+- Added check on instruction memory size.
+- Set outputs to 0.0 V after keyboard interrupt.
 
+NOTE: It seems to work with qblox-instruments v1.3.x, but performance and stability do not yet have the desired level.
 
 ## \[1.1.1] - 2026-02-27
 
