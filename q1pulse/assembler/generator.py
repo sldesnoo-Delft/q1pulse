@@ -862,6 +862,7 @@ class Q1asmGenerator(InstructionQueue):
                                      i.comment, line_nr, compact)
             line_label = None
             lines += [line]
+        self.n_q1asm_instructions = line_nr
         return lines
 
     def add_acquisition(self, acquisition: Acquisition):

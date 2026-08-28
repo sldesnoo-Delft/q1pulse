@@ -4,9 +4,10 @@ import logging
 import uuid
 from contextlib import contextmanager
 from numbers import Number
+from typing import Any
 
 from .lang.conditions import CounterFlags
-from .lang.exceptions import Q1InternalError, Q1ValueError, Q1SyntaxError
+from .lang.exceptions import Q1InternalError, Q1ValueError, Q1SyntaxError, Q1MemoryError
 from .lang.triggers import TriggerCounter, Trigger
 from .lang.math_expressions import Expression
 from .lang.timeline import Timeline
@@ -30,7 +31,7 @@ class Program:
         # NOTE: global registers are added to ALL sequencers.
         self.R = Registers(self, local=False)
         self.repetitions = 1
-        self._q1asm = {}
+        self._q1asm: dict[str, dict[str, Any]] = {}
         self._q1registers: dict[str, dict[str, str]] = {}
         self._var_registers: dict[str, dict[str, str]] = {}  # variable registers per sequencer with short name!
         self._loop_cnt = 0
@@ -82,6 +83,10 @@ class Program:
                     g.assemble(listing=listing, json_output=json, filename=filename)
             else:
                 g.assemble()
+            max_instructions = 16384  # Maximum for QRM is lower, but module type information is missing...
+            if g.n_q1asm_instructions > max_instructions:
+                raise Q1MemoryError("Program too big for instruction memory: "
+                                    f"{g.n_q1asm_instructions} > {max_instructions}.")
             self._q1asm[name] = g.q1asm
             self._q1registers[name] = g.registers
 
