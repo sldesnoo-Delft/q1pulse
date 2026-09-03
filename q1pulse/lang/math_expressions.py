@@ -67,7 +67,7 @@ class Operand(ABC):
     def __invert__(self):
         return BitwiseNot(self)
 
-    def asfloat(self):  # @@@ __float__ ??
+    def asfloat(self):
         return CastFloat(self)
 
     def __lt__(self, lhs):
