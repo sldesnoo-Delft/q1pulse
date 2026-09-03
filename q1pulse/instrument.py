@@ -480,6 +480,9 @@ class Q1Instrument:
             if "ACQ BINNING DONE" in status.debug_msgs:
                 module.mark_acq_ready(seq.seq_nr)
             logger.log(status.level, f"Status {module.slot_idx}:{seq.seq_nr} ({seq.label}): {status}")
+            if status.state == "Q1_STOPPED":
+                logger.warning("Sequencer didn't stop properly: "
+                               f"Status {module.slot_idx}:{seq.seq_nr} ({seq.label}): {status}")
             if status.status == "OKAY" and status.state == "STOPPED" and status.errors == ["FORCED STOP"]:
                 forced_stop = True
             else:
