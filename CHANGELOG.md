@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+# \[1.2.1] - 2026-09-03
+
+- Fixed `get_system_errors` for qblox-instruments v1.3
+- Log warning when sequencer doesn't stop properly, but stays in state "Q1_STOPPED".
+
 # \[1.2.0] - 2026-08-28
 
 - Support qblox-instruments v1.2.2 and firmware 2.1.1.
