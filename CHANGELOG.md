@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+# \[1.2.2] - 2026-09-08
+
+- Fixed performance of TurboCluster with QBI v1.3
+- Support up to QBI v1.3.1.
+
 # \[1.2.1] - 2026-09-03
 
 - Fixed `get_system_errors` for qblox-instruments v1.3
