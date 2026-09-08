@@ -309,8 +309,8 @@ class TurboCluster(Cluster):
             conn = self._connections[slot]
             if qblox_version >= Version("1.3.0"):
                 transport = conn._transport
-                for _ in seq_nums:
-                    status_str = transport._run_in_loop(transport._reader.readline()).decode("utf-8")
+                for sequencer in seq_nums:
+                    status_str = transport._run_in_loop(transport.readline())
                     status = SequencerStatus.from_scpi_str(status_str)
                     results.append((slot, sequencer, status))
             else:
