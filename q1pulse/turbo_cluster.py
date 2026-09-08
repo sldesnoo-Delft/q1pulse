@@ -86,8 +86,6 @@ class TurboCluster(Cluster):
         super().__init__(name, identifier, port, debug=debug)
 
         if qblox_version >= Version("1.3.0"):
-            print("WARNING: TurboCluster has not been tested fully with qblox-instruments >= v1.3.0. "
-                  "This version is SLOWER than qblox-instruments v1.2.2 !!")
             scpi = self._scpi
             self._connections[None] = super(Scpi, scpi)
             for slot in range(1, 21):
