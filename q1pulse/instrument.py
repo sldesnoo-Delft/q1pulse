@@ -6,7 +6,6 @@ import traceback
 from collections import defaultdict
 from datetime import datetime
 
-
 from q1pulse.program import Program
 from q1pulse.lang.exceptions import Q1InputOverloaded, Q1InternalError
 from q1pulse.sequencer.sequencer import SequenceBuilder
@@ -35,6 +34,7 @@ class Q1Instrument:
     concurrent_communication = True
     ignore_acq_binning_done = False
     retry_after_forced_stop = True
+    cache_routing = True
 
     # Postpone error checking till the end to save communication overhead.
     # System errors are only reported for SCPI errors. It's higly unlikely to
@@ -51,15 +51,17 @@ class Q1Instrument:
             logger.info("Instrument upload dir: " + path)
         self.root_instruments = set()
         self.modules: dict[str, QbloxModule] = {}
-        self.controllers: dict[int, Sequencer] = {}
-        self.readouts: dict[int, Sequencer] = {}
+        self.controllers: dict[str, Sequencer] = {}
+        self.readouts: dict[str, Sequencer] = {}
         self._loaded_q1asm: dict[str, dict] = {}
         self._loaded_program: Program | None = None
         self._program_variables_initialized = False
         self._last_started = None
         self._running = False
+        # dict[instrument_name, dict[event_id, list[tuple[slot_idx, seq_nr]]]]
+        self._cached_routes: dict[str, dict[int, list[tuple[int, int]]]] | None = None
         SequenceBuilder.add_traceback_to_instructions = add_traceback
-        self._cluster_debug_disabled = True
+        self._cluster_debug_disabled = False
 
     def add_qcm(self, module):
         logger.info(f"Add {module.name}")
@@ -166,7 +168,15 @@ class Q1Instrument:
                     builder_config["thresholded_acq_trigger_address"] = builder.trigger.address
                     builder_config["thresholded_acq_trigger_invert"] = builder.trigger.invert
 
+            if builder.subscribed_event_ids:
+                builder_config["fb_event_subscriptions"] = builder.subscribed_event_ids
+            # TODO @@@@ add variable information with init info...
+            # variables = program.variable_register_mapping.get(name)
+            # if variables:
+            #     builder_config["variables"] = variables
+
             config[name] = builder_config
+
         with open(os.path.join(path, "q1program.json"), "w", encoding="utf-8") as f:
             json.dump(config, f, indent=2)
 
@@ -412,6 +422,36 @@ class Q1Instrument:
             if Q1Instrument.verbose:
                 duration = time.perf_counter() - t_start_seq
                 logger.debug(f"Configured QRM {name} in {duration*1000.0:3.1f} ms")
+
+        with DelayedKeyboardInterrupt("routing"):
+            # TODO handle multiple clusters
+            if len(self.root_instruments) > 1:
+                logger.warning("Feedback routing is not yet supported for multiple instruments!!")
+
+            # dict[instrument_name, dict[event_id, list[tuple[slot_idx, seq_nr]]]]
+            routes: dict[str, dict[str, list[tuple, tuple]]] = {}
+            for event_id, sequencer_names in program.feedback_routing.items():
+                for name in sequencer_names:
+                    seq = sequencers[name]
+                    module = self.modules[seq.module_name]
+                    instrument = module.root_instrument
+                    slot_seq = [module.slot_idx, seq.seq_nr]
+                    inst_routes = routes.setdefault(instrument.name, {})
+                    inst_routes.setdefault(event_id, []).append(slot_seq)
+
+            if not self.cache_routing or self._cached_routes != routes:
+                for instrument in self.root_instruments:
+                    instrument.clear_router()
+                    inst_routes = routes.get(instrument.name)
+                    if inst_routes is None:
+                        continue
+                    for event_id, seq_list in inst_routes.items():
+                        qb_sequencers = []
+                        for slot_idx, seq_num in seq_list:
+                            qb_sequencer = instrument.modules[slot_idx-1].sequencers[seq_num]
+                            qb_sequencers.append(qb_sequencer)
+                        instrument.set_cmm_route(event_id, qb_sequencers)
+                self._cached_routes = routes
 
         try:
             with DelayedKeyboardInterrupt("arm and start"):

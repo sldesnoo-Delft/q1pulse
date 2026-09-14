@@ -42,6 +42,7 @@ class InstructionQueue:
         if isa_version not in [(1, 0), (2, 0), (2, 1)]:
             raise Exception(f"Unsupport ISA version {isa_version}")
         self.isa_v2 = isa_version[0] == 2
+        self._header = []
         self._init_section = []
         self._instructions = []
         self._reg_comment = None
@@ -51,6 +52,9 @@ class InstructionQueue:
         self._last_rt_command = None
         self._n_rt_instructions = 0
         self._updating_reg = None
+
+    def add_header_line(self, line):
+        self._header.append(line)
 
     def add_comment(self, line, init_section=False):
         if init_section:

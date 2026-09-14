@@ -2,21 +2,23 @@ import os
 import time
 import logging
 import uuid
+from collections import defaultdict
 from contextlib import contextmanager
 from numbers import Number
 from typing import Any
 
-from .lang.conditions import CounterFlags
-from .lang.exceptions import Q1InternalError, Q1ValueError, Q1SyntaxError, Q1MemoryError
-from .lang.triggers import TriggerCounter, Trigger
-from .lang.math_expressions import Expression
-from .lang.timeline import Timeline
-from .lang.registers import Registers
-from .lang.register import Register
-from .lang.register_statements import RegisterAssignment, AllocateVariable
-from .lang.loops import RangeLoop, LinspaceLoop, ArrayLoop
-from .lang.program_variables import Variable
-from .assembler.generator import Q1asmGenerator
+from q1pulse.lang.conditions import CounterFlags
+from q1pulse.lang.exceptions import Q1InternalError, Q1ValueError, Q1SyntaxError, Q1MemoryError
+from q1pulse.lang.feedback import FeedbackEventID
+from q1pulse.lang.triggers import TriggerCounter, Trigger
+from q1pulse.lang.math_expressions import Expression
+from q1pulse.lang.timeline import Timeline
+from q1pulse.lang.registers import Registers
+from q1pulse.lang.register import Register
+from q1pulse.lang.register_statements import RegisterAssignment, AllocateVariable
+from q1pulse.lang.loops import RangeLoop, LinspaceLoop, ArrayLoop
+from q1pulse.lang.program_variables import Variable
+from q1pulse.assembler.generator import Q1asmGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +38,7 @@ class Program:
         self._var_registers: dict[str, dict[str, str]] = {}  # variable registers per sequencer with short name!
         self._loop_cnt = 0
         self._triggers = []
+        self._feedback_event_ids: list[FeedbackEventID] = []
         # shared timeline for all sequencers
         self._timeline = Timeline()
 
@@ -62,6 +65,7 @@ class Program:
                 listing=False, json=True, optimize=1):
         # store compiled sequences
         self._q1asm = {}
+        self._feedback_routing: dict[int, list[str]] = defaultdict(list)
 
         start_compile = time.perf_counter()
         for name, builder in self.sequence_builders.items():
@@ -89,6 +93,8 @@ class Program:
                                     f"{g.n_q1asm_instructions} > {max_instructions}.")
             self._q1asm[name] = g.q1asm
             self._q1registers[name] = g.registers
+            for event_id in builder.subscribed_event_ids:
+                self._feedback_routing[event_id].append(name)
 
             duplicate_variables = set(self.R.variables.keys()) & set(builder.Rs.variables.keys())
             if duplicate_variables:
@@ -123,6 +129,10 @@ class Program:
     @property
     def variable_register_mapping(self) -> dict[str, dict[str, str]]:
         return self._var_registers
+
+    @property
+    def feedback_routing(self) -> dict[int, list[str]]:
+        return self._feedback_routing
 
     def _add_statement(self, statement, init_section=False):
         if not isinstance(statement, RegisterAssignment | AllocateVariable):
@@ -176,26 +186,35 @@ class Program:
         for s in self.sequence_builders.values():
             s.exit_condition()
 
-    def configure_trigger(self, sequencer_name, invert=False):
+    def configure_trigger(self, sequencer_name: str, invert: bool = False) -> Trigger:
         addr = len(self._triggers)+1
         trigger = Trigger(sequencer_name, address=addr, invert=invert)
         self._triggers.append(trigger)
         self.sequence_builders[sequencer_name].trigger = trigger
         return trigger
 
-    def add_trigger_counter(self, trigger, threshold=1, invert=False):
+    def add_trigger_counter(self, trigger: Trigger, threshold: int = 1, invert: bool = False) -> TriggerCounter:
         counter = TriggerCounter(trigger, threshold=threshold, invert=invert)
         for s in self.sequence_builders.values():
             s._add_trigger_counter(counter)
         return counter
 
-    def latch_enable(self, enable, t_offset=0):
+    def latch_enable(self, enable: bool, t_offset: int = 0):
         for s in self.sequence_builders.values():
             s.latch_enable(enable, t_offset=t_offset)
 
-    def latch_reset(self, t_offset=0):
+    def latch_reset(self, t_offset: int = 0):
         for s in self.sequence_builders.values():
             s.latch_reset(t_offset=t_offset)
+
+    def register_feedback_event(self, name: str) -> FeedbackEventID:
+        for event in self._feedback_event_ids:
+            if event.name == name:
+                raise Q1ValueError(f"Feedback event with name '{name}' has already been registered")
+        event_id = 20 + len(self._feedback_event_ids)
+        feedback_event_id = FeedbackEventID(name, event_id)
+        self._feedback_event_ids.append(feedback_event_id)
+        return feedback_event_id
 
     def add_comment(self, comment):
         for s in self.sequence_builders.values():

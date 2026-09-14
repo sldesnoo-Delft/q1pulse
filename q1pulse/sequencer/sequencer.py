@@ -6,28 +6,36 @@ import traceback
 import logging
 
 from .builderbase import BuilderBase
-from ..lang.triggers import TriggerCounter
-from ..lang.exceptions import (
+from q1pulse.lang.triggers import TriggerCounter
+from q1pulse.lang.exceptions import (
         Q1StateError, Q1Exception,
         Q1InternalError, Q1SequenceError,
         Q1TimingError, Q1SyntaxError,
         )
-from ..lang.sequence import Sequence
-from ..lang.loops import Loop
-from ..lang.registers import Registers
-from ..lang.timed_statements import WaitRegStatement, TimedStatement
-from ..lang.flow_statements import (
+from q1pulse.lang.sequence import Sequence
+from q1pulse.lang.loops import Loop
+from q1pulse.lang.math_expressions import Operand
+from q1pulse.lang.registers import Registers
+from q1pulse.lang.register import Register
+from q1pulse.lang.timed_statements import WaitRegStatement, TimedStatement
+from q1pulse.lang.flow_statements import (
         LoopDurationStatement,
         LoopStatement, EndLoopStatement,
         ArrayLoopStatement, EndArrayLoopStatement,
         )
-from ..lang.loops import LinspaceLoop, RangeLoop, ArrayLoop
-from ..lang.simulator_statements import LogStatement
-from ..lang.conditions import (
+from q1pulse.lang.loops import LinspaceLoop, RangeLoop, ArrayLoop
+from q1pulse.lang.simulator_statements import LogStatement
+from q1pulse.lang.conditions import (
         LatchEnableStatement, LatchResetStatement,
         BranchSequence, ConditionalBlockStatement,
         CounterFlags,
         )
+from q1pulse.lang.feedback import (
+    FeedbackEventID, FeedbackPopData,
+    FeedbackSendData, FeedbackPullData,
+    FeedbackComCfg, FeedbackComExtra,
+
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +65,7 @@ class SequenceBuilder(BuilderBase):
         self._conditional_block = None
         self._in_condition = False
         self._trigger_counters = []
+        self._feedback_event_subscriptions: set[FeedbackEventID] = set()
 
     def start_sequence(self, program, timeline):
         self._program = program
@@ -155,6 +164,12 @@ class SequenceBuilder(BuilderBase):
             self._sequence_stack[0].compile(generator, annotate)
             generator.end_main(self.end_time)
             self.modifies_frequency = generator.modifies_frequency
+            subscribed_event_ids = self.subscribed_event_ids
+            if subscribed_event_ids:
+                generator.add_header_line(f"feedback event subscriptions: {subscribed_event_ids}")
+            registers = generator.registers
+            for name, reg in registers.items():
+                generator.add_header_line(f"{reg}: {name}")
             self._compiled = True
         except Q1Exception as ex:
             logger.error(f'Compilation error on {self.name}', exc_info=True)
@@ -282,17 +297,17 @@ class SequenceBuilder(BuilderBase):
         self._add_trigger_counter(counter)
         return counter
 
-    def latch_enable(self, enable, t_offset=0):
+    def latch_enable(self, enable, t_offset=0, wait_after=0):
         if enable not in [0, 1, True, False]:
             raise ValueError('Valid values for enable are 0, 1, True, False')
         time = self.current_time + t_offset
         self._add_statement(LatchEnableStatement(time, enable))
-        self.set_pulse_end(time)
+        self.set_pulse_end(time + wait_after)
 
-    def latch_reset(self, t_offset=0):
+    def latch_reset(self, t_offset=0, wait_after=0):
         time = self.current_time + t_offset
         self._add_statement(LatchResetStatement(time))
-        self.set_pulse_end(time)
+        self.set_pulse_end(time + wait_after)
 
     @contextmanager
     def conditional(self, counters, t_offset=0, evaluation_time=0):
@@ -343,3 +358,41 @@ class SequenceBuilder(BuilderBase):
         self._in_condition = False
         self._sequence_pop()
         self._last_timed_statement = self._conditional_block
+
+    @property
+    def subscribed_event_ids(self) -> list[int]:
+        return [fb.event_id for fb in self._feedback_event_subscriptions]
+
+    def fb_subscribe(self, event_id: FeedbackEventID):
+        """Subscribes to event_id to make it available for `fb_pull_data`.
+        """
+        self._feedback_event_subscriptions.add(event_id)
+
+    def fb_pop_data(self, event_id: FeedbackEventID, register: Register):
+        # automatic registration of event.
+        self._feedback_event_subscriptions.add(event_id)
+        self._add_statement(FeedbackPopData(event_id, register))
+
+    def fb_pull_data(self, event_id_destination: Register, register: Register):
+        self._add_statement(FeedbackPullData(event_id_destination, register))
+
+    def fb_com_data(self, event_id: FeedbackEventID, value: Operand, t_offset: int = 0, wait_after: int = 0):
+        time = self.current_time + t_offset
+        self._add_statement(FeedbackSendData(time, event_id, value))
+        self.set_pulse_end(time + wait_after)
+
+    def fb_com_cfg(self, write_combine: bool, shift: int, n_bytes: int, t_offset: int = 0, wait_after: int = 0):
+        """
+        Args:
+            write_combine: if True enable write combine.
+            shift: left shift
+            n_bytes: total number of bytes of combined message.
+        """
+        time = self.current_time + t_offset
+        self._add_statement(FeedbackComCfg(time, write_combine, shift, n_bytes))
+        self.set_pulse_end(time + wait_after)
+
+    def fb_com_extra(self, valid: bool, extra: int, t_offset: int = 0, wait_after: int = 0):
+        time = self.current_time + t_offset
+        self._add_statement(FeedbackComExtra(time, valid, extra))
+        self.set_pulse_end(time + wait_after)

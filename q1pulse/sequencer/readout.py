@@ -1,6 +1,13 @@
+from q1pulse.lang.exceptions import Q1ValueError, Q1TypeError
+from q1pulse.lang.feedback import (
+    FeedbackEventID,
+    FeedbackAcqIqId, FeedbackAcqIqShift,
+    FeedbackAcqTbCfg, FeedbackAcqTbId,
+    FeedbackAcqTbExtra, FeedbackAcqTbMock,
+    FeedbackAcqTbValid
+    )
+from q1pulse.lang.timed_statements import AcquireStatement, AcquireWeighedStatement, AcquireTtlStatement
 from .control import ControlBuilder
-from ..lang.exceptions import Q1ValueError, Q1TypeError
-from ..lang.timed_statements import AcquireStatement, AcquireWeighedStatement, AcquireTtlStatement
 from .sequencer_data import (
     AcquisitionWeight, WeightCollection,
     Acquisition, AcquisitionCollection
@@ -249,6 +256,47 @@ class ReadoutBuilder(ControlBuilder):
     def reset_bin_counter(self, acquisition):
         reg_name = self._get_acquisition_reg_name(acquisition)
         self.Rs[reg_name] = 0
+
+    def fb_acq_iq_id(self, fb_event_id: FeedbackEventID, t_offset: int = 0, wait_after: int = 0):
+        time = self.current_time + t_offset
+        self._add_statement(FeedbackAcqIqId(time, fb_event_id))
+        self.set_pulse_end(time + wait_after)
+
+    def fb_acq_iq_shift(self, rshift: int, t_offset: int = 0, wait_after: int = 0):
+        time = self.current_time + t_offset
+        self._add_statement(FeedbackAcqIqShift(time, rshift))
+        self.set_pulse_end(time + wait_after)
+
+    def fb_acq_tb_id(self, fb_event_id: FeedbackEventID, t_offset: int = 0, wait_after: int = 0):
+        time = self.current_time + t_offset
+        self._add_statement(FeedbackAcqTbId(time, fb_event_id))
+        self.set_pulse_end(time + wait_after)
+
+    def fb_acq_tb_cfg(self, write_combine: bool, shift: int, n_bytes: int, t_offset: int = 0, wait_after: int = 0):
+        """
+        Args:
+            write_combine: if True enable write combine.
+            shift: left shift
+            n_bytes: total number of bytes of combined message.
+        """
+        time = self.current_time + t_offset
+        self._add_statement(FeedbackAcqTbCfg(time, write_combine, shift, n_bytes))
+        self.set_pulse_end(time + wait_after)
+
+    def fb_acq_tb_valid(self, valid: bool, t_offset: int = 0, wait_after: int = 0):
+        time = self.current_time + t_offset
+        self._add_statement(FeedbackAcqTbValid(time, valid))
+        self.set_pulse_end(time + wait_after)
+
+    def fb_acq_tb_extra(self, valid: bool, extra: int, t_offset: int = 0, wait_after: int = 0):
+        time = self.current_time + t_offset
+        self._add_statement(FeedbackAcqTbExtra(time, valid, extra))
+        self.set_pulse_end(time + wait_after)
+
+    def fb_acq_tb_mock(self, enable: bool, valid: bool, data: int, t_offset: int = 0, wait_after: int = 0):
+        time = self.current_time + t_offset
+        self._add_statement(FeedbackAcqTbMock(time, enable, valid, data))
+        self.set_pulse_end(time + wait_after)
 
     def _get_acquisition_reg_name(self, acquisition):
         if isinstance(acquisition, Acquisition):

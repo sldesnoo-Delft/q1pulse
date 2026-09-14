@@ -149,7 +149,7 @@ class QbloxModule:
                 res.update(self.pulsar.get_sequencer_registers(seq_nr, [reg]))
                 # res.update(seq.get_registers([reg]))
             return res
-        else:                      
+        else:
             return self.pulsar.get_sequencer_registers(seq_nr, registers)
 
     def set_sequencer_registers(self, seq_nr, registers: dict[str, int]) -> None:

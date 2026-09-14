@@ -43,12 +43,21 @@ def _float_to_f32(value):
 def register_args(signature):
     """
         Signature:
+        i: integer. no conversion. Check not register or expression.
         I: integer only; Evaluate expression, allow label.
         f: float or int: Evaluate expression, if one float, then all float; label counts as int
         F: float only: Evaluate expression, convert to i16
         t: time. integer, No register. No conversion.
         o: object. No register. No conversion.
     """
+    def arg_i(generator, i, arg, conversion_comments):
+        # translate reg, expr. to asm register
+        if isinstance(arg, (Operand, str)):
+            raise Q1TypeError(f"Argument {i} must be immediate of type int ({arg})")
+        else:
+            # make unsigned
+            return _int_u32(arg)
+
     def arg_I(generator, i, arg, conversion_comments):
         # translate reg, expr. to asm register
         if isinstance(arg, Operand):
@@ -113,6 +122,8 @@ def register_args(signature):
         if atype in "to":
             # argument is time or object. Nothing to translate
             continue
+        elif atype == "i":
+            arg_conv.append((i, arg_i))
         elif atype == "I":
             arg_conv.append((i, arg_I))
         elif atype == "f":
@@ -640,6 +651,59 @@ class Q1asmGenerator(InstructionQueue):
     def latch_rst(self, time):
         self._add_rt_command("latch_rst", time=time)
 
+    @register_args(signature="tI")
+    def fb_acq_iq_id(self, time, event_id):
+        self._add_rt_command("fb_acq_iq_id", event_id, time=time)
+        self._contains_io_instr = True
+
+    @register_args(signature="tI")
+    def fb_acq_iq_shift(self, time, rshift):
+        self._add_rt_command("fb_acq_iq_shift", rshift, time=time)
+
+    @register_args(signature="tI")
+    def fb_acq_tb_id(self, time, event_id):
+        self._add_rt_command("fb_acq_tb_id", event_id, time=time)
+        self._contains_io_instr = True
+
+    @register_args(signature="tiii")
+    def fb_acq_tb_cfg(self, time, write_combine, shift, n_bytes):
+        self._add_rt_command("fb_acq_tb_cfg", write_combine, shift, n_bytes, time=time)
+
+    @register_args(signature="tiI")
+    def fb_acq_tb_extra(self, time, valid, extra):
+        self._add_rt_command("fb_acq_tb_extra", valid, extra, time=time)
+
+    @register_args(signature="ti")
+    def fb_acq_tb_valid(self, time, valid):
+        self._add_rt_command("fb_acq_tb_valid", valid, time=time)
+
+    @register_args(signature="tiii")
+    def fb_acq_tb_mock(self, time, enable, valid, data):
+        self._add_rt_command("fb_acq_tb_mock", enable, valid, data, time=time)
+
+    @register_args(signature="tiI")
+    def fb_com_data(self, time, event_id, value):
+        self._add_rt_command("fb_com_data", event_id, value, time=time)
+        self._contains_io_instr = True
+
+    @register_args(signature="tiii")
+    def fb_com_cfg(self, time, write_combine, shift, n_bytes):
+        self._add_rt_command("fb_com_cfg", write_combine, shift, n_bytes, time=time)
+
+    @register_args(signature="tiI")
+    def fb_com_extra(self, time, valid, extra):
+        self._add_rt_command("fb_com_extra", valid, extra, time=time)
+
+    @register_args(signature="if")
+    def fb_pop_data(self, event_id, destination):
+        self._add_instruction("fb_pop_data", event_id, destination)
+        self._contains_io_instr = True
+
+    @register_args(signature="If")
+    def fb_pull_data(self, event_id_destination, destination):
+        self._add_instruction("fb_pull_data", event_id_destination, destination)
+        self._contains_io_instr = True
+
     @contextmanager
     def unsigned_registers(self):  # NOTE: only used for ISA v1
         emulate_signed = self.emulate_signed
@@ -923,6 +987,8 @@ class Q1asmGenerator(InstructionQueue):
             pprint(d['acquisitions'], f)
             f.write('\n')
             f.write('seq_prog="""\n')
+            for line in self._header:
+                f.write(f'#  {line}\n')
             f.write(self._q1asm_prog())
             f.write('\n"""\n\n')
 
