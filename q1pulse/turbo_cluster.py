@@ -101,9 +101,7 @@ class TurboCluster(Cluster):
         self._remove_slow_validators()
 
         # Disable continuous error checking
-        # Note: Not needed anymore since v0.17.0, because default debug level has changed and
-        #       start/stop sequencer has been reimplement in this class.
-        self._debug = 2
+        self._debug = 2 # Has minimal effect for > v1.1.0. Requires calls to get_system_errors!
         self._init_configuration_cache()
 
     def _remove_slow_validators(self):
@@ -217,7 +215,7 @@ class TurboCluster(Cluster):
             cmm = self._connections.get(None, super())
             return cmm.get_num_system_error()
         else:
-            if not self._needs_check.get(slot, False):
+            if qblox_version < Version("1.3.0") and not self._needs_check.get(slot, False):
                 return 0
             cnt = int(self._connections[slot]._read("SYSTem:ERRor:COUNt?"))
             if cnt == 0:
@@ -235,7 +233,12 @@ class TurboCluster(Cluster):
         """
         errors = []
         # use 0 for CMM. (actually it is in slot 0)
-        slots = [0] + [slot for slot, check in self._needs_check.items() if check]
+        if qblox_version < Version("1.3.0"):
+            slots = [0] + [slot for slot, check in self._needs_check.items() if check]
+        else:
+            # _needs_check doesn't work for >= v1.3. System response is fast enough.
+            slots = [0] + [slot for slot in self._connections.keys() if slot is not None]
+
         for slot in exclude:
             try:
                 slots.remove(slot)
