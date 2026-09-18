@@ -1,4 +1,6 @@
+from __future__ import annotations
 from abc import abstractmethod, ABC
+from enum import Enum
 
 import numpy as np
 
@@ -70,23 +72,23 @@ class Operand(ABC):
     def asfloat(self):
         return CastFloat(self)
 
-    def __lt__(self, lhs):
-        ...
+    def __lt__(self, rhs):
+        return BinaryCondition(self, "<", rhs)
 
-    def __le__(self, lhs):
-        ...
+    def __le__(self, rhs):
+        return BinaryCondition(self, "<=", rhs)
 
-    def __eq__(self, lhs):
-        ...
+    def __eq__(self, rhs):
+        return BinaryCondition(self, "==", rhs)
 
-    def __ne__(self, lhs):
-        ...
+    def __ne__(self, rhs):
+        return BinaryCondition(self, "!=", rhs)
 
-    def __ge__(self, lhs):
-        ...
+    def __ge__(self, rhs):
+        return BinaryCondition(self, ">=", rhs)
 
-    def __gt__(self, lhs):
-        ...
+    def __gt__(self, rhs):
+        return BinaryCondition(self, ">", rhs)
 
 
 def get_dtype(value):
@@ -344,3 +346,137 @@ class CastFloat(UnaryExpression, ABC):
     def _evaluate(self, generator, destination, rhs):
         if destination != rhs:
             generator.move(rhs, destination)
+
+
+class ComparisonOp(Enum):
+    EQ = 'z'
+    NEQ = 'nz'
+    UL = 'b'
+    ULE = 'be'
+    UG = 'a'
+    UGE = 'ae'
+    SL = 'l'
+    SLE = 'le'
+    SG = 'g'
+    SGE = 'ge'
+
+
+class Condition:
+    @property
+    def comparison_operator(self) -> ComparisonOp:
+        return self._comparison_op
+
+    @abstractmethod
+    def test(self, generator):
+        ...
+
+
+class BinaryCondition(Expression, Condition):
+    """
+    TODO doc.
+    evaluate: assign result of condition: jxx assign 1 jump @end else: assign 0
+    test: set jump condition
+
+    TODO Optimizations for comparison with 0:
+        * only evaluate lhs (or rhs) if expression. Use js, jns? lhs < 0, lhs >= 0.
+        * if lhs is register use cmp result,0
+    """
+
+    def __init__(self, lhs, operator, rhs):
+        self.lhs = lhs
+        self.operator = operator
+        self.rhs = rhs
+        lhs_dtype = get_dtype(lhs)
+        rhs_dtype = get_dtype(rhs)
+        if lhs_dtype != rhs_dtype:
+            raise Q1TypeError(f'incompatible data types: {self}, '
+                              f'{lhs_dtype.__name__} <> {rhs_dtype.__name__}')
+        # TODO add signed int
+        self._signed_compare = lhs_dtype == float
+        self._dtype = int
+        if self._signed_compare:
+            operators = {
+                '==': ComparisonOp.EQ,
+                '!=': ComparisonOp.NEQ,
+                '>': ComparisonOp.SG,
+                '>=': ComparisonOp.SGE,
+                '<': ComparisonOp.SL,
+                '<=': ComparisonOp.SLE,
+                }
+        else:
+            operators = {
+                '==': ComparisonOp.EQ,
+                '!=': ComparisonOp.NEQ,
+                '>': ComparisonOp.UG,
+                '>=': ComparisonOp.UGE,
+                '<': ComparisonOp.UL,
+                '<=': ComparisonOp.ULE,
+                }
+        self._comparison_op = operators[operator]
+
+    @property
+    def dtype(self):
+        return self._dtype
+
+    def evaluate(self, generator, destination=None):
+        if destination is None:
+            destination = generator.get_temp_reg()
+
+        self._cmp(generator)
+
+        generator.move(0, destination)
+        generator.cmove(self.comparision_operator, 1, destination)
+
+        return destination
+
+    def _cmp(self, generator):
+        """
+        TODO Optimization for comparison with 0:
+            * only evaluate lhs (or rhs) if expression. Use js, jns? lhs < 0, lhs >= 0.
+            * if lhs is register use cmp result,0
+        """
+        if isinstance(self.lhs, Expression):
+            lhs = self.lhs.evaluate(generator)
+        else:
+            lhs = self.lhs
+
+        if isinstance(self.rhs, Expression):
+            rhs = self.rhs.evaluate(generator)
+        else:
+            rhs = self.rhs
+
+        generator.cmp(lhs, rhs)
+
+    def test(self, generator):
+        self._cmp(generator)
+
+    @property
+    def comparision_operator(self) -> ComparisonOp:
+        return self._comparison_op
+
+    def __repr__(self):
+        return f'{self.lhs} {self.operator} {self.rhs}'
+
+
+class ExpressionCondition(Condition):
+    def __init__(self, expression: Expression):
+        self._expression = expression
+        self._comparison_op = ComparisonOp.NEQ
+
+    def test(self, generator):
+        self._expression.evaluate(generator)
+
+    def __repr__(self):
+        return f'{self._expression}'
+
+
+class RegisterCondition(Condition):
+    def __init__(self, register):
+        self._register = register
+        self._comparison_op = ComparisonOp.NEQ
+
+    def test(self, generator):
+        generator.test(self._register, self._register)
+
+    def __repr__(self):
+        return f'{self._register}'

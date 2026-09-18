@@ -7,9 +7,24 @@ class Sequence:
     def __init__(self, timeline):
         self.timeline = timeline
         self._statements = []
+        self._if_block = None # @@@: IfBlockStatement | None = None
 
     def add(self, statement):
         self._statements.append(statement)
+
+    @property
+    def current_if_block(self):
+        return self._if_block
+
+    @current_if_block.setter
+    def current_if_block(self, if_block):
+        self._if_block = if_block
+
+    def _close_if_block(self, auto: bool = False):
+        if self._if_block is not None:
+            self._if_block.close()
+            self._if_block = None
+            self._if_auto_closed = auto
 
     def describe(self, lines, indent=0, init_section=False):
         white = '    ' * indent

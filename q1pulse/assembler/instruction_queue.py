@@ -46,7 +46,7 @@ class InstructionQueue:
         self._init_section = []
         self._instructions = []
         self._reg_comment = None
-        self._wait_loop_cnt = 0
+        self._auto_label_cnt = 0
         self._rt_time = 0
         self._pending_update = None
         self._last_rt_command = None
@@ -67,6 +67,10 @@ class InstructionQueue:
         Label to be added to next instruction
         '''
         self._instructions.append(Instruction(None, label=label))
+
+    def generate_label(self, prefix: str):
+        self._auto_label_cnt += 1
+        return f"{prefix}{self._auto_label_cnt}"
 
     def adjust_time(self, duration):
         self._rt_time += duration
@@ -199,10 +203,9 @@ class InstructionQueue:
                 for _ in range(n_max):
                     self._add_instruction('wait', MAX_WAIT_STEP)
             else:
-                self._wait_loop_cnt += 1
                 with self.temp_regs(1) as wait_reg:
                     self._add_reg_instruction('move', n_max, wait_reg)
-                    label = f'wait{self._wait_loop_cnt}'
+                    label = self.generate_label("wait")
                     self.set_label(label)
                     self._add_instruction('wait', MAX_WAIT_STEP)
                     if self.isa_v2:
@@ -227,11 +230,10 @@ class InstructionQueue:
             self._add_reg_instruction('sub', time_reg, elapsed, wait_reg)
         else:
             self._add_reg_instruction('move', time_reg, wait_reg)
-        self._wait_loop_cnt += 1
 
         if self._check_time_reg:
             self.add_comment('         --- check for negative wait time')
-            continue_label = f'waitc{self._wait_loop_cnt}'
+            continue_label = self.generate_label("waitc")
             if self.isa_v2:
                 self._add_instruction('cmp', wait_reg, MIN_WAIT)
                 self._add_instruction('jge', '@'+continue_label)
@@ -250,8 +252,8 @@ class InstructionQueue:
 
         # FIXME: NO Looping allowed inside conditional, because number rt_instructions cannot be counted properly.
         if not less_then_65us:
-            loop_label = f'wait{self._wait_loop_cnt}'
-            end_label = f'endwait{self._wait_loop_cnt}'
+            loop_label = self.generate_label("wait")
+            end_label = self.generate_label("endwait")
             if self.isa_v2:
                 self._add_reg_instruction('cmp', wait_reg, MAX_WAIT)
                 self._add_instruction('jle', '@'+end_label)

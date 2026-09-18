@@ -1,9 +1,10 @@
 import sys
 import os
+import logging
+import traceback
 from copy import copy
 from contextlib import contextmanager
-import traceback
-import logging
+from types import NoneType
 
 from .builderbase import BuilderBase
 from q1pulse.lang.triggers import TriggerCounter
@@ -14,7 +15,7 @@ from q1pulse.lang.exceptions import (
         )
 from q1pulse.lang.sequence import Sequence
 from q1pulse.lang.loops import Loop
-from q1pulse.lang.math_expressions import Operand
+from q1pulse.lang.math_expressions import Operand, Expression, Condition, RegisterCondition, ExpressionCondition
 from q1pulse.lang.registers import Registers
 from q1pulse.lang.register import Register
 from q1pulse.lang.timed_statements import WaitRegStatement, TimedStatement
@@ -22,6 +23,9 @@ from q1pulse.lang.flow_statements import (
         LoopDurationStatement,
         LoopStatement, EndLoopStatement,
         ArrayLoopStatement, EndArrayLoopStatement,
+        )
+from q1pulse.lang.if_block import (
+        IfBlockStatement, IfBranchSequence,
         )
 from q1pulse.lang.loops import LinspaceLoop, RangeLoop, ArrayLoop
 from q1pulse.lang.simulator_statements import LogStatement
@@ -68,7 +72,7 @@ class SequenceBuilder(BuilderBase):
         self._feedback_event_subscriptions: set[FeedbackEventID] = set()
 
     def start_sequence(self, program, timeline):
-        self._program = program
+        # @@@@ self._program = program ???
         self._timeline = timeline
         self._sequence_push(Sequence(self._timeline))
 
@@ -77,8 +81,9 @@ class SequenceBuilder(BuilderBase):
         self.sequence = sequence
 
     def _sequence_pop(self):
-        self._sequence_stack.pop()
+        sequence = self._sequence_stack.pop()
         self.sequence = self._sequence_stack[-1]
+        return sequence
 
     def _add_statement(self, statement, init_section=False):
         self._check_time(statement)
@@ -86,6 +91,8 @@ class SequenceBuilder(BuilderBase):
             self._add_traceback(statement)
         if self._compiled:
             raise Q1StateError('Program cannot be changed after compilation')
+        if self.sequence.current_if_block is not None:
+            self._close_if_block()
         if init_section:
             self._init_sequence.add(statement)
         else:
@@ -284,6 +291,93 @@ class SequenceBuilder(BuilderBase):
 
     def _add_reg_wait(self, reg):
         self._add_statement(WaitRegStatement(self.end_time, reg))
+
+    @contextmanager
+    def if_(self, condition: Operand):
+        if self._conditional_block:
+            raise Q1SyntaxError('If within rt-conditional is not supported')
+        self.enter_if(condition)
+        yield
+        self.exit_if()
+
+    @contextmanager
+    def elif_(self, condition: Operand):
+        self.enter_elif(condition)
+        yield
+        self.exit_elif()
+
+    @property
+    @contextmanager
+    def else_(self):
+        self.enter_else()
+        yield
+        self.exit_else()
+
+    def enter_if(self, condition: Operand):
+        self._start_if_block()
+        self._add_if_branch(condition, "if")
+
+    def exit_if(self):
+        self._close_if_branch()
+
+    def enter_elif(self, condition: Operand):
+        if self.sequence.current_if_block is None:
+            raise Q1SyntaxError("Cannot add `elif` without matching `if`")
+        self._add_if_branch(condition, "elif")
+
+    def exit_elif(self):
+        self._close_if_branch()
+
+    def enter_else(self):
+        if self.sequence.current_if_block is None:
+            raise Q1SyntaxError("Cannot add `else` without matching `if`")
+        self._add_if_branch(None, "else")
+
+    def exit_else(self):
+        self._close_if_branch()
+        self._close_if_block()
+
+    def _start_if_block(self):
+        if self.sequence.current_if_block is not None:
+            self.sequence.current_if_block.close()
+
+        block_statement = IfBlockStatement(self.current_time, self._last_timed_statement)
+        self._add_statement(block_statement)
+        self.sequence.current_if_block = block_statement
+
+    def _close_if_block(self):
+        current_if_block = self.sequence.current_if_block
+        if current_if_block is not None:
+            self.sequence.current_if_block = None
+            current_if_block.close()
+            self.set_pulse_end(current_if_block.end_time)
+            # @@@ set last timed statement
+
+    def _add_if_branch(self, condition: Operand, keyword: str):
+        if isinstance(condition, Condition | NoneType):
+            pass
+        elif isinstance(condition, Register):
+            condition = RegisterCondition(condition)
+        elif isinstance(condition, Expression):
+            condition = ExpressionCondition(condition)
+        else:
+            raise Q1SyntaxError(f"Cannot evaluate: {keyword} {condition}.")
+        current_block = self.sequence.current_if_block
+        timeline = copy(self._timeline)
+        self._last_timed_statement = current_block.last_timed_statement
+        if_branch_sequence = IfBranchSequence(timeline, condition, keyword)
+        current_block.add_branch(if_branch_sequence)
+        self._sequence_push(if_branch_sequence)
+        end_time = self.end_time
+        self.add_comment(f'branch start time: {end_time}')
+
+    def _close_if_branch(self):
+        end_time = self.end_time
+        self.add_comment(f'branch end time: {end_time}')
+        self._sequence_pop()
+        self.sequence.current_if_block.set_end_time(end_time)
+        # @@@ also set last timed statement
+        end_time = self.end_time
 
     @property
     def trigger_counters(self):

@@ -8,16 +8,16 @@ from functools import wraps
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 
+from q1pulse.lang.exceptions import (
+        Q1ValueError, Q1TypeError,
+        Q1Exception, Q1CompileError
+        )
+from q1pulse.lang.math_expressions import get_dtype, Expression, Operand, ComparisonOp, Condition
+from q1pulse.lang.register import Register
 from q1pulse.sequencer.sequencer_data import Acquisition
 from .generator_data import GeneratorData
 from .instruction_queue import InstructionQueue, Instruction, PendingUpdate, MIN_WAIT, CLOCK_PERIOD
 from .registers import SequencerRegisters
-from ..lang.math_expressions import get_dtype, Expression, Operand
-from ..lang.register import Register
-from ..lang.exceptions import (
-        Q1ValueError, Q1TypeError,
-        Q1Exception, Q1CompileError
-        )
 
 logger = logging.getLogger(__name__)
 
@@ -167,6 +167,14 @@ class ConditionalBlockState:
 
 
 @dataclass
+class IfBlockState:
+    start_time: int
+    end_time: int
+    end_label: str
+    continue_label: str = ""
+
+
+@dataclass
 class LastRtSettings:
     awg_offs_time: int = -1
     awg_offs_instr: Instruction = None
@@ -176,6 +184,34 @@ class LastRtSettings:
     def clear(self):
         self.awg_gain_time = -1
         self.awg_offs_time = -1
+
+
+_jump_condition_true = {
+    ComparisonOp.EQ: 'jz',
+    ComparisonOp.NEQ: 'jnz',
+    ComparisonOp.UL: 'jb',
+    ComparisonOp.ULE: 'jbe',
+    ComparisonOp.UG: 'ja',
+    ComparisonOp.UGE: 'jae',
+    ComparisonOp.SL: 'jl',
+    ComparisonOp.SLE: 'jle',
+    ComparisonOp.SG: 'jg',
+    ComparisonOp.SGE: 'jge',
+    }
+
+
+_jump_condition_false = {
+    ComparisonOp.EQ: 'jnz',
+    ComparisonOp.NEQ: 'jz',
+    ComparisonOp.UL: 'jae',
+    ComparisonOp.ULE: 'ja',
+    ComparisonOp.UG: 'jbe',
+    ComparisonOp.UGE: 'jb',
+    ComparisonOp.SL: 'jge',
+    ComparisonOp.SLE: 'jg',
+    ComparisonOp.SG: 'jle',
+    ComparisonOp.SGE: 'jl',
+    }
 
 
 class Q1asmGenerator(InstructionQueue):
@@ -191,6 +227,7 @@ class Q1asmGenerator(InstructionQueue):
         self._repetitions = 1
         self._last_rt_settings = LastRtSettings()
         self._conditional_block_state = None
+        self._if_block_state: list[IfBlockState] = []
         self._data = GeneratorData()
         self._registers = SequencerRegisters(self._add_reg_comment if add_comments else None)
         # counter for signed ASR emulation
@@ -299,6 +336,49 @@ class Q1asmGenerator(InstructionQueue):
         self._last_rt_command = None
         self._rt_time = time
 
+    def enter_if_block(self, time: int, end_time: int):
+        # TODO @@@ Actually, a pending update at `time` should be copied to all branches, if there is a rt statement in the branch.
+        self._flush_pending_update()
+        self._last_rt_settings.clear() # this is only for overwrite, right??
+        self._last_rt_command = None
+        self._wait_till(time)
+        self.add_comment(f"if-block {time}, {self._rt_time} {end_time}")
+        end_label = self.generate_label("endif")
+        if_block_state = IfBlockState(self._rt_time, end_time, end_label)
+        self._if_block_state.append(if_block_state)
+
+    def exit_if_block(self):
+        block_state = self._if_block_state[-1]
+        self.set_label(block_state.end_label)
+        self._if_block_state.pop()
+
+    def enter_if_branch(self, condition: Condition | None, last: bool):
+        block_state = self._if_block_state[-1]
+        self._rt_time = block_state.start_time
+        if not last:
+            label = self.generate_label("cont")
+        else:
+            label = block_state.end_label
+        self._if_block_state[-1].continue_label = label
+        self.add_comment(f"condition {condition}, {label}")
+        if condition is not None:
+            condition.test(self)
+            cjump = _jump_condition_false[condition.comparison_operator]
+            self._add_instruction(cjump, "@"+label)
+
+    def exit_if_branch(self, last: bool):
+        """
+        Args:
+            last: if last add end-label, else continue-label.
+        """
+        block_state = self._if_block_state[-1]
+        self._wait_till(block_state.end_time)
+        self._flush_pending_update()
+        self._last_rt_command = None
+        if not last:
+            self.jmp("@"+block_state.end_label)
+            self.set_label(block_state.continue_label)
+
     @register_args(signature="I")
     def jmp(self, label):
         self._add_instruction("jmp", label)
@@ -378,6 +458,15 @@ class Q1asmGenerator(InstructionQueue):
     def move(self, source, destination, init_section=False):
         self._add_reg_instruction("move", source, destination,
                                   init_section=init_section)
+
+    @register_args(signature="off")
+    def cmove(self, condition, source, destination):
+        cjump = _jump_condition_false[condition]
+        label = self.generate_label("cmove")
+        # jump over move is condition is false.
+        self._add_instruction(cjump, "@"+label)
+        self._add_reg_instruction("move", source, destination)
+        self.set_label(label)
 
     @register_args(signature="fff")
     def add(self, lhs, rhs, destination):
@@ -646,10 +735,10 @@ class Q1asmGenerator(InstructionQueue):
 
     @register_args(signature="tI")
     def set_latch_en(self, time, enable):
-        self._add_rt_command("set_latch_en", enable, time=time)
+        self._add_rt_command("set_latch_en", enable, time=time) # @@@ Check flushing of rt settings ...
 
     def latch_rst(self, time):
-        self._add_rt_command("latch_rst", time=time)
+        self._add_rt_command("latch_rst", time=time) # @@@ Check flushing of rt settings ...
 
     @register_args(signature="tI")
     def fb_acq_iq_id(self, time, event_id):

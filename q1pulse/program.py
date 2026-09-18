@@ -11,13 +11,13 @@ from q1pulse.lang.conditions import CounterFlags
 from q1pulse.lang.exceptions import Q1InternalError, Q1ValueError, Q1SyntaxError, Q1MemoryError
 from q1pulse.lang.feedback import FeedbackEventID
 from q1pulse.lang.triggers import TriggerCounter, Trigger
-from q1pulse.lang.math_expressions import Expression
-from q1pulse.lang.timeline import Timeline
+from q1pulse.lang.math_expressions import Expression, Operand
+from q1pulse.lang.loops import RangeLoop, LinspaceLoop, ArrayLoop
+from q1pulse.lang.program_variables import Variable
 from q1pulse.lang.registers import Registers
 from q1pulse.lang.register import Register
 from q1pulse.lang.register_statements import RegisterAssignment, AllocateVariable
-from q1pulse.lang.loops import RangeLoop, LinspaceLoop, ArrayLoop
-from q1pulse.lang.program_variables import Variable
+from q1pulse.lang.timeline import Timeline
 from q1pulse.assembler.generator import Q1asmGenerator
 
 logger = logging.getLogger(__name__)
@@ -168,6 +168,31 @@ class Program:
         self._timeline.disable_update()
         yield
         self._timeline.enable_update()
+
+    @contextmanager
+    def if_(self, condition: Operand):
+        for s in self.sequence_builders.values():
+            s.enter_if(condition)
+        yield
+        for s in self.sequence_builders.values():
+            s.exit_if()
+
+    @contextmanager
+    def elif_(self, condition: Operand):
+        for s in self.sequence_builders.values():
+            s.enter_elif(condition)
+        yield
+        for s in self.sequence_builders.values():
+            s.exit_elif()
+
+    @property
+    @contextmanager
+    def else_(self):
+        for s in self.sequence_builders.values():
+            s.enter_else()
+        yield
+        for s in self.sequence_builders.values():
+            s.exit_else()
 
     @contextmanager
     def conditional(self, counters, t_offset=0, evaluation_time=0):
