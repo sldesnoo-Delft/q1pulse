@@ -7,6 +7,9 @@ weights={
 acquisitions={'default': {'index': 0, 'num_bins': 101}}
 
 seq_prog="""
+#  R0: _zero
+#  R1: Rs._acq_default
+#  R2: Rs.frequency
 # --INIT-- 
            move           0,R0       # L0001 R0: _zero
            move           0,R1       # L0002 R1: Rs._acq_default
@@ -31,13 +34,14 @@ local_0:   acquire        0,R1,848   # L0013 t=152
            nop                       # L0018  set_freq wait for R5
            set_freq       R5         # L0019 @ 1000
            upd_param      152        # L0020 t=1000
+# endloop t=1152 
            sub            R4,1,R4    # L0021 
            jg             @local_0   # L0022 
 # acquire(default, increment) 
            acquire        0,R1,848   # L0023 t=100152
            add            R1,1,R1    # L0024 
            set_awg_offs   0,0        # L0025 @ 101000
-           upd_param      4          # L0026 t=101000
+           upd_param      1000       # L0026 t=101000
 # --END-- 
            stop                      # L0027 
 """

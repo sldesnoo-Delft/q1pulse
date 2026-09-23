@@ -12,11 +12,11 @@ from q1pulse.lang.exceptions import (
         Q1ValueError, Q1TypeError,
         Q1Exception, Q1CompileError
         )
-from q1pulse.lang.math_expressions import get_dtype, Expression, Operand, ComparisonOp, Condition
+from q1pulse.lang.math_expressions import get_dtype, Expression, Operand, ComparisonOp
 from q1pulse.lang.register import Register
 from q1pulse.sequencer.sequencer_data import Acquisition
 from .generator_data import GeneratorData
-from .instruction_queue import InstructionQueue, Instruction, PendingUpdate, MIN_WAIT, CLOCK_PERIOD
+from .instruction_queue import InstructionQueue, Instruction, PendingUpdate, MIN_WAIT
 from .registers import SequencerRegisters
 
 logger = logging.getLogger(__name__)
@@ -159,11 +159,30 @@ def register_args(signature):
 
 
 @dataclass
+class ConditionalBranchState:
+    n_instr: int
+    rt_end: int
+    last_rt_instruction: Instruction
+
+
+@dataclass
 class ConditionalBlockState:
-    rt_time_start: int = 0
-    n_rt_instruction_start: int = 0
-    last_rt_instructions: list[Instruction] = field(default_factory=list)
-    rt_end_times: list[int] = field(default_factory=list)
+    t_start: int
+    _n_rt_instruction_start: int
+    _n_rt_instruction_last: int = field(init=False)
+    branch_states: list[ConditionalBranchState] = field(default_factory=list)
+
+    def __post_init__(self):
+        self._n_rt_instruction_last = self._n_rt_instruction_start
+
+    @property
+    def n_instructions(self):
+        return self._n_rt_instruction_last - self._n_rt_instruction_start
+
+    def add_branch(self, rt_end, n_rt_instructions, last_rt_instruction: Instruction):
+        n_instr_branch = n_rt_instructions - self._n_rt_instruction_last
+        self._n_rt_instruction_last = n_rt_instructions
+        self.branch_states.append(ConditionalBranchState(n_instr_branch, rt_end, last_rt_instruction))
 
 
 @dataclass
@@ -217,12 +236,14 @@ _jump_condition_false = {
 class Q1asmGenerator(InstructionQueue):
     def __init__(self, add_comments=False, list_registers=True,
                  line_numbers=True, comment_arg_conversions=False,
-                 optimize=1, isa_version=(1, 0)):
+                 optimize=1, isa_version=(1, 0),
+                 annotate: bool = False):
         super().__init__(add_comments=add_comments, isa_version=isa_version)
         self._list_registers = list_registers
         self._line_numbers = line_numbers
         self._show_arg_conversions = comment_arg_conversions
         self._optimize = optimize
+        self.annotate = annotate
         self.q1asm = None
         self._repetitions = 1
         self._last_rt_settings = LastRtSettings()
@@ -251,7 +272,7 @@ class Q1asmGenerator(InstructionQueue):
         self._reset_time()
         self.add_comment("--START-- (t=0)")
         self.set_label("_start")
-        self.block_start()
+        self.rt_seq_start(0)
         self.reset_phase(0) # TODO only if NCO enabled?
         self._contains_io_instr = False
 
@@ -261,18 +282,18 @@ class Q1asmGenerator(InstructionQueue):
                       init_section=True)
 
     def end_main(self, time):
-        self._wait_till(time)
-        self.block_end()
+        self.rt_seq_end(time)
         self.add_comment("--END--")
         if self._repetitions > 1:
             self.loop(self.repetitions_reg, "@_start")
-            # Last start/stop to ensure that pending update is set at end of program
-            self.block_start()
-            self.block_end()
-        self._flush_pending_update()  # NOTE: Always adds 4 ns before stop.
+            # Pull last update across loop statement. There is an update at loop start.
+            # NOTE: Always adds 4 ns before stop.
+            self._schedule_update(self._rt_time)
+        self.rt_seq_flush()
         self._add_instruction("stop")
 
-    def block_start(self):
+    def rt_seq_start(self, rt_time):
+        self._rt_time = rt_time
         # Pending updates of the previous block must be updated now.
         # So, updates scheduled at the end of the loop will be updated
         # at the start of the loop or immediately after the loop.
@@ -280,46 +301,56 @@ class Q1asmGenerator(InstructionQueue):
         # rt_settings may not be overwritten across block boundary
         self._last_rt_settings.clear()
 
-    def block_end(self):
-        # NOTE pending update will move to next block start.
+    def rt_seq_flush(self):
+        self._flush_pending_update()
+
+    def rt_seq_end(self, rt_time):
+        self._wait_till(rt_time)
+        # NOTE pending update will move to next rt seq start.
         self._last_rt_settings.clear()
+        self._last_rt_command = None
+
+    def rt_clear_pending_update(self):
+        pending_update = self._pending_update is not None
+        self._pending_update = None
+        return pending_update
 
     def enter_conditional(self, time):
-        self._flush_pending_update()
-        self._wait_till(time)
+        self.rt_seq_flush()
+        self.rt_seq_end(time)
         self.add_comment(f"Start conditional block at {time}")
-        self._conditional_block_state = ConditionalBlockState()
+        self._conditional_block_state = ConditionalBlockState(time, self._n_rt_instructions)
 
     def set_condition(self, mask, operator):
+        cbs = self._conditional_block_state
+        else_time = cbs.n_instructions * MIN_WAIT
         # always use 4 ns for else-wait.
+        self.add_comment(f"Start condition @ {cbs.t_start + else_time} ns. Total wait_else before: {else_time} ns")
         self._add_instruction("set_cond", 1, mask, operator, MIN_WAIT)
-        # Store rt state at start to set the time after the block.
-        self._conditional_block_state.n_rt_instruction_start = self._n_rt_instructions
-        self._conditional_block_state.rt_time_start = self._rt_time
+        self.rt_seq_start(cbs.t_start + else_time)
 
     def exit_condition(self):
-        self._flush_pending_update()
-        self._last_rt_settings.clear()
+        self.rt_seq_flush()
+
         cbs = self._conditional_block_state
         # add wait command if there is no pending rt command with wait_after time
         if self._last_rt_command is None:
             self._add_rt_command("wait", time=self._rt_time)
-        else_time = CLOCK_PERIOD*(self._n_rt_instructions - cbs.n_rt_instruction_start)
-        self.add_comment(f"End condition. total wait_else {else_time} ns (t_end={self._rt_time})")
-        # update end times of previous branches with time spent in else-wait.
-        for i in range(len(cbs.rt_end_times)):
-            cbs.rt_end_times[i] += else_time
-        # store last rt-statement
-        cbs.last_rt_instructions.append(self._last_rt_command)
-        cbs.rt_end_times.append(self._rt_time)
 
-        # set time to else time.
-        self._rt_time = cbs.rt_time_start + else_time
-        self._last_rt_command = None
+        cbs.add_branch(self._rt_time, self._n_rt_instructions, self._last_rt_command)
+        self.add_comment(f"End condition. (t_end={self._rt_time}; {cbs.branch_states[-1].n_instr} RT instructions)")
 
     def exit_conditional(self, time):
         cbs = self._conditional_block_state
-        max_rt_time_branches = max(cbs.rt_end_times)
+
+        n_else_after = 0
+        max_rt_time_branches = 0
+        for branch in reversed(cbs.branch_states):
+            t_else_after = n_else_after * MIN_WAIT
+            branch.last_rt_instruction.wait_after += t_else_after
+            max_rt_time_branches = max(max_rt_time_branches, branch.rt_end + t_else_after)
+            n_else_after += branch.n_instr
+
         if max_rt_time_branches > time:
             self.add_comment(f"End conditional block t={time}, "
                              f"wait_after {max_rt_time_branches-time} ns, "
@@ -327,61 +358,20 @@ class Q1asmGenerator(InstructionQueue):
             time = max_rt_time_branches
         else:
             self.add_comment(f"End conditional block t={time}")
-        # update wait after of last instructions
-        for rt_instr, end_time in zip(cbs.last_rt_instructions, cbs.rt_end_times):
-            rt_instr.wait_after += time-end_time
+
         # disable condition
-        self._add_instruction("set_cond", 0, 0, 0, 4)
+        self._add_instruction("set_cond", 0, 0, 0, MIN_WAIT)
         self._conditional_block_state = None
-        self._last_rt_command = None
-        self._rt_time = time
-
-    def enter_if_block(self, time: int, end_time: int):
-        # TODO @@@ Actually, a pending update at `time` should be copied to all branches, if there is a rt statement in the branch.
-        self._flush_pending_update()
-        self._last_rt_settings.clear() # this is only for overwrite, right??
-        self._last_rt_command = None
-        self._wait_till(time)
-        self.add_comment(f"if-block {time}, {self._rt_time} {end_time}")
-        end_label = self.generate_label("endif")
-        if_block_state = IfBlockState(self._rt_time, end_time, end_label)
-        self._if_block_state.append(if_block_state)
-
-    def exit_if_block(self):
-        block_state = self._if_block_state[-1]
-        self.set_label(block_state.end_label)
-        self._if_block_state.pop()
-
-    def enter_if_branch(self, condition: Condition | None, last: bool):
-        block_state = self._if_block_state[-1]
-        self._rt_time = block_state.start_time
-        if not last:
-            label = self.generate_label("cont")
-        else:
-            label = block_state.end_label
-        self._if_block_state[-1].continue_label = label
-        self.add_comment(f"condition {condition}, {label}")
-        if condition is not None:
-            condition.test(self)
-            cjump = _jump_condition_false[condition.comparison_operator]
-            self._add_instruction(cjump, "@"+label)
-
-    def exit_if_branch(self, last: bool):
-        """
-        Args:
-            last: if last add end-label, else continue-label.
-        """
-        block_state = self._if_block_state[-1]
-        self._wait_till(block_state.end_time)
-        self._flush_pending_update()
-        self._last_rt_command = None
-        if not last:
-            self.jmp("@"+block_state.end_label)
-            self.set_label(block_state.continue_label)
+        self.rt_seq_start(time)
 
     @register_args(signature="I")
     def jmp(self, label):
         self._add_instruction("jmp", label)
+
+    @register_args(signature="oI")
+    def cnjmp(self, condition, label):
+        cnjump = _jump_condition_false[condition]
+        self._add_instruction(cnjump, label)
 
     @register_args(signature="I")
     def jz(self, label):
@@ -461,10 +451,9 @@ class Q1asmGenerator(InstructionQueue):
 
     @register_args(signature="off")
     def cmove(self, condition, source, destination):
-        cjump = _jump_condition_false[condition]
+        # jump over move if condition is false.
         label = self.generate_label("cmove")
-        # jump over move is condition is false.
-        self._add_instruction(cjump, "@"+label)
+        self.cnjmp(condition, "@"+label)
         self._add_reg_instruction("move", source, destination)
         self.set_label(label)
 
@@ -735,10 +724,10 @@ class Q1asmGenerator(InstructionQueue):
 
     @register_args(signature="tI")
     def set_latch_en(self, time, enable):
-        self._add_rt_command("set_latch_en", enable, time=time) # @@@ Check flushing of rt settings ...
+        self._add_rt_command("set_latch_en", enable, time=time)
 
     def latch_rst(self, time):
-        self._add_rt_command("latch_rst", time=time) # @@@ Check flushing of rt settings ...
+        self._add_rt_command("latch_rst", time=time)
 
     @register_args(signature="tI")
     def fb_acq_iq_id(self, time, event_id):
@@ -999,7 +988,7 @@ class Q1asmGenerator(InstructionQueue):
                     lines += [f"# {i} "]
                 continue
 
-            if i.label is not None:
+            if i.label is not None: # @@@ put labels on separate line.
                 if line_label is not None:
                     raise Q1CompileError(f"Cannot put two labels on one line '{i.label}','{line_label}'")
                 line_label = i.label

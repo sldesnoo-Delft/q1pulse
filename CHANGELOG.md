@@ -1,13 +1,19 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+# \[1.3.0] - 2026-09-@@@ NOT RELEASED
+
+- Added if/elif/else to program and sequences.
+- Added comparison operators for registers.
+- Refactored flow statements.
+
 # \[1.2.4] - 2026-09-14
 
 - Added feedback features `fb_com_...` and `fb_acq_...`.
 - Added wait_after to `fb_...()` and `latch_...()` methods, because they need at least 4 ns of RT time.
 - Fixed TurboCluster with QBI v1.3
 
-\[1.2.3] -- FAILED
+# \[1.2.3] -- FAILED
 
 # \[1.2.2] - 2026-09-08
 

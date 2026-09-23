@@ -71,10 +71,11 @@ class Program:
         for name, builder in self.sequence_builders.items():
             g = Q1asmGenerator(add_comments=add_comments,
                                optimize=optimize,
-                               isa_version=builder.isa_version)
+                               isa_version=builder.isa_version,
+                               annotate=annotate)
             g.repetitions = self.repetitions
             start = time.perf_counter()
-            builder.compile(g, annotate=annotate)
+            builder.compile(g)
             end = time.perf_counter()
             d1 = (end-start)*1000
             start = end

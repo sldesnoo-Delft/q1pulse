@@ -7,6 +7,10 @@ weights={
 acquisitions={}
 
 seq_prog="""
+#  R0: _zero
+#  R1: _repetitions
+#  R2: R.phase1
+#  R3: Rs.phase2
 # --INIT-- 
            move           0,R0       # L0001 R0: _zero
            move           100,R1     # L0002 R1: _repetitions

@@ -7,6 +7,8 @@ weights={
 acquisitions={}
 
 seq_prog="""
+#  R0: _zero
+#  R1: _repetitions
 # --INIT-- 
            move           0,R0       # L0001 R0: _zero
            move           2,R1       # L0002 R1: _repetitions
@@ -67,12 +69,12 @@ loop_1:    nop                       # L0035  add wait for R2
            jge            @waitc1    # L0041 
            illegal                   # L0042 wait time < 4 ns
 waitc1:    cmp            R4,65535   # L0043 
-           jle            @endwait1  # L0044 
-wait1:     sub            R4,65532,R4 # L0045 
+           jle            @endwait3  # L0044 
+wait2:     sub            R4,65532,R4 # L0045 
            wait           65532      # L0046 
            cmp            R4,65535   # L0047 
-           jg             @wait1     # L0048 
-endwait1:  wait           R4         # L0049 
+           jg             @wait2     # L0048 
+endwait3:  wait           R4         # L0049 
 # log "after",None,T 
 #Q1Sim:log "after",none,T 
 # block_pulse(20, 0.25, None) 
@@ -89,15 +91,15 @@ endwait1:  wait           R4         # L0049
 #          --- check for negative wait time 
            nop                       # L0057  cmp wait for R5
            cmp            R5,4       # L0058 
-           jge            @waitc2    # L0059 
+           jge            @waitc4    # L0059 
            illegal                   # L0060 wait time < 4 ns
-waitc2:    cmp            R5,65535   # L0061 
-           jle            @endwait2  # L0062 
-wait2:     sub            R5,65532,R5 # L0063 
+waitc4:    cmp            R5,65535   # L0061 
+           jle            @endwait6  # L0062 
+wait5:     sub            R5,65532,R5 # L0063 
            wait           65532      # L0064 
            cmp            R5,65535   # L0065 
-           jg             @wait2     # L0066 
-endwait2:  wait           R5         # L0067 
+           jg             @wait5     # L0066 
+endwait6:  wait           R5         # L0067 
 # endloop t=540 
            jmp            R2         # L0068 
 _table1:   move           80,R3      # L0069 

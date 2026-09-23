@@ -7,6 +7,9 @@ weights={
 acquisitions={}
 
 seq_prog="""
+#  R0: _zero
+#  R1: Rs.phase_shift
+#  R2: R.bin
 # --INIT-- 
            move           0,R0       # L0001 R0: _zero
            wait_sync      100        # L0002 t=0
@@ -25,6 +28,7 @@ loop_0:    set_awg_offs   3276,0     # L0008 @ 0
            nop                       # L0013  set_ph_delta wait for R1
            set_ph_delta   R1         # L0014 @ 600
            upd_param      500        # L0015 t=600
+# endloop t=1100 
            add            R3,1,R3    # L0016 
            sub            R4,1,R4    # L0017 
            jg             @loop_0    # L0018 

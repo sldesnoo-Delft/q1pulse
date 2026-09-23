@@ -1,4 +1,5 @@
-from .timed_statements import TimedStatement
+from abc import abstractmethod
+from .sequence import BlockStatement
 
 
 class LoopDurationStatement:  # TODO add to end loop?
@@ -15,17 +16,6 @@ class LoopDurationStatement:  # TODO add to end loop?
         generator.adjust_time((self.n-1) * self.t_loop)
 
 
-class BranchStatement(TimedStatement):
-    def __init__(self, time, sequence, label):
-        super().__init__(time)
-        self._sequence = sequence
-        self._label = label
-
-    @property
-    def sequence(self):
-        return self._sequence
-
-
 def _assign_reg(generator, register, value, allocate=True):
     if allocate:
         generator.allocate_reg(register.name)
@@ -36,52 +26,73 @@ def _increment_reg(generator, register, incr):
     generator.add(register, incr, register)
 
 
-class LoopStatement(BranchStatement):
-    def __init__(self, time, sequence, loop):
-        super().__init__(time, sequence, loop.label)
+class LoopBlockBase(BlockStatement):
+
+    # TODO: start/end can shift to match 4 ns constraint. First statement after loop must also be known!!
+
+    def __init__(self, time, loop):
+        super().__init__(time)
         self._loop = loop
 
     def __repr__(self):
-        return repr(self._loop)
+        return repr(self._loop) + f" t={self.t_block_start}"
+
+    @abstractmethod
+    def write_loop_init(self, generator):
+        ...
+
+    @abstractmethod
+    def write_loop_end(self, generator):
+        ...
 
     def write_instruction(self, generator):
-        generator._wait_till(self.time)
+        with generator.scope():
+            # Note: even without timed statements the waits must be looped.
+            if self.has_timed_statements or (self.t_block_start != self.t_block_end):
+                generator.rt_seq_end(self.t_block_start)
+
+                self.write_loop_init(generator)
+                # only 1 branch...
+                for branch in self.branches:
+                    generator.rt_seq_start(self.t_block_start)
+                    branch.compile(generator)
+                    generator.rt_seq_end(self.t_block_end)
+                generator.add_comment(f"endloop t={self.t_block_end}")
+                self.write_loop_end(generator)
+                generator.rt_seq_start(self.t_block_end)
+            else:
+                # A loop without timed statements occurs at other (parallel) sequencers.
+                # It could also occur in computations, but would be really rare.
+
+                self.write_loop_init(generator)
+                # only 1 branch...
+                for branch in self.branches:
+                    branch.compile(generator)
+                self.write_loop_end(generator)
+
+
+class LoopBlock(LoopBlockBase):
+
+    def write_loop_init(self, generator):
         loop = self._loop
         if loop.loopvar:
             _assign_reg(generator, loop.loopvar, loop.start)
         _assign_reg(generator, loop._loop_reg, loop._n)
-        generator.set_label(self._label)
+        generator.set_label(loop.label)
 
-
-class EndLoopStatement(TimedStatement):
-    def __init__(self, time, loop):
-        super().__init__(time)
-        self._label = loop.label
-        self._loop = loop
-
-    def __repr__(self):
-        return 'endloop'
-
-    def write_instruction(self, generator):
-        generator._wait_till(self.time)
+    def write_loop_end(self, generator):
         loop = self._loop
         if loop.loopvar:
             # increment loop value
             _increment_reg(generator, loop.loopvar, loop.step)
         # loop, register
-        generator.loop(loop._loop_reg, '@'+self._label)
+        generator.loop(loop._loop_reg, '@'+loop.label)
 
 
-class ArrayLoopStatement(BranchStatement):
-    def __init__(self, time, sequence, loop):
-        super().__init__(time, sequence, loop.label)
-        self._loop = loop
+class ArrayLoopBlock(LoopBlockBase):
 
-    def __repr__(self):
-        return repr(self._loop)
-
-    def write_instruction(self, generator):
-        generator._wait_till(self.time)
+    def write_loop_init(self, generator):
+        loop = self._loop
         loop = self._loop
 
         # set data address register to data_label
@@ -91,22 +102,11 @@ class ArrayLoopStatement(BranchStatement):
         # decrement data pointer with 2, because first value already loaded
         _increment_reg(generator, loop._data_ptr, -2)
         # start loop
-        generator.set_label(self._label)
+        generator.set_label(loop.label)
         # increment data pointer with 2 for next value
         _increment_reg(generator, loop._data_ptr, 2)
 
-
-class EndArrayLoopStatement(TimedStatement):
-    def __init__(self, time, loop):
-        super().__init__(time)
-        self._label = loop.label
-        self._loop = loop
-
-    def __repr__(self):
-        return 'endloop'
-
-    def write_instruction(self, generator):
-        generator._wait_till(self.time)
+    def write_loop_end(self, generator):
         loop = self._loop
         # jump to data address
         generator.jmp(loop._data_ptr)
@@ -116,5 +116,5 @@ class EndArrayLoopStatement(TimedStatement):
             # set next value
             _assign_reg(generator, loop.loopvar, value, allocate=False)
             # jump to loop start
-            generator.jmp('@'+self._label)
+            generator.jmp('@'+loop.label)
         # NOTE: last jump will end here at the end of loop.

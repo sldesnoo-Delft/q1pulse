@@ -7,6 +7,9 @@ weights={
 acquisitions={'ttl': {'index': 0, 'num_bins': 30}}
 
 seq_prog="""
+#  R0: _zero
+#  R1: Rs._acq_ttl
+#  R2: _repetitions
 # --INIT-- 
            move           0,R0       # L0001 R0: _zero
            move           6,R2       # L0002 R2: _repetitions

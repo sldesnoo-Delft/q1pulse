@@ -1,8 +1,8 @@
 from enum import IntEnum
 from contextlib import contextmanager
 
-from .timed_statements import TimedStatement, MultiBranchStatement
-from .sequence import Sequence
+from .timed_statements import TimedStatement
+from .sequence import Sequence, BlockStatement
 from .exceptions import Q1InternalError, Q1SyntaxError
 
 
@@ -91,19 +91,11 @@ class BranchSequence(Sequence):
     def __init__(self, timeline, operator):
         super().__init__(timeline)
         self.operator = operator
-
-    def add(self, statement):
-        super().add(statement)
-
-    def describe(self, lines, indent=0, init_section=False):
-        white = '    ' * indent
-        time = ' '*6
-        line = f'{time}{white}condition({self.operator.name}):'
-        lines.append(line)
-        super().describe(lines, indent=indent, init_section=init_section)
+        self.set_header(f"condition({self.operator.name}):")
 
 
-class ConditionalBlockStatement(MultiBranchStatement):
+class ConditionalBlockStatement(BlockStatement):
+
     '''
     Statement containing one or more conditions on a set of trigger counters.
 
@@ -125,11 +117,11 @@ class ConditionalBlockStatement(MultiBranchStatement):
         self._closed = False
         self._end_time = time
 
-    def add_branch(self, branch_sequence):
+    def add_branch(self, branch_sequence, end_time):
         operator = branch_sequence.operator
         if operator in [branch.operator for branch in self.branches]:
             raise Q1SyntaxError(f'Duplicate operator {operator.name}')
-        self.branches.append(branch_sequence)
+        super().add_branch(branch_sequence, end_time)
         self._check_operators()
 
     @property
@@ -146,7 +138,7 @@ class ConditionalBlockStatement(MultiBranchStatement):
         '''
         else_operator = self._get_else()
         if else_operator is not None:
-            self.add_branch(BranchSequence(timeline, else_operator))
+            self.add_branch(BranchSequence(timeline, else_operator), self.t_block_start)
         self._closed = True
 
     def _check_operators(self):
@@ -193,11 +185,25 @@ class ConditionalBlockStatement(MultiBranchStatement):
         mask = 0
         for counter in self.counters:
             mask |= 1 << (counter.address-1)
-        generator.enter_conditional(self.time)
-        # TODO: optimize branches. Minimize extra time at end. Check fit at start.
-        for branch in self.branches:
-            generator.set_condition(mask, branch.operator.value)
-            branch.compile(generator, annotate=False)  # TODO: move annotate flag to generator.
-            generator.exit_condition()
-        # disables conditions and enforces equal end-time.
-        generator.exit_conditional(self.end_time)
+
+        with generator.scope():
+            if self.has_timed_statements:
+                # TODO: start/end can shift to match 4 ns constraint.
+
+                # includes call to rt_seq_end()
+                generator.enter_conditional(self.t_block_start)
+
+                for branch in self.branches:
+                    # includes call to rt_seq_start()
+                    generator.set_condition(mask, branch.operator)
+                    branch.compile(generator)
+                    # includes call to rt_seq_flush()
+                    generator.exit_condition()
+
+                # includes call to rt_seq_start()
+                generator.exit_conditional(self.t_block_end)
+            else:
+                # on sequencer wihout timed instructions.
+                # Branches Should be empty! Raise error if branch not empty?
+                for branch in self.branches:
+                    branch.compile(generator)

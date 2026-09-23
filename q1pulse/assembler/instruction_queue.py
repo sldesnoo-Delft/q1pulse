@@ -57,6 +57,8 @@ class InstructionQueue:
         self._header.append(line)
 
     def add_comment(self, line, init_section=False):
+        if not self.add_comments:
+            return
         if init_section:
             self._init_section.append(line)
         else:
@@ -73,6 +75,8 @@ class InstructionQueue:
         return f"{prefix}{self._auto_label_cnt}"
 
     def adjust_time(self, duration):
+        if self._pending_update and self._pending_update.time == self._rt_time:
+            self._pending_update.time += duration
         self._rt_time += duration
 
     def __append_instruction(self, instruction):

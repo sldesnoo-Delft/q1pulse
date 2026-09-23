@@ -4,6 +4,7 @@ import matplotlib.pyplot as pt
 from q1pulse.instrument import Q1Instrument
 
 from init_pulsars import qcm0, qrm1, q1asm_isa_v2
+# import init_logger
 
 instrument = Q1Instrument('q1_v2' if q1asm_isa_v2 else 'q1')
 instrument.add_qcm(qcm0)
@@ -36,10 +37,11 @@ rf1.acquire_frequency_sweep(N, period,
                             f_start, f_stop,
                             "default",
                             acq_delay=152)
-rf1.wait(period)
 
 rf1.set_offset(0.0)
 q1.set_offset(0.0)
+
+p.wait(1000)
 
 p.compile(listing=True)
 

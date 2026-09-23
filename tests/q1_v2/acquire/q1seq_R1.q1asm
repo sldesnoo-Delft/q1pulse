@@ -29,6 +29,9 @@ acquisitions={'non-weighed': {'index': 0, 'num_bins': 25},
  'weighed': {'index': 1, 'num_bins': 25}}
 
 seq_prog="""
+#  R0: _zero
+#  R1: Rs._acq_non-weighed
+#  R2: Rs._acq_weighed
 # --INIT-- 
            move           0,R0       # L0001 R0: _zero
 # Rs._acq_non-weighed:int = 0 
@@ -54,8 +57,8 @@ loop_1:    upd_param      160        # L0010 t=0
 # acquire_weighed(bins=weighed, bin=Rs._acq_weighed, weight0=gaus100, weight1=gaus100) t=660 
            move           0,R7       # L0013 temp ['R7', 'R8']
            move           0,R8       # L0014 
-           nop                       # L0015  acquire_weighed wait for R8
-           acquire_weighed 1,R2,R7,R8,1440 # L0016 t=660
+           nop                       # L0015  acquire_weighted wait for R8
+           acquire_weighted 1,R2,R7,R8,1440 # L0016 t=660
 # Rs._acq_weighed:int = Rs._acq_weighed + 1 
            add            R2,1,R2    # L0017 
 # endloop t=2100 

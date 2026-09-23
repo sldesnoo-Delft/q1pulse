@@ -51,6 +51,8 @@ weights={
 acquisitions={}
 
 seq_prog="""
+#  R0: _zero
+#  R1: Rs._freq
 # --INIT-- 
            move           0,R0       # L0001 R0: _zero
            wait_sync      100        # L0002 t=0

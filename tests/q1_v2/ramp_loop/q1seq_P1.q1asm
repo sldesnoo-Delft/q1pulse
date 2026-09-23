@@ -59,6 +59,9 @@ weights={
 acquisitions={}
 
 seq_prog="""
+#  R0: _zero
+#  R1: _repetitions
+#  R2: R.v_ramp1
 # --INIT-- 
            move           0,R0       # L0001 R0: _zero
            move           2,R1       # L0002 R1: _repetitions

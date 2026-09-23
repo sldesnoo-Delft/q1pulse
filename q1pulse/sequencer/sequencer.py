@@ -8,31 +8,15 @@ from types import NoneType
 
 from .builderbase import BuilderBase
 from q1pulse.lang.triggers import TriggerCounter
-from q1pulse.lang.exceptions import (
-        Q1StateError, Q1Exception,
-        Q1InternalError, Q1SequenceError,
-        Q1TimingError, Q1SyntaxError,
-        )
-from q1pulse.lang.sequence import Sequence
-from q1pulse.lang.loops import Loop
-from q1pulse.lang.math_expressions import Operand, Expression, Condition, RegisterCondition, ExpressionCondition
-from q1pulse.lang.registers import Registers
-from q1pulse.lang.register import Register
-from q1pulse.lang.timed_statements import WaitRegStatement, TimedStatement
-from q1pulse.lang.flow_statements import (
-        LoopDurationStatement,
-        LoopStatement, EndLoopStatement,
-        ArrayLoopStatement, EndArrayLoopStatement,
-        )
-from q1pulse.lang.if_block import (
-        IfBlockStatement, IfBranchSequence,
-        )
-from q1pulse.lang.loops import LinspaceLoop, RangeLoop, ArrayLoop
-from q1pulse.lang.simulator_statements import LogStatement
 from q1pulse.lang.conditions import (
         LatchEnableStatement, LatchResetStatement,
         BranchSequence, ConditionalBlockStatement,
         CounterFlags,
+        )
+from q1pulse.lang.exceptions import (
+        Q1StateError, Q1Exception,
+        Q1InternalError, Q1SequenceError,
+        Q1SyntaxError, Q1TimingError
         )
 from q1pulse.lang.feedback import (
     FeedbackEventID, FeedbackPopData,
@@ -40,6 +24,20 @@ from q1pulse.lang.feedback import (
     FeedbackComCfg, FeedbackComExtra,
 
     )
+from q1pulse.lang.flow_statements import (
+        LoopDurationStatement,
+        LoopBlock, ArrayLoopBlock,
+        )
+from q1pulse.lang.loops import Loop, LinspaceLoop, RangeLoop, ArrayLoop
+from q1pulse.lang.math_expressions import Operand, Expression, Condition, RegisterCondition, ExpressionCondition
+from q1pulse.lang.sequence import (
+        Sequence, BlockStatement,
+        IfBlockStatement, IfBranchSequence,
+        )
+from q1pulse.lang.simulator_statements import LogStatement
+from q1pulse.lang.registers import Registers
+from q1pulse.lang.register import Register
+from q1pulse.lang.timed_statements import WaitRegStatement
 
 logger = logging.getLogger(__name__)
 
@@ -65,14 +63,12 @@ class SequenceBuilder(BuilderBase):
         self._local_time_active = False
         self._compiled = False
         self._init_sequence = Sequence(None)
-        self._last_timed_statement = None
         self._conditional_block = None
         self._in_condition = False
         self._trigger_counters = []
         self._feedback_event_subscriptions: set[FeedbackEventID] = set()
 
     def start_sequence(self, program, timeline):
-        # @@@@ self._program = program ???
         self._timeline = timeline
         self._sequence_push(Sequence(self._timeline))
 
@@ -86,7 +82,6 @@ class SequenceBuilder(BuilderBase):
         return sequence
 
     def _add_statement(self, statement, init_section=False):
-        self._check_time(statement)
         if SequenceBuilder.add_traceback_to_instructions and not isinstance(statement, str):
             self._add_traceback(statement)
         if self._compiled:
@@ -98,22 +93,17 @@ class SequenceBuilder(BuilderBase):
         else:
             self.sequence.add(statement)
 
-    def _check_time(self, statement):
-        # TODO: Distinguish parameter operations vs RT IO / RT control instructions.
-        if not isinstance(statement, TimedStatement):
-            return
-        t = statement.time
-        last = self._last_timed_statement
-        if last and t != last.time:
-            delta_t = t - last.time
-            if delta_t < 0:
-                raise Q1TimingError(f'Statement time cannot be before {last.time}\n'
-                                    f'Previous: t={last.time}  {last}\n'
-                                    f'Adding:   t={statement.time}  {statement}')
-            if delta_t < SequenceBuilder.MIN_DURATION:
-                raise Q1TimingError(f'Time between statements must be at least of 4 ns:\n'
-                                    f'Adding:  t={statement.time}  {statement} (delta_t {delta_t})')
-        self._last_timed_statement = statement
+    def _close_block(self, time: int):
+        block = self._current_block
+        block.close(time)
+        self.sequence.has_timed_statements |= block.has_timed_statements
+
+    @property
+    def _current_block(self):
+        block = self.sequence.last_statement
+        if not isinstance(block, BlockStatement):
+            raise Q1InternalError(f"Expected Block, but got {block}")
+        return block
 
     def _add_traceback(self, statement):
         max_depth = 10
@@ -164,11 +154,11 @@ class SequenceBuilder(BuilderBase):
             fp.write(line+'\n')
         fp.write('\n')
 
-    def compile(self, generator, annotate=False):
+    def compile(self, generator):
         try:
-            self._init_sequence.compile(generator, annotate)
+            self._init_sequence.compile(generator)
             generator.start_main()
-            self._sequence_stack[0].compile(generator, annotate)
+            self._sequence_stack[0].compile(generator)
             generator.end_main(self.end_time)
             self.modifies_frequency = generator.modifies_frequency
             subscribed_event_ids = self.subscribed_event_ids
@@ -235,6 +225,8 @@ class SequenceBuilder(BuilderBase):
         self._local_time = t_offset
         self._local_time_active = True
         yield
+        if self.current_time > end_time:
+            raise Q1TimingError(f"Local time exceeded specified end time: {self.current_time} > {end_time}")
         self._local_time = 0
         self._local_time_active = False
         self.set_pulse_end(end_time)
@@ -246,23 +238,20 @@ class SequenceBuilder(BuilderBase):
     def enter_loop(self, loop):
         loop_sequence = Sequence(self._timeline)
         if isinstance(loop, (RangeLoop, LinspaceLoop)):
-            loop_statement = LoopStatement(self.end_time, loop_sequence, loop)
+            loop_block = LoopBlock(self.end_time, loop)
         elif isinstance(loop, ArrayLoop):
-            loop_statement = ArrayLoopStatement(self.end_time, loop_sequence, loop)
+            loop_block = ArrayLoopBlock(self.end_time, loop)
         else:
             raise Q1InternalError('Unknown loop')
-        self._add_statement(loop_statement)
+        self._add_statement(loop_block)
         self._sequence_push(loop_sequence)
 
     def exit_loop(self, loop):
-        if isinstance(loop, (RangeLoop, LinspaceLoop)):
-            loop_end_statement = EndLoopStatement(self.end_time, loop)
-        elif isinstance(loop, ArrayLoop):
-            loop_end_statement = EndArrayLoopStatement(self.end_time, loop)
-        else:
-            raise Q1InternalError('Unknown loop')
-        self._add_statement(loop_end_statement)
-        self._sequence_pop()
+        end_time = self.end_time
+        branch = self._sequence_pop()
+        loop_block = self._current_block
+        loop_block.add_branch(branch, end_time)
+        self._close_block(end_time)
 
     @contextmanager
     def _seq_repeat(self, n):
@@ -276,17 +265,20 @@ class SequenceBuilder(BuilderBase):
             loop = Loop(self._local_loop_cnt, n, local=True)
             self._local_loop_cnt += 1
             loop_sequence = Sequence(self._timeline)
-            loop_statement = LoopStatement(self.current_time, loop_sequence, loop)
-            self._add_statement(loop_statement)
+            loop_block = LoopBlock(t_start, loop)
+            self._add_statement(loop_block)
             self._sequence_push(loop_sequence)
 
             yield
 
-            loop_end_statement = EndLoopStatement(self.current_time, loop)
-            self._add_statement(loop_end_statement)
-            t_loop = self.current_time - t_start
+            t = self.current_time
+            t_loop = t - t_start
+            branch = self._sequence_pop()
+            loop_block = self._current_block
+            loop_block.add_branch(branch, t)
+            self._close_block(t)
+            # TODO: The LoopDurationStatement is a bit hacky.
             self._add_statement(LoopDurationStatement(n, t_loop))
-            self._sequence_pop()
             self.set_pulse_end(t_start + n * t_loop)
 
     def _add_reg_wait(self, reg):
@@ -339,19 +331,19 @@ class SequenceBuilder(BuilderBase):
 
     def _start_if_block(self):
         if self.sequence.current_if_block is not None:
-            self.sequence.current_if_block.close()
+            self._close_if_block()
 
-        block_statement = IfBlockStatement(self.current_time, self._last_timed_statement)
-        self._add_statement(block_statement)
-        self.sequence.current_if_block = block_statement
+        if_block = IfBlockStatement(self.current_time)
+        self._add_statement(if_block)
+        self.sequence.current_if_block = if_block
 
     def _close_if_block(self):
         current_if_block = self.sequence.current_if_block
         if current_if_block is not None:
             self.sequence.current_if_block = None
-            current_if_block.close()
-            self.set_pulse_end(current_if_block.end_time)
-            # @@@ set last timed statement
+            self._close_block(current_if_block.t_block_end)
+            self.set_pulse_end(current_if_block.t_block_end)
+            # @@@ set last timed statement for error check/report
 
     def _add_if_branch(self, condition: Operand, keyword: str):
         if isinstance(condition, Condition | NoneType):
@@ -364,9 +356,8 @@ class SequenceBuilder(BuilderBase):
             raise Q1SyntaxError(f"Cannot evaluate: {keyword} {condition}.")
         current_block = self.sequence.current_if_block
         timeline = copy(self._timeline)
-        self._last_timed_statement = current_block.last_timed_statement
         if_branch_sequence = IfBranchSequence(timeline, condition, keyword)
-        current_block.add_branch(if_branch_sequence)
+        # if_branch_sequence._last_timed_statement = current_block.last_timed_statement # @@@ Fix add to Branch
         self._sequence_push(if_branch_sequence)
         end_time = self.end_time
         self.add_comment(f'branch start time: {end_time}')
@@ -374,9 +365,10 @@ class SequenceBuilder(BuilderBase):
     def _close_if_branch(self):
         end_time = self.end_time
         self.add_comment(f'branch end time: {end_time}')
-        self._sequence_pop()
-        self.sequence.current_if_block.set_end_time(end_time)
-        # @@@ also set last timed statement
+        branch = self._sequence_pop()
+        self.sequence.current_if_block.add_branch(branch, end_time)
+
+        # @@@ also set last timed statement (for time check and error messages..)
         end_time = self.end_time
 
     @property
@@ -423,7 +415,7 @@ class SequenceBuilder(BuilderBase):
 
     def exit_conditional(self):
         timeline = copy(self._timeline)
-        self._conditional_block.close(timeline)
+        self._conditional_block.close(timeline) # timeline to add else branch.
         self.set_pulse_end(self._conditional_block.end_time)
         self._conditional_block = None
 
@@ -441,17 +433,17 @@ class SequenceBuilder(BuilderBase):
         self._in_condition = True
         timeline = copy(self._timeline)
         branch = BranchSequence(timeline, operator)
-        self._conditional_block.add_branch(branch)
         self._sequence_push(branch)
 
     def exit_condition(self, end_time=None):
         if end_time is None:
             end_time = self.end_time
         self.add_comment(f'Condition end time: {end_time}')
-        self._conditional_block.set_end_time(end_time)
+        self._conditional_block.set_end_time(end_time) # @@@ check for duplication
+        branch = self._sequence_pop()
+        self._conditional_block.add_branch(branch, end_time)
+        # self._last_timed_statement = self._conditional_block.last_timed_statement # @@@ TODO
         self._in_condition = False
-        self._sequence_pop()
-        self._last_timed_statement = self._conditional_block
 
     @property
     def subscribed_event_ids(self) -> list[int]:
