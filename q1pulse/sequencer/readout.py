@@ -118,7 +118,7 @@ class ReadoutBuilder(ControlBuilder):
         t1 = self.current_time + t_offset
         self.set_pulse_end(t1)
         # TODO Keep track of acquisition trigger interval to prevent overruns?
-        if bin_index == 'increment':
+        if isinstance(bin_index, str) and bin_index == 'increment':
             reg_name = self._get_acquisition_reg_name(acquisition)
             bin_reg = self.Rs.init(reg_name)
             self._add_statement(AcquireStatement(t1, acquisition, bin_reg))
@@ -135,7 +135,7 @@ class ReadoutBuilder(ControlBuilder):
         weight1 = self._translate_weight(weight1)
         t1 = self.current_time + t_offset
         self.set_pulse_end(t1)
-        if bin_index == 'increment':
+        if isinstance(bin_index, str) and bin_index == 'increment':
             reg_name = self._get_acquisition_reg_name(acquisition)
             bin_reg = self.Rs.init(reg_name)
             st = AcquireWeighedStatement(t1, acquisition, bin_reg, weight0, weight1)
@@ -150,7 +150,7 @@ class ReadoutBuilder(ControlBuilder):
         acquisition = self._translate_acquisition(acquisition)
         t1 = self.current_time + t_offset
         self.set_pulse_end(t1)
-        if bin_index == 'increment':
+        if isinstance(bin_index, str) and bin_index == 'increment':
             if enable:
                 reg_name = self._get_acquisition_reg_name(acquisition)
                 bin_reg = self.Rs.init(reg_name)
@@ -206,7 +206,7 @@ class ReadoutBuilder(ControlBuilder):
         if acq_delay > period - 20:
             raise Q1ValueError(f"acq_delay ({acq_delay}) too big. It should be less than period ({period}) - 20")
 
-        with self._local_timeline(t_offset=t_offset, duration=(n-1)*period):
+        with self._local_timeline(t_offset=t_offset, duration=n*period):
             # Repeat only n-1 times to avoid wait after last acquire.
             # A wait after the last acquire could create unwanted waits in the
             # control sequencers, because acquisition is ~100 ns delayed w.r.t. control.
@@ -321,7 +321,7 @@ class ReadoutBuilder(ControlBuilder):
             return weight
         raise Q1TypeError(f'Illegal type {weight}')
 
-    def compile(self, generator, annotate=False):
+    def compile(self, generator):
         if self.scope_mode != "off":
             generator.add_acquisition(Acquisition("_scope", 1))
-        super().compile(generator, annotate=annotate)
+        super().compile(generator)
