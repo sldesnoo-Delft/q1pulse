@@ -36,12 +36,10 @@ _start:    reset_ph                  # L0003 @ 0
 # R.c:int = 10 
            nop                       # L0011  move wait for R32
            move           10,R32     # L0012 
-# # if-block 
-# if-block 100, 200 
+# if-block 3 branches (t = 100 ... 200) 
 # condition R.a == R.b 
            cmp            R30,R31    # L0013 
            jnz            @cont2     # L0014 
-# branch start time: 100 
 # R.d:int = 2 
            move           2,R33      # L0015 
 # block_pulse(100, 0.2, None) 
@@ -50,13 +48,11 @@ _start:    reset_ph                  # L0003 @ 0
            upd_param      100        # L0017 t=100
 # awg_offset = 0.0, None t=200 
            set_awg_offs   0,0        # L0018 @ 200
-# branch end time: 200 
            jmp            @endif1    # L0019 
 # condition R.a < R.b 
 cont2:     cmp            R30,R31    # L0020 
            jae            @cont3     # L0021 
            upd_param      20         # L0022 t=100
-# branch start time: 100 
 # R.d:int = 3 
            move           3,R33      # L0023 
 # block_pulse(10, 0.4, None) 
@@ -66,11 +62,9 @@ cont2:     cmp            R30,R31    # L0020
 # awg_offset = 0.0, None t=130 
            set_awg_offs   0,0        # L0026 @ 130
            upd_param      70         # L0027 t=130
-# branch end time: 130 
            jmp            @endif1    # L0028 
 # condition None 
 cont3:     upd_param      10         # L0029 t=100
-# branch start time: 100 
 # R.d:int = 4 
            move           4,R33      # L0030 
 # block_pulse(80, 0.6, None) 
@@ -80,7 +74,6 @@ cont3:     upd_param      10         # L0029 t=100
 # awg_offset = 0.0, None t=190 
            set_awg_offs   0,0        # L0033 @ 190
            upd_param      10         # L0034 t=190
-# branch end time: 190 
 endif1:    upd_param      10         # L0035 t=200
 # block_pulse(20, -0.2, None) 
 # awg_offset = -0.2, None t=210 

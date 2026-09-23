@@ -360,11 +360,11 @@ class SequenceBuilder(BuilderBase):
         # if_branch_sequence._last_timed_statement = current_block.last_timed_statement # @@@ Fix add to Branch
         self._sequence_push(if_branch_sequence)
         end_time = self.end_time
-        self.add_comment(f'branch start time: {end_time}')
+        # self.add_comment(f'branch start time: {end_time}')
 
     def _close_if_branch(self):
         end_time = self.end_time
-        self.add_comment(f'branch end time: {end_time}')
+        # self.add_comment(f'branch end time: {end_time}')
         branch = self._sequence_pop()
         self.sequence.current_if_block.add_branch(branch, end_time)
 
@@ -438,8 +438,7 @@ class SequenceBuilder(BuilderBase):
     def exit_condition(self, end_time=None):
         if end_time is None:
             end_time = self.end_time
-        self.add_comment(f'Condition end time: {end_time}')
-        self._conditional_block.set_end_time(end_time) # @@@ check for duplication
+        self._conditional_block.set_end_time(end_time) # @@@ check for duplication icw add_branch.
         branch = self._sequence_pop()
         self._conditional_block.add_branch(branch, end_time)
         # self._last_timed_statement = self._conditional_block.last_timed_statement # @@@ TODO

@@ -28,21 +28,17 @@ _start:    reset_ph                  # L0003 @ 0
            move           0,R33      # L0006 R33: R.d
 # R.c:int = 1 
            move           1,R32      # L0007 
-# # if-block 
+# if-block 1 branches (t = 100 ... 100) 
 # condition R.a > R.b 
            cmp            R30,R31    # L0008 
            jbe            @endif1    # L0009 
-# branch start time: 100 
 # R.c:int = 10 
            move           10,R32     # L0010 
-# branch end time: 100 
-# # if-block 
-# if-block 100, 210 
+# if-block 3 branches (t = 100 ... 210) 
 # condition R.a == R.b 
 endif1:    cmp            R30,R31    # L0011 
            jnz            @cont4     # L0012 
            upd_param      10         # L0013 t=100
-# branch start time: 100 
 # R.d:int = 2 
            move           2,R33      # L0014 
 # block_pulse(100, 0.2, None) 
@@ -51,13 +47,11 @@ endif1:    cmp            R30,R31    # L0011
            upd_param      100        # L0016 t=110
 # awg_offset = 0.0, None t=210 
            set_awg_offs   0,0        # L0017 @ 210
-# branch end time: 210 
            jmp            @endif3    # L0018 
 # condition R.a < R.b 
 cont4:     cmp            R30,R31    # L0019 
            jae            @cont5     # L0020 
            upd_param      20         # L0021 t=100
-# branch start time: 100 
 # R.d:int = 3 
            move           3,R33      # L0022 
 # block_pulse(10, 0.4, None) 
@@ -67,11 +61,9 @@ cont4:     cmp            R30,R31    # L0019
 # awg_offset = 0.0, None t=130 
            set_awg_offs   0,0        # L0025 @ 130
            upd_param      80         # L0026 t=130
-# branch end time: 130 
            jmp            @endif3    # L0027 
 # condition None 
 cont5:     upd_param      10         # L0028 t=100
-# branch start time: 100 
 # R.d:int = 4 
            move           4,R33      # L0029 
 # block_pulse(80, 0.6, None) 
@@ -81,7 +73,6 @@ cont5:     upd_param      10         # L0028 t=100
 # awg_offset = 0.0, None t=190 
            set_awg_offs   0,0        # L0032 @ 190
            upd_param      20         # L0033 t=190
-# branch end time: 190 
 endif3:    upd_param      10         # L0034 t=210
 # --END-- 
            stop                      # L0035 

@@ -15,9 +15,9 @@ seq_prog="""
            wait_sync      100        # L0003 t=0
 # --START-- (t=0) 
 _start:    reset_ph                  # L0004 @ 0
-# loop_linspace(0.2, 1.0, 1005):R._var0 t=0 
+# loop_linspace(0.2, 1.0, 5):R._var0 t=0 
            move           429496729,R2 # L0005 R2: R._var0
-           move           1005,R3    # L0006 R3: R._cnt0
+           move           5,R3       # L0006 R3: R._cnt0
 # block_pulse(20, R._var0, None) 
 # awg_offset = R._var0, None t=0 
 loop_0:    asr            R2,16,R4   # L0007 temp R4
@@ -28,7 +28,7 @@ loop_0:    asr            R2,16,R4   # L0007 temp R4
            set_awg_offs   0,0        # L0011 @ 20
            upd_param      140        # L0012 t=20
 # endloop t=160 
-           add            R2,1711142,R2 # L0013 
+           add            R2,429496729,R2 # L0013 
            sub            R3,1,R3    # L0014 
            jg             @loop_0    # L0015 
 # --END-- 

@@ -29,60 +29,46 @@ _start:    reset_ph                  # L0003 @ 0
            move           0,R33      # L0007 R33: R.d
 # R.c:int = 1 
            move           1,R32      # L0008 
-# # if-block 
+# if-block 1 branches (t = 1000 ... 1000) 
 # condition R.a > R.b 
            cmp            R30,R31    # L0009 
            jbe            @endif1    # L0010 
-# branch start time: 1000 
 # R.c:int = 10 
            move           10,R32     # L0011 
-# branch end time: 1000 
-# # if-block 
+# if-block 1 branches (t = 1000 ... 1000) 
 # condition R.a == 10 
 endif1:    cmp            R30,10     # L0012 
            jnz            @endif3    # L0013 
-# branch start time: 1000 
 # R.c:int = R.c + 100 
            add            R32,100,R32 # L0014 
-# branch end time: 1000 
-# # if-block 
+# if-block 3 branches (t = 1000 ... 1000) 
 # condition R.a == R.b 
 endif3:    cmp            R30,R31    # L0015 
            jnz            @cont6     # L0016 
-# branch start time: 1000 
 # R.d:int = 2 
            move           2,R33      # L0017 
-# branch end time: 1000 
            jmp            @endif5    # L0018 
 # condition R.a < R.b 
 cont6:     cmp            R30,R31    # L0019 
            jae            @cont7     # L0020 
-# branch start time: 1000 
 # R.d:int = 3 
            move           3,R33      # L0021 
-# branch end time: 1000 
            jmp            @endif5    # L0022 
 # condition None 
-# branch start time: 1000 
 # R.d:int = 4 
 cont7:     move           4,R33      # L0023 
-# branch end time: 1000 
-# # if-block 
+# if-block 1 branches (t = 1000 ... 1000) 
 # condition R.a 
 endif5:    test           R30,R30    # L0024 
            jz             @endif9    # L0025 
-# branch start time: 1000 
 # R.d:int = R.d + 10 
            add            R33,10,R33 # L0026 
-# branch end time: 1000 
-# # if-block 
+# if-block 1 branches (t = 1000 ... 1000) 
 # condition R.a >> 4 
 endif9:    asr            R30,4,R1   # L0027 temp R1
            jz             @endif11   # L0028 
-# branch start time: 1000 
 # R.d:int = R.d + 100 
            add            R33,100,R33 # L0029 
-# branch end time: 1000 
 # --END-- 
 endif11:   stop                      # L0030 
 """

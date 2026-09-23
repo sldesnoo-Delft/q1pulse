@@ -46,8 +46,8 @@ _start:    reset_ph                  # L0004 @ 0
            play           0,0,60     # L0017 t=200
            set_awg_offs   0,0        # L0018 @ 260
            upd_param      120        # L0019 t=260
-# Start conditional block at 380 
-# Start condition @ 380 ns. Total wait_else before: 0 ns 
+# Start Conditional Block at 380 
+# Start condition [2] @ 380 ns. Total wait_else before: 0 ns 
            set_cond       1,1,2,4    # L0020 
            upd_param      20         # L0021 t=380
 # ramp(60, 0.25, 0.25) 
@@ -56,9 +56,8 @@ _start:    reset_ph                  # L0004 @ 0
            play           0,0,60     # L0024 t=400
            set_awg_offs   0,0        # L0025 @ 460
            upd_param      16         # L0026 t=460
-# Condition end time: 460 
 # End condition. (t_end=464; 3 RT instructions) 
-# Start condition @ 392 ns. Total wait_else before: 12 ns 
+# Start condition [1] @ 392 ns. Total wait_else before: 12 ns 
            set_cond       1,1,1,4    # L0027 
            upd_param      8          # L0028 t=392
 # ramp(60, 0.25, 0.0) 
@@ -67,13 +66,12 @@ _start:    reset_ph                  # L0004 @ 0
            play           0,0,60     # L0031 t=400
            set_awg_offs   0,0        # L0032 @ 460
            upd_param      4          # L0033 t=460
-# Condition end time: 460 
 # End condition. (t_end=464; 3 RT instructions) 
-# End conditional block t=460, wait_after 16 ns, next at 476 ns 
+# End Conditional Block t=460, wait_after 16 ns, next at 476 ns 
            set_cond       0,0,0,4    # L0034 
            upd_param      24         # L0035 t=476
-# Start conditional block at 500 
-# Start condition @ 500 ns. Total wait_else before: 0 ns 
+# Start Conditional Block at 500 
+# Start condition [2] @ 500 ns. Total wait_else before: 0 ns 
            set_cond       1,1,2,4    # L0036 
 # ramp(60, 0.25, 0.25) 
            set_awg_gain   0,0        # L0037 @ 500
@@ -81,13 +79,12 @@ _start:    reset_ph                  # L0004 @ 0
            play           0,0,60     # L0039 t=500
            set_awg_offs   0,0        # L0040 @ 560
            upd_param      8          # L0041 t=560
-# Condition end time: 560 
 # End condition. (t_end=564; 2 RT instructions) 
-# Start condition @ 508 ns. Total wait_else before: 8 ns 
+# Start condition [3] @ 508 ns. Total wait_else before: 8 ns 
            set_cond       1,1,3,4    # L0042 
            upd_param      4          # L0043 t=508
 # End condition. (t_end=512; 1 RT instructions) 
-# End conditional block t=560, wait_after 8 ns, next at 568 ns 
+# End Conditional Block t=560, wait_after 8 ns, next at 568 ns 
            set_cond       0,0,0,4    # L0044 
            upd_param      32         # L0045 t=568
 # ramp(60, 0.25, 0.5) 

@@ -318,14 +318,15 @@ class Q1asmGenerator(InstructionQueue):
     def enter_conditional(self, time):
         self.rt_seq_flush()
         self.rt_seq_end(time)
-        self.add_comment(f"Start conditional block at {time}")
+        self.add_comment(f"Start Conditional Block at {time}")
         self._conditional_block_state = ConditionalBlockState(time, self._n_rt_instructions)
 
     def set_condition(self, mask, operator):
         cbs = self._conditional_block_state
         else_time = cbs.n_instructions * MIN_WAIT
         # always use 4 ns for else-wait.
-        self.add_comment(f"Start condition @ {cbs.t_start + else_time} ns. Total wait_else before: {else_time} ns")
+        self.add_comment(f"Start condition [{operator}] @ {cbs.t_start + else_time} ns. "
+                         f"Total wait_else before: {else_time} ns")
         self._add_instruction("set_cond", 1, mask, operator, MIN_WAIT)
         self.rt_seq_start(cbs.t_start + else_time)
 
@@ -352,7 +353,7 @@ class Q1asmGenerator(InstructionQueue):
             n_else_after += branch.n_instr
 
         if max_rt_time_branches > time:
-            self.add_comment(f"End conditional block t={time}, "
+            self.add_comment(f"End Conditional Block t={time}, "
                              f"wait_after {max_rt_time_branches-time} ns, "
                              f"next at {max_rt_time_branches} ns")
             time = max_rt_time_branches

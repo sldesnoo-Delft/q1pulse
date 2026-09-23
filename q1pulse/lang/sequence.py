@@ -155,7 +155,7 @@ class IfBlockStatement(BlockStatement):
     # End time could also be adjusted the same way.
 
     def __repr__(self):
-        return '# if-block'
+        return f"if-block {len(self.branches)} branches (t = {self.t_block_start} ... {self.t_block_end})"
 
     def write_instruction(self, generator):
         with generator.scope():
@@ -166,7 +166,6 @@ class IfBlockStatement(BlockStatement):
                 #       It may collide with non-updating RT instruction.
 
                 generator.rt_seq_end(self.t_block_start)
-                generator.add_comment(f"if-block {self.t_block_start}, {self.t_block_end}")
 
                 for i, branch in enumerate(self.branches):
                     condition = branch.condition
