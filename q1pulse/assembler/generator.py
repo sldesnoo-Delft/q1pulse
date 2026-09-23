@@ -946,12 +946,8 @@ class Q1asmGenerator(InstructionQueue):
             raise Q1TypeError("Only registers and None can be logged")
         self.add_comment(f'Q1Sim:log "{msg}",{reg},{opt}')
 
-    def _format_line(self, label, mnemonic, args, wait_after, comment, line_nr,
-                     compact=False):
-        if label is not None:
-            label = label+":"
-        else:
-            label = ""
+    def _format_line(self, mnemonic, args, wait_after, comment, line_nr,
+                     compact=False, overwritten=False):
 
         arg_list = []
         if args is not None:
@@ -961,7 +957,7 @@ class Q1asmGenerator(InstructionQueue):
         arg_str = ",".join(arg_list)
 
         if compact:
-            return f"{label} {mnemonic} {arg_str}"
+            return f"{mnemonic} {arg_str}"
 
         c = ""
         if not self.add_comments or (comment is None and not self._line_numbers):
@@ -973,12 +969,14 @@ class Q1asmGenerator(InstructionQueue):
             if comment is not None:
                 c += comment
 
-        return f"{label:10} {mnemonic:14} {arg_str:10}{c}"
+        if overwritten:
+            return f"#-- {mnemonic:14} {arg_str:10}{c}"
+        else:
+            return f"    {mnemonic:14} {arg_str:10}{c}"
 
     def q1asm_lines(self, compact=False):
         lines = []
         line_nr = 0
-        line_label = None
 
         for i in self._init_section + self._instructions:
             if isinstance(i, str):
@@ -989,21 +987,17 @@ class Q1asmGenerator(InstructionQueue):
                     lines += [f"# {i} "]
                 continue
 
-            if i.label is not None: # @@@ put labels on separate line.
-                if line_label is not None:
-                    raise Q1CompileError(f"Cannot put two labels on one line '{i.label}','{line_label}'")
-                line_label = i.label
+            if i.label is not None:
+                lines += [i.label + ":"]
                 continue
             if i.overwritten:
                 if not compact:
-                    lines += [self._format_line("# ------",
-                                                i.mnemonic, i.args, i.wait_after,
-                                                i.comment, None)]
+                    lines += [self._format_line(i.mnemonic, i.args, i.wait_after,
+                                                i.comment, None, overwritten=True)]
                 continue
             line_nr += 1
-            line = self._format_line(line_label, i.mnemonic, i.args, i.wait_after,
+            line = self._format_line(i.mnemonic, i.args, i.wait_after,
                                      i.comment, line_nr, compact)
-            line_label = None
             lines += [line]
         self.n_q1asm_instructions = line_nr
         return lines
