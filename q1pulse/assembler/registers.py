@@ -14,7 +14,7 @@ class SequencerRegisters:
         self._stack_ptr = 0
         self._n_static = 0
         self._static_regs = []
-        self._scope = []
+        self._scope: list[tuple[int, list[str]]] = []
         self.enter_scope()
 
     def get_asm_reg(self, name):
@@ -40,13 +40,13 @@ class SequencerRegisters:
             raise Q1MemoryError(f"Cannot allocate register {name}") from None
 
     def enter_scope(self):
-        self._scope.append((self._stack_ptr, {})) # @@@@ replace by list
+        self._scope.append((self._stack_ptr, []))
 
     def exit_scope(self):
-        ptr, named = self._scope.pop()
+        ptr, names = self._scope.pop()
         self._stack_ptr = ptr
-        for reg_name in named:
-            del self._allocated_regs[reg_name]
+        for name in names:
+            del self._allocated_regs[name]
 
     @contextmanager
     def temp_regs(self, n):
@@ -64,7 +64,7 @@ class SequencerRegisters:
             raise Q1MemoryError("Stack overflow")
         reg_name = f"R{reg_nr}"
         if name:
-            self._scope[-1][1][name] = reg_name
+            self._scope[-1][1].append(name)
         return reg_name
 
     def _allocate_static_reg(self, name):
@@ -84,8 +84,8 @@ class SequencerRegisters:
 
     def get_scope_regs(self):
         res = {}
-        for scope in reversed(self._scope):
-            for name in scope[1]:
+        for ptr, names in reversed(self._scope):
+            for name in names:
                 res[name] = self.get_asm_reg(name)
         return res
 
