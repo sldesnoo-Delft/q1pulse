@@ -3,10 +3,12 @@ import numpy as np
 from q1pulse.instrument import Q1Instrument
 from q1pulse.lang.program_variables import IntVariable
 
-import init_logger
 from init_pulsars import qcm0, qrm1, q1asm_isa_v2
 
 from plot_util import plot_output
+
+if not q1asm_isa_v2:
+    raise Exception("'test_event_...' cannot be executed for Q1ASM v1.0")
 
 
 def set_mock_data(qrm, seq_nr, acq_name, data):

@@ -7,9 +7,8 @@ from init_pulsars import qcm0, qrm1, q1asm_isa_v2
 
 from plot_util import plot_output
 
-import logging
-logger = logging.getLogger(__name__)
-logging.basicConfig(filename='test_log.txt', encoding='utf-8', level=logging.DEBUG)
+if not q1asm_isa_v2:
+    raise Exception("'test_event_...' cannot be executed for Q1ASM v1.0")
 
 
 def set_mock_data(qrm, seq_nr, acq_name, data):
