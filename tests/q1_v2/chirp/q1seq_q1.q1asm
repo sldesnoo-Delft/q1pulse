@@ -54,45 +54,47 @@ seq_prog="""
 #  R0: _zero
 #  R1: Rs._freq
 # --INIT-- 
-           move           0,R0       # L0001 R0: _zero
-           wait_sync      100        # L0002 t=0
+    move           0,R0       # L0001 R0: _zero
+    wait_sync      100        # L0002 t=0
 # --START-- (t=0) 
-_start:    reset_ph                  # L0003 @ 0
+_start:
+    reset_ph                  # L0003 @ 0
 # chirp(20000, 0.5,   1.000,  10.000 MHz) 
 # Rs._freq:int = 1000000 
-           move           1000000,R1 # L0004 R1: Rs._freq
+    move           1000000,R1 # L0004 R1: Rs._freq
 # awg_gain = 0.5, 0.5 t=0 
-           set_awg_gain   16383,16383 # L0005 @ 0
+    set_awg_gain   16383,16383 # L0005 @ 0
 # set_freq Rs._freq t=0 
-           asl            R1,2,R2    # L0006 temp R2
-           nop                       # L0007  set_freq wait for R2
-           set_freq       R2         # L0008 @ 0
+    asl            R1,2,R2    # L0006 temp R2
+    nop                       # L0007  set_freq wait for R2
+    set_freq       R2         # L0008 @ 0
 # play _chirp_100_3_45000_real _chirp_100_3_45000_imag t=0 
-           play           0,1,100    # L0009 t=0
+    play           0,1,100    # L0009 t=0
 # Rs._freq:int = Rs._freq + 45000 
-           add            R1,45000,R1 # L0010 
+    add            R1,45000,R1 # L0010 
 # repeat(199): t=100 
-           move           199,R3     # L0011 R3: Rs._cnt0
+    move           199,R3     # L0011 R3: Rs._cnt0
+local_0:
 # phase_delta 0.004545 t=100 
-local_0:   set_ph_delta   2272500    # L0012 @ 100
+    set_ph_delta   2272500    # L0012 @ 100
 # set_freq Rs._freq t=100 
-           asl            R1,2,R4    # L0013 temp R4
-           nop                       # L0014  set_freq wait for R4
-           set_freq       R4         # L0015 @ 100
+    asl            R1,2,R4    # L0013 temp R4
+    nop                       # L0014  set_freq wait for R4
+    set_freq       R4         # L0015 @ 100
 # play _chirp_100_3_45000_real _chirp_100_3_45000_imag t=100 
-           play           0,1,100    # L0016 t=100
+    play           0,1,100    # L0016 t=100
 # Rs._freq:int = Rs._freq + 45000 
-           add            R1,45000,R1 # L0017 
+    add            R1,45000,R1 # L0017 
 # endloop t=200 
-           sub            R3,1,R3    # L0018 
-           jg             @local_0   # L0019 
+    sub            R3,1,R3    # L0018 
+    jg             @local_0   # L0019 
 #     --- loop duration: 19900 
 # awg_gain = 0.0, None t=20000 
-           set_awg_gain   0,0        # L0020 @ 20000
+    set_awg_gain   0,0        # L0020 @ 20000
 # set_freq 0 t=20000 
-           set_freq       0          # L0021 @ 20000
-           upd_param      4          # L0022 t=20000
+    set_freq       0          # L0021 @ 20000
+    upd_param      4          # L0022 t=20000
 # --END-- 
-           stop                      # L0023 
+    stop                      # L0023 
 """
 

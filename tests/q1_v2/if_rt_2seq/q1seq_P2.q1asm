@@ -13,50 +13,55 @@ seq_prog="""
 #  R33: R.d
 #  R0: _zero
 # --INIT-- 
-           move           0,R0       # L0001 R0: _zero
+    move           0,R0       # L0001 R0: _zero
 # var R.a:int 
 # var R.b:int 
 # var R.c:int 
 # var R.d:int 
-           wait_sync      100        # L0002 t=0
+    wait_sync      100        # L0002 t=0
 # --START-- (t=0) 
-_start:    reset_ph                  # L0003 @ 0
-           upd_param      230        # L0004 t=0
+_start:
+    reset_ph                  # L0003 @ 0
+    upd_param      230        # L0004 t=0
 # R.d:int = 0 
-           move           0,R33      # L0005 R33: R.d
+    move           0,R33      # L0005 R33: R.d
 # R.c:int = 1 
-           move           1,R32      # L0006 
+    move           1,R32      # L0006 
 # if-block 1 branches (t = 100 ... 100) 
 # condition R.a > R.c 
-           nop                       # L0007  cmp wait for R32
-           cmp            R30,R32    # L0008 
-           jbe            @endif1    # L0009 
+    nop                       # L0007  cmp wait for R32
+    cmp            R30,R32    # L0008 
+    jbe            @endif1    # L0009 
 # R.c:int = 10 
-           move           10,R32     # L0010 
+    move           10,R32     # L0010 
+endif1:
 # if-block 3 branches (t = 100 ... 100) 
 # condition R.a == R.b 
-endif1:    cmp            R30,R31    # L0011 
-           jnz            @cont4     # L0012 
+    cmp            R30,R31    # L0011 
+    jnz            @cont4     # L0012 
 # R.d:int = 2 
-           move           2,R33      # L0013 
-           jmp            @endif3    # L0014 
+    move           2,R33      # L0013 
+    jmp            @endif3    # L0014 
+cont4:
 # condition R.a < R.b 
-cont4:     cmp            R30,R31    # L0015 
-           jae            @cont5     # L0016 
+    cmp            R30,R31    # L0015 
+    jae            @cont5     # L0016 
 # R.d:int = 3 
-           move           3,R33      # L0017 
-           jmp            @endif3    # L0018 
+    move           3,R33      # L0017 
+    jmp            @endif3    # L0018 
+cont5:
 # condition None 
 # R.d:int = 4 
-cont5:     move           4,R33      # L0019 
+    move           4,R33      # L0019 
+endif3:
 # block_pulse(20, -0.2, None) 
 # awg_offset = -0.2, None t=230 
-endif3:    set_awg_offs   -6554,0    # L0020 @ 230
-           upd_param      20         # L0021 t=230
+    set_awg_offs   -6554,0    # L0020 @ 230
+    upd_param      20         # L0021 t=230
 # awg_offset = 0.0, None t=250 
-           set_awg_offs   0,0        # L0022 @ 250
-           upd_param      10         # L0023 t=250
+    set_awg_offs   0,0        # L0022 @ 250
+    upd_param      10         # L0023 t=250
 # --END-- 
-           stop                      # L0024 
+    stop                      # L0024 
 """
 

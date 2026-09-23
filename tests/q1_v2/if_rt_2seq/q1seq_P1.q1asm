@@ -13,76 +13,80 @@ seq_prog="""
 #  R33: R.d
 #  R0: _zero
 # --INIT-- 
-           move           0,R0       # L0001 R0: _zero
+    move           0,R0       # L0001 R0: _zero
 # var R.a:int 
 # var R.b:int 
 # var R.c:int 
 # var R.d:int 
-           wait_sync      100        # L0002 t=0
+    wait_sync      100        # L0002 t=0
 # --START-- (t=0) 
-_start:    reset_ph                  # L0003 @ 0
-           upd_param      80         # L0004 t=0
+_start:
+    reset_ph                  # L0003 @ 0
+    upd_param      80         # L0004 t=0
 # block_pulse(10, 0.1, None) 
 # awg_offset = 0.1, None t=80 
-           set_awg_offs   3276,0     # L0005 @ 80
-           upd_param      10         # L0006 t=80
+    set_awg_offs   3276,0     # L0005 @ 80
+    upd_param      10         # L0006 t=80
 # awg_offset = 0.0, None t=90 
-           set_awg_offs   0,0        # L0007 @ 90
-           upd_param      10         # L0008 t=90
+    set_awg_offs   0,0        # L0007 @ 90
+    upd_param      10         # L0008 t=90
 # R.d:int = 0 
-           move           0,R33      # L0009 R33: R.d
+    move           0,R33      # L0009 R33: R.d
 # R.c:int = 1 
-           move           1,R32      # L0010 
+    move           1,R32      # L0010 
 # R.c:int = 10 
-           nop                       # L0011  move wait for R32
-           move           10,R32     # L0012 
+    nop                       # L0011  move wait for R32
+    move           10,R32     # L0012 
 # if-block 3 branches (t = 100 ... 200) 
 # condition R.a == R.b 
-           cmp            R30,R31    # L0013 
-           jnz            @cont2     # L0014 
+    cmp            R30,R31    # L0013 
+    jnz            @cont2     # L0014 
 # R.d:int = 2 
-           move           2,R33      # L0015 
+    move           2,R33      # L0015 
 # block_pulse(100, 0.2, None) 
 # awg_offset = 0.2, None t=100 
-           set_awg_offs   6553,0     # L0016 @ 100
-           upd_param      100        # L0017 t=100
+    set_awg_offs   6553,0     # L0016 @ 100
+    upd_param      100        # L0017 t=100
 # awg_offset = 0.0, None t=200 
-           set_awg_offs   0,0        # L0018 @ 200
-           jmp            @endif1    # L0019 
+    set_awg_offs   0,0        # L0018 @ 200
+    jmp            @endif1    # L0019 
+cont2:
 # condition R.a < R.b 
-cont2:     cmp            R30,R31    # L0020 
-           jae            @cont3     # L0021 
-           upd_param      20         # L0022 t=100
+    cmp            R30,R31    # L0020 
+    jae            @cont3     # L0021 
+    upd_param      20         # L0022 t=100
 # R.d:int = 3 
-           move           3,R33      # L0023 
+    move           3,R33      # L0023 
 # block_pulse(10, 0.4, None) 
 # awg_offset = 0.4, None t=120 
-           set_awg_offs   13107,0    # L0024 @ 120
-           upd_param      10         # L0025 t=120
+    set_awg_offs   13107,0    # L0024 @ 120
+    upd_param      10         # L0025 t=120
 # awg_offset = 0.0, None t=130 
-           set_awg_offs   0,0        # L0026 @ 130
-           upd_param      70         # L0027 t=130
-           jmp            @endif1    # L0028 
+    set_awg_offs   0,0        # L0026 @ 130
+    upd_param      70         # L0027 t=130
+    jmp            @endif1    # L0028 
+cont3:
 # condition None 
-cont3:     upd_param      10         # L0029 t=100
+    upd_param      10         # L0029 t=100
 # R.d:int = 4 
-           move           4,R33      # L0030 
+    move           4,R33      # L0030 
 # block_pulse(80, 0.6, None) 
 # awg_offset = 0.6, None t=110 
-           set_awg_offs   19660,0    # L0031 @ 110
-           upd_param      80         # L0032 t=110
+    set_awg_offs   19660,0    # L0031 @ 110
+    upd_param      80         # L0032 t=110
 # awg_offset = 0.0, None t=190 
-           set_awg_offs   0,0        # L0033 @ 190
-           upd_param      10         # L0034 t=190
-endif1:    upd_param      10         # L0035 t=200
+    set_awg_offs   0,0        # L0033 @ 190
+    upd_param      10         # L0034 t=190
+endif1:
+    upd_param      10         # L0035 t=200
 # block_pulse(20, -0.2, None) 
 # awg_offset = -0.2, None t=210 
-           set_awg_offs   -6554,0    # L0036 @ 210
-           upd_param      20         # L0037 t=210
+    set_awg_offs   -6554,0    # L0036 @ 210
+    upd_param      20         # L0037 t=210
 # awg_offset = 0.0, None t=230 
-           set_awg_offs   0,0        # L0038 @ 230
-           upd_param      30         # L0039 t=230
+    set_awg_offs   0,0        # L0038 @ 230
+    upd_param      30         # L0039 t=230
 # --END-- 
-           stop                      # L0040 
+    stop                      # L0040 
 """
 

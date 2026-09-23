@@ -29,51 +29,59 @@ weights={
 acquisitions={}
 
 seq_prog="""
+#  R0: _zero
+#  R1: _repetitions
 # --INIT-- 
-           move           0,R0       # L0001 R0: _zero
-           move           2,R1       # L0002 R1: _repetitions
-           wait_sync      100        # L0003 t=0
+    move           0,R0       # L0001 R0: _zero
+    move           2,R1       # L0002 R1: _repetitions
+    wait_sync      100        # L0003 t=0
 # --START-- (t=0) 
-_start:    reset_ph                  # L0004 @ 0
-           move           100,R2     # L0005 R2: R._var0
-           move           20,R3      # L0006 R3: R._cnt0
+_start:
+    reset_ph                  # L0004 @ 0
+    move           100,R2     # L0005 R2: R._var0
+    move           20,R3      # L0006 R3: R._cnt0
+loop_0:
 # block_pulse(200, 0.22, None) 
-loop_0:    set_awg_offs   7208,0     # L0007 @ 0
-           upd_param      200        # L0008 t=0
-           set_awg_offs   0,0        # L0009 @ 200
-           upd_param      20         # L0010 t=200
-           move           R2,R4      # L0011 R4: _waittime
+    set_awg_offs   7208,0     # L0007 @ 0
+    upd_param      200        # L0008 t=0
+    set_awg_offs   0,0        # L0009 @ 200
+    upd_param      20         # L0010 t=200
+    move           R2,R4      # L0011 R4: _waittime
 #          --- check for negative wait time 
-           nop                       # L0012  cmp wait for R4
-           cmp            R4,4       # L0013 
-           jge            @waitc1    # L0014 
-           illegal                   # L0015 wait time < 4 ns
-waitc1:    cmp            R4,65535   # L0016 
-           jle            @endwait1  # L0017 
-wait1:     sub            R4,65532,R4 # L0018 
-           wait           65532      # L0019 
-           cmp            R4,65535   # L0020 
-           jg             @wait1     # L0021 
-endwait1:  wait           R4         # L0022 
+    nop                       # L0012  cmp wait for R4
+    cmp            R4,4       # L0013 
+    jge            @waitc1    # L0014 
+    illegal                   # L0015 wait time < 4 ns
+waitc1:
+    cmp            R4,65535   # L0016 
+    jle            @endwait3  # L0017 
+wait2:
+    sub            R4,65532,R4 # L0018 
+    wait           65532      # L0019 
+    cmp            R4,65535   # L0020 
+    jg             @wait2     # L0021 
+endwait3:
+    wait           R4         # L0022 
 # ramp(200, 0.0, -0.05) 
-           set_awg_gain   -852,0     # L0023 @ 220
-           set_awg_offs   0,0        # L0024 @ 220
-           play           0,0,100    # L0025 t=220
-           set_awg_offs   -820,0     # L0026 @ 320
-           play           0,0,100    # L0027 t=320
-           set_awg_gain   0,0        # L0028 @ 420
-# ------:  set_awg_offs   0,0        # @ 420 = overwritten =
+    set_awg_gain   -852,0     # L0023 @ 220
+    set_awg_offs   0,0        # L0024 @ 220
+    play           0,0,100    # L0025 t=220
+    set_awg_offs   -820,0     # L0026 @ 320
+    play           0,0,100    # L0027 t=320
+    set_awg_gain   0,0        # L0028 @ 420
+#-- set_awg_offs   0,0        # @ 420 = overwritten =
 # -- Overwrites set_awg_offs at 420 -- 
-           set_awg_offs   -1639,0    # L0029 @ 420
-           upd_param      2000       # L0030 t=420
-           add            R2,100,R2  # L0031 
-           sub            R3,1,R3    # L0032 
-           jg             @loop_0    # L0033 
-           set_awg_offs   0,0        # L0034 @ 2420
+    set_awg_offs   -1639,0    # L0029 @ 420
+    upd_param      2000       # L0030 t=420
+# endloop t=2420 
+    add            R2,100,R2  # L0031 
+    sub            R3,1,R3    # L0032 
+    jg             @loop_0    # L0033 
+    set_awg_offs   0,0        # L0034 @ 2420
 # --END-- 
-           sub            R1,1,R1    # L0035 
-           jg             @_start    # L0036 
-           upd_param      4          # L0037 t=2420
-           stop                      # L0038 
+    sub            R1,1,R1    # L0035 
+    jg             @_start    # L0036 
+    upd_param      4          # L0037 t=2420
+    stop                      # L0038 
 """
 

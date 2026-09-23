@@ -59,89 +59,96 @@ weights={
 acquisitions={}
 
 seq_prog="""
+#  R0: _zero
+#  R1: _repetitions
+#  R2: R.v_ramp1
 # --INIT-- 
-           move           0,R0       # L0001 R0: _zero
-           move           2,R1       # L0002 R1: _repetitions
-           wait_sync      100        # L0003 t=0
+    move           0,R0       # L0001 R0: _zero
+    move           2,R1       # L0002 R1: _repetitions
+    wait_sync      100        # L0003 t=0
 # --START-- (t=0) 
-_start:    reset_ph                  # L0004 @ 0
+_start:
+    reset_ph                  # L0004 @ 0
 # R.v_ramp1:float = 0.2 
-           move           429496729,R2 # L0005 R2: R.v_ramp1
+    move           429496729,R2 # L0005 R2: R.v_ramp1
 # block_pulse(100, -0.1, None) 
 # awg_offset = -0.1, None t=0 
-           set_awg_offs   -3277,0    # L0006 @ 0
-           upd_param      100        # L0007 t=0
+    set_awg_offs   -3277,0    # L0006 @ 0
+    upd_param      100        # L0007 t=0
 # awg_offset = 0.0, None t=100 
-# ------:  set_awg_offs   0,0        # @ 100 = overwritten =
+#-- set_awg_offs   0,0        # @ 100 = overwritten =
 # block_pulse(40, 0.5, None) 
 # awg_offset = 0.5, None t=100 
 # -- Overwrites set_awg_offs at 100 -- 
-           set_awg_offs   16383,0    # L0008 @ 100
-           upd_param      40         # L0009 t=100
+    set_awg_offs   16383,0    # L0008 @ 100
+    upd_param      40         # L0009 t=100
 # awg_offset = 0.0, None t=140 
-           set_awg_offs   0,0        # L0010 @ 140
-           upd_param      140        # L0011 t=140
+    set_awg_offs   0,0        # L0010 @ 140
+    upd_param      140        # L0011 t=140
 # loop_linspace(-0.5, 0.5, 5):R._var0 t=280 
-           move           3221225472,R3 # L0012 R3: R._var0
-           move           5,R4       # L0013 R4: R._cnt0
-loop_0:    upd_param      120        # L0014 t=280
+    move           3221225472,R3 # L0012 R3: R._var0
+    move           5,R4       # L0013 R4: R._cnt0
+loop_0:
+    upd_param      120        # L0014 t=280
 # ramp(360, 0.0, R._var0) 
 # Rs._ramp_step:float = R._var0 - 0.0 
-           sub            R3,0,R5    # L0015 R5: Rs._ramp_step
+    sub            R3,0,R5    # L0015 R5: Rs._ramp_step
 # Rs._ramp_step:float = Rs._ramp_step >> 1 
 #          --- emulate signed ASR 
-           nop                       # L0016  move wait for R5
-           move           R5,R6      # L0017 temp R6
-           asr            R5,1,R5    # L0018 
-           jlt            R6,2147483648,@asr_end0 # L0019 
-           or             R5,3221225472,R5 # L0020 
+    nop                       # L0016  move wait for R5
+    move           R5,R6      # L0017 temp R6
+    asr            R5,1,R5    # L0018 
+    jlt            R6,2147483648,@asr_end0 # L0019 
+    or             R5,3221225472,R5 # L0020 
+asr_end0:
 # Rs._ramp_offset:float = 0.0 
-asr_end0:  move           0,R6       # L0021 R6: Rs._ramp_offset
+    move           0,R6       # L0021 R6: Rs._ramp_offset
 # awg_gain = Rs._ramp_step, None t=400 
-           asr            R5,16,R7   # L0022 temp R7
-           nop                       # L0023  set_awg_gain wait for R7
-           set_awg_gain   R7,R0      # L0024 @ 400
+    asr            R5,16,R7   # L0022 temp R7
+    nop                       # L0023  set_awg_gain wait for R7
+    set_awg_gain   R7,R0      # L0024 @ 400
 # repeat(2): t=400 
-           move           2,R7       # L0025 R7: Rs._cnt0
+    move           2,R7       # L0025 R7: Rs._cnt0
+local_0:
 # awg_offset = Rs._ramp_offset, None t=400 
-local_0:   asr            R6,16,R8   # L0026 temp R8
-           nop                       # L0027  set_awg_offs wait for R8
-           set_awg_offs   R8,R0      # L0028 @ 400
+    asr            R6,16,R8   # L0026 temp R8
+    nop                       # L0027  set_awg_offs wait for R8
+    set_awg_offs   R8,R0      # L0028 @ 400
 # play _ramp_180 None t=400 
-           play           0,0,180    # L0029 t=400
+    play           0,0,180    # L0029 t=400
 # Rs._ramp_offset:float = Rs._ramp_offset + Rs._ramp_step 
-           add            R6,R5,R6   # L0030 
+    add            R6,R5,R6   # L0030 
 # endloop t=580 
-           loop           R7,@local_0 # L0031 
+    loop           R7,@local_0 # L0031 
 #     --- loop duration: 360 
 # awg_offset = 0.0, None t=760 
-# ------:  set_awg_offs   0,0        # @ 760 = overwritten =
+#-- set_awg_offs   0,0        # @ 760 = overwritten =
 # ramp(80, R._var0, 0.0) 
 # awg_gain = 0.0 - R._var0, None t=760 
-           move           0,R8       # L0032 temp ['R8']
-           nop                       # L0033  sub wait for R8
-           sub            R8,R3,R7   # L0034 
-           nop                       # L0035  asr wait for R7
-           asr            R7,16,R7   # L0036 
-           nop                       # L0037  set_awg_gain wait for R7
-           set_awg_gain   R7,R0      # L0038 @ 760
+    move           0,R8       # L0032 temp ['R8']
+    nop                       # L0033  sub wait for R8
+    sub            R8,R3,R7   # L0034 
+    nop                       # L0035  asr wait for R7
+    asr            R7,16,R7   # L0036 
+    nop                       # L0037  set_awg_gain wait for R7
+    set_awg_gain   R7,R0      # L0038 @ 760
 # awg_offset = R._var0, None t=760 
-           asr            R3,16,R7   # L0039 temp R7
+    asr            R3,16,R7   # L0039 temp R7
 # -- Overwrites set_awg_offs at 760 -- 
-           nop                       # L0040  set_awg_offs wait for R7
-           set_awg_offs   R7,R0      # L0041 @ 760
+    nop                       # L0040  set_awg_offs wait for R7
+    set_awg_offs   R7,R0      # L0041 @ 760
 # play _ramp_80 None t=760 
-           play           1,1,80     # L0042 t=760
+    play           1,1,80     # L0042 t=760
 # awg_offset = 0.0, None t=840 
-           set_awg_offs   0,0        # L0043 @ 840
-           upd_param      60         # L0044 t=840
+    set_awg_offs   0,0        # L0043 @ 840
+    upd_param      60         # L0044 t=840
 # endloop t=900 
-           add            R3,536870911,R3 # L0045 
-           loop           R4,@loop_0 # L0046 
-           upd_param      100        # L0047 t=900
+    add            R3,536870911,R3 # L0045 
+    loop           R4,@loop_0 # L0046 
+    upd_param      100        # L0047 t=900
 # --END-- 
-           loop           R1,@_start # L0048 
-           upd_param      4          # L0049 t=1000
-           stop                      # L0050 
+    loop           R1,@_start # L0048 
+    upd_param      4          # L0049 t=1000
+    stop                      # L0050 
 """
 
