@@ -69,6 +69,8 @@ class SequenceBuilder(BuilderBase):
         self._feedback_event_subscriptions: set[FeedbackEventID] = set()
 
     def start_sequence(self, program, timeline):
+        # NOTE: program is used for wait register.
+        self._program = program
         self._timeline = timeline
         self._sequence_push(Sequence(self._timeline))
 
