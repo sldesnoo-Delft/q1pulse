@@ -344,7 +344,7 @@ class CastFloat(UnaryExpression, ABC):
         return float
 
     def _evaluate(self, generator, destination, rhs):
-        if destination != rhs:
+        if id(destination) != id(rhs):
             generator.move(rhs, destination)
 
 
