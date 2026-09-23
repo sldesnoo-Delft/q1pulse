@@ -4,6 +4,7 @@ from .math_expressions import get_dtype
 from .register import Register
 from .exceptions import Q1ValueError, Q1TypeError
 
+
 class LoopVar(Register):
     def __init__(self, name, loop, **kwargs):
         super().__init__(name, **kwargs)
@@ -63,10 +64,11 @@ class RangeLoop(Loop):
     def __repr__(self):
         return f'loop_range({self._start}, {self._stop}, {self._step}):{self.loopvar}'
 
+
 class LinspaceLoop(Loop):
     def __init__(self, loop_number, start, stop, n, endpoint=True):
         super().__init__(loop_number, n, var_type=float)
-        if max(start,stop) > 1.0 or min(start,stop) < -1.0:
+        if max(start, stop) > 1.0 or min(start, stop) < -1.0:
             raise Q1ValueError('value out of range [-1.0, 1.0]')
         self._start = start
         self._stop = stop
@@ -85,6 +87,7 @@ class LinspaceLoop(Loop):
     def __repr__(self):
         endpoint = ', endpoint=False' if not self._endpoint else ''
         return f'loop_linspace({self._start}, {self._stop}, {self.n}{endpoint}):{self.loopvar}'
+
 
 class ArrayLoop(Loop):
     def __init__(self, loop_number, values):
