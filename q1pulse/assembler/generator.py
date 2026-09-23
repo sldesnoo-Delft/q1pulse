@@ -348,8 +348,8 @@ class Q1asmGenerator(InstructionQueue):
         max_rt_time_branches = 0
         for branch in reversed(cbs.branch_states):
             t_else_after = n_else_after * MIN_WAIT
-            branch.last_rt_instruction.wait_after += t_else_after
-            max_rt_time_branches = max(max_rt_time_branches, branch.rt_end + t_else_after)
+            branch.rt_end += t_else_after
+            max_rt_time_branches = max(max_rt_time_branches, branch.rt_end)
             n_else_after += branch.n_instr
 
         if max_rt_time_branches > time:
@@ -358,7 +358,10 @@ class Q1asmGenerator(InstructionQueue):
                              f"next at {max_rt_time_branches} ns")
             time = max_rt_time_branches
         else:
-            self.add_comment(f"End conditional block t={time}")
+            self.add_comment(f"End Conditional Block t={time}")
+
+        for branch in cbs.branch_states:
+            branch.last_rt_instruction.wait_after += time - branch.rt_end
 
         # disable condition
         self._add_instruction("set_cond", 0, 0, 0, MIN_WAIT)
