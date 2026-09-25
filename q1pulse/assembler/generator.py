@@ -292,12 +292,15 @@ class Q1asmGenerator(InstructionQueue):
         self.rt_seq_flush()
         self._add_instruction("stop")
 
-    def rt_seq_start(self, rt_time):
+    def rt_seq_start(self, rt_time, update: bool = True):
         self._rt_time = rt_time
-        # Pending updates of the previous block must be updated now.
-        # So, updates scheduled at the end of the loop will be updated
-        # at the start of the loop or immediately after the loop.
-        self._schedule_update(self._rt_time)
+        if update:
+            # Pending updates of the previous block must be updated now.
+            # So, updates scheduled at the end of the loop will be updated
+            # at the start of the loop or immediately after the loop.
+            self._schedule_update(self._rt_time)
+        else:
+            self._last_rt_command = None
         # rt_settings may not be overwritten across block boundary
         self._last_rt_settings.clear()
 
@@ -366,7 +369,12 @@ class Q1asmGenerator(InstructionQueue):
         # disable condition
         self._add_instruction("set_cond", 0, 0, 0, MIN_WAIT)
         self._conditional_block_state = None
-        self.rt_seq_start(time)
+        # do NOT insert upd_param.
+        # There shouldn't be any pending updates.
+        # However, if a latched setting is changed in one of the branches
+        # and the update is not executed, then there is still a pending 
+        # latched setting that will be executed by the next upd_param.
+        self.rt_seq_start(time, update=False)
 
     @register_args(signature="I")
     def jmp(self, label):

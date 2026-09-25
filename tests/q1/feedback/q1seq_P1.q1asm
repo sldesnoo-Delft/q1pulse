@@ -70,7 +70,7 @@ _start:
 # End condition. (t_end=464; 3 RT instructions) 
 # End Conditional Block t=460, wait_after 16 ns, next at 476 ns 
     set_cond       0,0,0,4    # L0034 
-    upd_param      24         # L0035 t=476
+    wait           24         # L0035 
 # Start Conditional Block at 500 
 # Start condition [2] @ 500 ns. Total wait_else before: 0 ns 
     set_cond       1,1,2,4    # L0036 
@@ -87,9 +87,9 @@ _start:
 # End condition. (t_end=512; 1 RT instructions) 
 # End Conditional Block t=560, wait_after 8 ns, next at 568 ns 
     set_cond       0,0,0,4    # L0044 
-    upd_param      32         # L0045 t=568
 # ramp(60, 0.25, 0.5) 
-    set_awg_gain   8191,0     # L0046 @ 600
+    set_awg_gain   8191,0     # L0045 @ 600
+    wait           32         # L0046 
     set_awg_offs   8191,0     # L0047 @ 600
     play           0,0,60     # L0048 t=600
     set_awg_offs   0,0        # L0049 @ 660

@@ -8,17 +8,17 @@ from .exceptions import Q1InternalError, Q1SyntaxError
 
 class Operators(IntEnum):
     OR = 0
-    ''' At least 1 bit set '''
+    """ At least 1 bit set """
     NOR = 1
-    ''' No bit set '''
+    """ No bit set """
     AND = 2
-    ''' All bits set '''
+    """ All bits set """
     NAND = 3
-    ''' Not all bits set '''
+    """ Not all bits set """
     XOR = 4
-    ''' Odd number of bits set '''
+    """ Odd number of bits set """
     XNOR = 5
-    ''' Even number of bits set '''
+    """ Even number of bits set """
 
     @property
     def family(self):
@@ -70,7 +70,7 @@ class LatchEnableStatement(TimedStatement):
         self.enable = enable
 
     def __repr__(self):
-        return f'latch_enable({self.enable})'
+        return f"latch_enable({self.enable})"
 
     def write_instruction(self, generator):
         generator.set_latch_en(self.time, int(self.enable))
@@ -81,7 +81,7 @@ class LatchResetStatement(TimedStatement):
         super().__init__(time)
 
     def __repr__(self):
-        return 'latch_reset()'
+        return "latch_reset()"
 
     def write_instruction(self, generator):
         generator.latch_rst(self.time)
@@ -96,7 +96,7 @@ class BranchSequence(Sequence):
 
 class ConditionalBlockStatement(BlockStatement):
 
-    '''
+    """
     Statement containing one or more conditions on a set of trigger counters.
 
     The duration of the conditional block is fixed.
@@ -109,33 +109,29 @@ class ConditionalBlockStatement(BlockStatement):
     This could result in some additional execution time for the block.
 
     Branches are added in programming order.
-    '''
+    """
 
     def __init__(self, time, counters):
         super().__init__(time)
         self.counters = counters
         self._closed = False
-        self._end_time = time
 
     def add_branch(self, branch_sequence, end_time):
         operator = branch_sequence.operator
         if operator in [branch.operator for branch in self.branches]:
-            raise Q1SyntaxError(f'Duplicate operator {operator.name}')
+            raise Q1SyntaxError(f"Duplicate operator {operator.name}")
         super().add_branch(branch_sequence, end_time)
         self._check_operators()
 
     @property
     def end_time(self):
-        return self._end_time
-
-    def set_end_time(self, value):
-        self._end_time = max(self._end_time, value)
+        return self.t_block_end
 
     def close(self, timeline):
-        '''
+        """
         Adds else branch of equal length.
         get first RT statement and last RT statement
-        '''
+        """
         else_operator = self._get_else()
         if else_operator is not None:
             self.add_branch(BranchSequence(timeline, else_operator), self.t_block_start)
@@ -152,10 +148,10 @@ class ConditionalBlockStatement(BlockStatement):
             return operators[0].opposite
         if len(self.counters) == 1:
             if len(operators) > 2:
-                raise Q1SyntaxError('Cannot have more than 2 different operators with 1 counter')
+                raise Q1SyntaxError("Cannot have more than 2 different operators with 1 counter")
             flag_set_ops = [Operators.AND, Operators.OR, Operators.XOR]
             if (operators[0] in flag_set_ops) == (operators[1] in flag_set_ops):
-                raise Q1SyntaxError(f'Incompatible operators {[op.name for op in operators]} on 1 counter')
+                raise Q1SyntaxError(f"Incompatible operators {[op.name for op in operators]} on 1 counter")
             return None
         if len(operators) == 2:
             if operators[0].family == operators[1].family:
@@ -166,21 +162,23 @@ class ConditionalBlockStatement(BlockStatement):
                     tri_state.remove(op)
                 return list(tri_state)[0]
             except KeyError:
-                raise Q1SyntaxError(f'Operators {[op.name for op in operators]} are not exclusive') from None
+                raise Q1SyntaxError(f"Operators {[op.name for op in operators]} are not exclusive") from None
         else:
             try:
                 for op in operators:
                     tri_state.remove(op)
                 return None
             except KeyError:
-                raise Q1SyntaxError(f'Operators {[op.name for op in operators]} are not exclusive') from None
+                raise Q1SyntaxError(f"Operators {[op.name for op in operators]} are not exclusive") from None
 
     def __repr__(self):
-        return f'conditional({[counter.name for counter in self.counters]}):'
+        return (
+            f"conditional({[counter.name for counter in self.counters]}) {self.t_block_start} ... {self.t_block_end}:"
+            )
 
     def write_instruction(self, generator):
         if not self._closed:
-            raise Q1InternalError('Condition not closed')
+            raise Q1InternalError("Condition not closed")
 
         mask = 0
         for counter in self.counters:
