@@ -133,7 +133,7 @@ class AcquireStatement(TimedStatement):
         generator.acquire(self.time, self.acquisition, self.bin_index)
 
 
-class AcquireWeighedStatement(TimedStatement):
+class AcquireWeightedStatement(TimedStatement):
     def __init__(self, time, acquisition, bin_index, weight0, weight1):
         super().__init__(time)
         self.acquisition = acquisition
@@ -145,11 +145,11 @@ class AcquireWeighedStatement(TimedStatement):
         weight0 = self.weight0.name if self.weight0 is not None else None
         weight1 = self.weight1.name if self.weight1 is not None else None
         return (
-            f'acquire_weighed(bins={self.acquisition.name}, bin={self.bin_index}, '
+            f'acquire_weighted(bins={self.acquisition.name}, bin={self.bin_index}, '
             f'weight0={weight0}, weight1={weight1})')
 
     def write_instruction(self, generator):
-        generator.acquire_weighed(self.time, self.acquisition, self.bin_index,
+        generator.acquire_weighted(self.time, self.acquisition, self.bin_index,
                                   self.weight0, self.weight1)
 
 

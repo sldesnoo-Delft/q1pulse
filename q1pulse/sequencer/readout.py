@@ -6,7 +6,7 @@ from q1pulse.lang.feedback import (
     FeedbackAcqTbExtra, FeedbackAcqTbMock,
     FeedbackAcqTbValid
     )
-from q1pulse.lang.timed_statements import AcquireStatement, AcquireWeighedStatement, AcquireTtlStatement
+from q1pulse.lang.timed_statements import AcquireStatement, AcquireWeightedStatement, AcquireTtlStatement
 from .control import ControlBuilder
 from .sequencer_data import (
     AcquisitionWeight, WeightCollection,
@@ -127,7 +127,11 @@ class ReadoutBuilder(ControlBuilder):
             self._add_statement(AcquireStatement(t1, acquisition, bin_index))
 
     def acquire_weighed(self, acquisition, bin_index, weight0, weight1=None, t_offset=0):
-        self.add_comment(f'acquire_weighed({acquisition}, {bin_index})')
+        """Deprecated"""
+        self.acquire_weighted(acquisition, bin_index, weight0, weight1=weight1, t_offset=t_offset)
+
+    def acquire_weighted(self, acquisition, bin_index, weight0, weight1=None, t_offset=0):
+        self.add_comment(f'acquire_weighted({acquisition}, {bin_index})')
         if weight1 is None:
             weight1 = weight0
         acquisition = self._translate_acquisition(acquisition)
@@ -138,11 +142,11 @@ class ReadoutBuilder(ControlBuilder):
         if isinstance(bin_index, str) and bin_index == 'increment':
             reg_name = self._get_acquisition_reg_name(acquisition)
             bin_reg = self.Rs.init(reg_name)
-            st = AcquireWeighedStatement(t1, acquisition, bin_reg, weight0, weight1)
+            st = AcquireWeightedStatement(t1, acquisition, bin_reg, weight0, weight1)
             self._add_statement(st)
             self.Rs[reg_name] += 1
         else:
-            st = AcquireWeighedStatement(t1, acquisition, bin_index, weight0, weight1)
+            st = AcquireWeightedStatement(t1, acquisition, bin_index, weight0, weight1)
             self._add_statement(st)
 
     def acquire_ttl(self, acquisition, bin_index, enable, t_offset=0):
@@ -231,7 +235,13 @@ class ReadoutBuilder(ControlBuilder):
 
     def repeated_acquire_weighed(self, n, period, acquisition, bin_index,
                                  weight0, weight1=None, t_offset=0):
-        self.add_comment(f'repeated_acquire_weighed({n}, {period}, {acquisition}, {bin_index})')
+        """Deprecated"""
+        self.repeated_acquire_weighted(n, period, acquisition, bin_index, weight0,
+                                       weight1=weight1, t_offset=t_offset)
+
+    def repeated_acquire_weighted(self, n, period, acquisition, bin_index,
+                                  weight0, weight1=None, t_offset=0):
+        self.add_comment(f'repeated_acquire_weighted({n}, {period}, {acquisition}, {bin_index})')
         if period < ReadoutBuilder.MIN_ACQUISITION_INTERVAL:
             raise Q1ValueError(f'Acquisition period ({period} ns) too small. '
                                f'Minimum is {ReadoutBuilder.MIN_ACQUISITION_INTERVAL} ns')
@@ -241,9 +251,9 @@ class ReadoutBuilder(ControlBuilder):
             # control sequencers, because acquisition is ~100 ns delayed w.r.t. control.
             if n > 1:
                 with self._seq_repeat(n-1):
-                    self.acquire_weighed(acquisition, bin_index, weight0, weight1)
+                    self.acquire_weighted(acquisition, bin_index, weight0, weight1)
                     self.wait(period)
-            self.acquire_weighed(acquisition, bin_index, weight0, weight1)
+            self.acquire_weighted(acquisition, bin_index, weight0, weight1)
 
     def acquire_ttl_interval(self, acquisition, bin_index, duration, t_offset=0):
         """Perform TTL acquisition for specified duration.

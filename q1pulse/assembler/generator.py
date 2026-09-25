@@ -372,7 +372,7 @@ class Q1asmGenerator(InstructionQueue):
         # do NOT insert upd_param.
         # There shouldn't be any pending updates.
         # However, if a latched setting is changed in one of the branches
-        # and the update is not executed, then there is still a pending 
+        # and the update is not executed, then there is still a pending
         # latched setting that will be executed by the next upd_param.
         self.rt_seq_start(time, update=False)
 
@@ -706,13 +706,13 @@ class Q1asmGenerator(InstructionQueue):
         self._contains_io_instr = True
 
     @register_args(signature="toIoo")
-    def acquire_weighed(self, time, acquisition, bin_index, weight0, weight1):
+    def acquire_weighted(self, time, acquisition, bin_index, weight0, weight1):
         acq_index = self._data.translate_acquisition(acquisition)
         weight0 = self._data.translate_weight(weight0)
         weight1 = self._data.translate_weight(weight1)
         instruction = "acquire_weighted" if self.isa_v2 else "acquire_weighed"
-        # q1asm has no instruction for acquire_weighed imm,reg,imm,imm,imme.
-        # Use acquire_weighed imm,reg,reg,reg,imm instead
+        # q1asm has no instruction for acquire_weighted imm,reg,imm,imm,imme.
+        # Use acquire_weighted imm,reg,reg,reg,imm instead
         if not isinstance(bin_index, Number):
             with self._registers.temp_regs(2) as (rw0, rw1):
                 self.move(weight0, rw0)

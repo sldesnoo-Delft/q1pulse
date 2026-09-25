@@ -63,7 +63,7 @@ with p.loop_linspace(-v1_max, v1_max, N) as v1:
             P1.block_pulse(500, v1)
             P2c.block_pulse(500, v1)
             P2.block_pulse(500, v2)
-            R1.acquire_weighed('weighed', 'increment', 'gaus100', t_offset=160)
+            R1.acquire_weighted('weighed', 'increment', 'gaus100', t_offset=160)
 
         p.wait(1100)
 
