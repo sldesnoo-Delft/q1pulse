@@ -210,6 +210,12 @@ Composite instructions:
 - ramp: creates ramp on 1 output (2)
 - ramp_2paths: creates ramps on 2 paths (a.o. useful for sequencer real mode)
 - chirp: a linear sweep of the frequency (using IQ modulation)
+LINQ Feedback:
+- fb_pop_data
+- fb_pull_data
+- fb_com_data
+- fb_com_cfg
+- fb_subscribe: activate routing to receive events with fb_pull_data.
 
 Notes:
 1. instruction does not advance time in sequence.
@@ -223,11 +229,17 @@ QRM specific instructions:
 - add_acquisition_weights: add specification for weights
 - reset_bin_counter: resets the automatic incrementing bin counter.
 - acquire: acquire data, optionally incrementing the bin counter. (1)
-- acquire_weighed: acquire data using weighed average, optionally incrementing the bin counter. (1)
+- acquire_weighted: acquire data using weighed average, optionally incrementing the bin counter. (1)
 - repeated_acquire: N times acquire data, optionally incrementing the bin counter.
-- repeated_acquire_weighed: N times acquire data using weighed average, optionally incrementing the bin counter.
+- repeated_acquire_weighted: N times acquire data using weighed average, optionally incrementing the bin counter.
 - acquire_ttl: start or stop TTL acquisition. (1)
 - acquire_ttl_interval: start TTL acquisition and stop after specified interval.
+LINQ Feedback:
+- fb_acq_iq_id
+- fb_acq_iq_shift
+- fb_acq_tb_id
+- fb_acq_tb_cfg
+- fb_acq_tb_valid
 
 Notes:
 1. instruction does not advance time in sequence.
@@ -249,7 +261,8 @@ Where needed and as far as possible the compiler inserts additional Q1ASM instru
 signed int operations.
 
 ### Expressions
-The following Python operations are supported: `+`, `-`, `<<`, `>>`, `*` and bitwise `&`, `|`, `~`.
+The following Python operations are supported: `+`, `-`, `<<`, `>>`, `*`, bitwise `&`, `|`, `~`, `^`,
+and comparison `==`, `!=`, `\>`, `\>=`, `\<`, `\<=`.
 Evaluation order is determined by the Python operator rules.
 The (unsigned) logical shift right is available as function `lsr(lhs, rhs)` and method `reg.lsr(rhs)`.
 
@@ -375,6 +388,105 @@ be used as such.
     # create a staircase
     with p.loop_linspace(-0.5, 0.5, 20) as v1:
         P1.block_pulse(200, v1)
+```
+
+## If / elif / else
+Conditional branches (if/elif/else) can be added to program and sequencers.
+
+All branches of an if/elif/else block will have the same real-time execution duration.
+The duration of a sequence does not depend on the branches followed during execution.
+
+The condition in the if/eiif statement can be a comparison (`if_(p.R.a == 3`)), an expression
+(`if_(p.R.a & 0x0100)`), or a register (`if_(p.R.a)`).
+
+### Example
+```python
+    # Assign a value to variable "d" dependant of variable "a" and "b"
+    with p.if_(p.R.a == p.R.b):
+        p.R.d = 2
+    with p.elif_(p.R.a < p.R.b):
+        p.R.d = 3
+    with p.else_:
+        p.R.d = 4
+```
+
+Conditional branches on sequencer level and real-time instructions:
+```python
+    with P1.if_(P1.Rs.a == 0):
+        P1.wait(10)
+        P1.block_pulse(100, 0.2)
+    with P1.elif_(P1.Rs.a < P1.Rs.b):
+        P1.wait(20)
+        P1.block_pulse(10, 0.4)
+    with P1.else_:
+        P1.wait(10)
+        P1.block_pulse(80, 0.6)
+```
+
+## LINQ Feedback
+
+The instructions for LINQ Feedback in Q1Pulse are very similar to the Q1ASM instructions.
+In Q1Pulse the events are identified by an FeedbackEventID object with a name.
+
+Routing is generated automatically for data that is "popped".
+If a sequencer pulls the event, then the event id cannot be determined automatically,
+and routing should be activated with `fb_subscribe(event)`.
+
+NOTES:
+- If threshold bits and I/Q are both configured for feedback, then threshold bits is sent first.
+  See 2nd example.
+- When acquisition feedback is used the parameter `integration_length_acq` must be set to
+  the duration of the weighted acquisition. See Qblox documentation.
+
+### Example
+
+Example with `fb_com_data`:
+
+```python
+p = instrument.new_program('event_feedback')
+
+event_id = p.register_feedback_event("example_event")
+
+P1 = p.P1
+R1 = p.R1
+
+P1.Rs.data = IntVariable()
+
+R1.fb_com_data(event_id, 77)
+p.wait(600)
+P1.fb_pop_data(event_id, P1.Rs.data)
+```
+
+Example with `fb_acq_...`
+```python
+p = instrument.new_program('event_feedback_acq')
+
+P1 = p.P1
+R1 = p.R1
+
+n_acq = p.repetitions
+R1.add_acquisition_bins('measurements', n_acq)
+R1.integration_length_acq = 100
+R1.thresholded_acq_threshold = 0.1
+
+event_tb = p.register_feedback_event("m1_tb")
+event_iq = p.register_feedback_event("m1_iq")
+
+P1.Rs.m1_tb = IntVariable()
+P1.Rs.m1_i = FloatVariable()
+P1.Rs.m1_q = FloatVariable()
+
+p.wait(4)
+R1.fb_acq_tb_id(event_tb, wait_after=4)
+R1.fb_acq_iq_id(event_iq, wait_after=4)
+
+p.P1.block_pulse(100, 0.2)
+p.wait(50)
+R1.acquire('measurements')
+p.wait(650)
+P1.fb_pop_data(event_tb, P1.Rs.m1_tb)
+P1.fb_pop_data(event_iq, P1.Rs.m1_i)
+P1.fb_pop_data(event_iq, P1.Rs.m1_q)
 ```
 
 ## Conditional statements
