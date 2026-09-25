@@ -88,7 +88,7 @@ class FeedbackComExtra(TimedStatement):
 # --- Acquisition ---
 
 class FeedbackAcqIqId(TimedStatement):
-    def __init__(self, time: int, fb_id: FeedbackEventID):
+    def __init__(self, time: int, fb_id: FeedbackEventID | None):
         super().__init__(time)
         self.fb_id = fb_id
 
@@ -112,7 +112,7 @@ class FeedbackAcqIqShift(TimedStatement):
 
 
 class FeedbackAcqTbId(TimedStatement):
-    def __init__(self, time: int, fb_id: FeedbackEventID):
+    def __init__(self, time: int, fb_id: FeedbackEventID | None):
         super().__init__(time)
         self.fb_id = fb_id
 

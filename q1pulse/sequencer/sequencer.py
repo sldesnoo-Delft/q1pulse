@@ -452,34 +452,82 @@ class SequenceBuilder(BuilderBase):
 
     def fb_subscribe(self, event_id: FeedbackEventID):
         """Subscribes to event_id to make it available for `fb_pull_data`.
+        Args:
+            event_id: event created with `Program.register_feedback_event`.
         """
         self._feedback_event_subscriptions.add(event_id)
 
     def fb_pop_data(self, event_id: FeedbackEventID, register: Register):
+        """ Loads data of next event with `event_id` in `register`.
+
+        This instruction reads events from the event queue until an
+        event with specified event-id is found. Events that do not match
+        the event-id will be dropped.
+        This methods blocks if the queue does not contain an event
+        with specified id.
+
+        Args:
+            event_id: event created with `Program.register_feedback_event`.
+            register: sequencer register to load the data in.
+        """
         # automatic registration of event.
         self._feedback_event_subscriptions.add(event_id)
         self._add_statement(FeedbackPopData(event_id, register))
 
     def fb_pull_data(self, event_id_destination: Register, register: Register):
+        """ Loads data of next event in `register`.
+
+        The event-id is loaded in register `event_id_destination`.
+        This instruction reads one event from the event queue.
+        This methods blocks if the queue does not contain any event.
+
+        Args:
+            event_id_destination: register to be loaded with the event-id.
+            register: sequencer register to load the data in.
+        """
         self._add_statement(FeedbackPullData(event_id_destination, register))
 
     def fb_com_data(self, event_id: FeedbackEventID, value: Operand, t_offset: int = 0, wait_after: int = 0):
+        """Sends event with specified id and data.
+
+        Args:
+            event_id: event created with `Program.register_feedback_event`.
+            value: 32 bit value (constant, register or expression result) to send.
+            t_offset: real-time delay for instruction execution.
+            wait_after: time to wait after RT instruction.
+
+        Note:
+            There must be a gap of at least 4 ns between the previous RT instruction ant this one.
+            There must be a gap of at least 4 ns between this RT instruction and the next.
+        """
         time = self.current_time + t_offset
         self._add_statement(FeedbackSendData(time, event_id, value))
         self.set_pulse_end(time + wait_after)
 
     def fb_com_cfg(self, write_combine: bool, shift: int, n_bytes: int, t_offset: int = 0, wait_after: int = 0):
-        """
+        """Configure write combine for `fb_com_data`.
+
+        See Qblox documentation.
+
         Args:
             write_combine: if True enable write combine.
             shift: left shift
             n_bytes: total number of bytes of combined message.
+            t_offset: real-time delay for instruction execution.
+            wait_after: time to wait after RT instruction.
+
+        Note:
+            There must be a gap of at least 4 ns between the previous RT instruction ant this one.
+            There must be a gap of at least 4 ns between this RT instruction and the next.
         """
         time = self.current_time + t_offset
         self._add_statement(FeedbackComCfg(time, write_combine, shift, n_bytes))
         self.set_pulse_end(time + wait_after)
 
     def fb_com_extra(self, valid: bool, extra: int, t_offset: int = 0, wait_after: int = 0):
+        """
+        See Qblox documentation.
+        """
         time = self.current_time + t_offset
         self._add_statement(FeedbackComExtra(time, valid, extra))
         self.set_pulse_end(time + wait_after)

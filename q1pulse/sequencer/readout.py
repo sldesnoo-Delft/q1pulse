@@ -257,43 +257,113 @@ class ReadoutBuilder(ControlBuilder):
         reg_name = self._get_acquisition_reg_name(acquisition)
         self.Rs[reg_name] = 0
 
-    def fb_acq_iq_id(self, fb_event_id: FeedbackEventID, t_offset: int = 0, wait_after: int = 0):
+    def fb_acq_iq_id(self, fb_event_id: FeedbackEventID | None, t_offset: int = 0, wait_after: int = 0):
+        """Configure event-id for acquisition I/Q data.
+
+        See Qblox documentation.
+
+        Args:
+            fb_event_id: event created with `Program.register_feedback_event`. If None disables I/Q event transmission.
+            t_offset: real-time delay for instruction execution.
+            wait_after: time to wait after RT instruction.
+
+        Note:
+            There must be a gap of at least 4 ns between the previous RT instruction ant this one.
+            There must be a gap of at least 4 ns between this RT instruction and the next.
+        """
         time = self.current_time + t_offset
         self._add_statement(FeedbackAcqIqId(time, fb_event_id))
         self.set_pulse_end(time + wait_after)
 
     def fb_acq_iq_shift(self, rshift: int, t_offset: int = 0, wait_after: int = 0):
+        """Configure right shift for I/Q data.
+
+        The feedback event contains the lower 32 bits of the 48 bits I/Q data.
+        The I/Q data can be right shifted before transmission.
+
+        See Qblox documentation.
+
+        Args:
+            rshift: event created with `Program.register_feedback_event`. If None disables I/Q event transmission.
+            t_offset: real-time delay for instruction execution.
+            wait_after: time to wait after RT instruction.
+
+        Note:
+            There must be a gap of at least 4 ns between the previous RT instruction ant this one.
+            There must be a gap of at least 4 ns between this RT instruction and the next.
+        """
         time = self.current_time + t_offset
         self._add_statement(FeedbackAcqIqShift(time, rshift))
         self.set_pulse_end(time + wait_after)
 
-    def fb_acq_tb_id(self, fb_event_id: FeedbackEventID, t_offset: int = 0, wait_after: int = 0):
+    def fb_acq_tb_id(self, fb_event_id: FeedbackEventID | None, t_offset: int = 0, wait_after: int = 0):
+        """Configure event-id for acquisition threshold bits data.
+
+        See Qblox documentation.
+
+        Args:
+            fb_event_id: event created with `Program.register_feedback_event`. If None disables I/Q event transmission.
+            t_offset: real-time delay for instruction execution.
+            wait_after: time to wait after RT instruction.
+
+        Note:
+            There must be a gap of at least 4 ns between the previous RT instruction ant this one.
+            There must be a gap of at least 4 ns between this RT instruction and the next.
+        """
         time = self.current_time + t_offset
         self._add_statement(FeedbackAcqTbId(time, fb_event_id))
         self.set_pulse_end(time + wait_after)
 
     def fb_acq_tb_cfg(self, write_combine: bool, shift: int, n_bytes: int, t_offset: int = 0, wait_after: int = 0):
-        """
+        """Configure write combine for threshold bits.
+
+        See Qblox documentation.
+
         Args:
             write_combine: if True enable write combine.
             shift: left shift
             n_bytes: total number of bytes of combined message.
+            t_offset: real-time delay for instruction execution.
+            wait_after: time to wait after RT instruction.
+
+        Note:
+            There must be a gap of at least 4 ns between the previous RT instruction ant this one.
+            There must be a gap of at least 4 ns between this RT instruction and the next.
         """
         time = self.current_time + t_offset
         self._add_statement(FeedbackAcqTbCfg(time, write_combine, shift, n_bytes))
         self.set_pulse_end(time + wait_after)
 
     def fb_acq_tb_valid(self, valid: bool, t_offset: int = 0, wait_after: int = 0):
+        """Configure threshold bits valid bit.
+
+        See Qblox documentation.
+
+        Args:
+            valid: if False sets valid bit to False.
+            t_offset: real-time delay for instruction execution.
+            wait_after: time to wait after RT instruction.
+
+        Note:
+            There must be a gap of at least 4 ns between the previous RT instruction ant this one.
+            There must be a gap of at least 4 ns between this RT instruction and the next.
+        """
         time = self.current_time + t_offset
         self._add_statement(FeedbackAcqTbValid(time, valid))
         self.set_pulse_end(time + wait_after)
 
     def fb_acq_tb_extra(self, valid: bool, extra: int, t_offset: int = 0, wait_after: int = 0):
+        """
+        See Qblox documentation.
+        """
         time = self.current_time + t_offset
         self._add_statement(FeedbackAcqTbExtra(time, valid, extra))
         self.set_pulse_end(time + wait_after)
 
     def fb_acq_tb_mock(self, enable: bool, valid: bool, data: int, t_offset: int = 0, wait_after: int = 0):
+        """
+        See Qblox documentation.
+        """
         time = self.current_time + t_offset
         self._add_statement(FeedbackAcqTbMock(time, enable, valid, data))
         self.set_pulse_end(time + wait_after)
