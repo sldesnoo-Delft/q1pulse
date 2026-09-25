@@ -56,8 +56,8 @@ loop_1:
     acquire        0,R1,500   # L0011 t=160
 # Rs._acq_non-weighed:int = Rs._acq_non-weighed + 1 
     add            R1,1,R1    # L0012 
-# acquire_weighed(weighed, increment) 
-# acquire_weighed(bins=weighed, bin=Rs._acq_weighed, weight0=gaus100, weight1=gaus100) t=660 
+# acquire_weighted(weighed, increment) 
+# acquire_weighted(bins=weighed, bin=Rs._acq_weighed, weight0=gaus100, weight1=gaus100) t=660 
     move           0,R7       # L0013 temp ['R7', 'R8']
     move           0,R8       # L0014 
     nop                       # L0015  acquire_weighed wait for R8
