@@ -96,7 +96,7 @@ class FeedbackAcqIqId(TimedStatement):
         return f"fb_acq_iq_id {self.fb_id}"
 
     def write_instruction(self, generator):
-        generator.fb_acq_iq_id(self.time, self.fb_id.event_id)
+        generator.fb_acq_iq_id(self.time, self.fb_id.event_id if self.fb_id else 0)
 
 
 class FeedbackAcqIqShift(TimedStatement):
@@ -120,7 +120,7 @@ class FeedbackAcqTbId(TimedStatement):
         return f"fb_acq_tb_id {self.fb_id}"
 
     def write_instruction(self, generator):
-        generator.fb_acq_tb_id(self.time, self.fb_id.event_id)
+        generator.fb_acq_tb_id(self.time, self.fb_id.event_id if self.fb_id else 0)
 
 
 class FeedbackAcqTbCfg(TimedStatement):
