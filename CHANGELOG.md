@@ -82,7 +82,7 @@ NOTE: It seems to work with qblox-instruments v1.3.x, but performance and stabil
 
 - Updates for qblox-instruments v0.18.0
 - Use `as_numpy=True` in `get_acquisitions`.
-- Use SCPI transaction in TurboCluser for `get_acquisitions`.
+- Use SCPI transaction in TurboCluster for `get_acquisitions`.
 
 ## \[0.17.5] - 2025-08-05
 

@@ -396,7 +396,7 @@ class ControlBuilder(SequenceBuilder):
             f_step = (f_end - f_start) * chirp_loop_time / duration
             # Note: For the loop we need an integer frequency step. This could add a small
             # error of 0.5 Hz per iteration of the loop.
-            # The maximum errror for a 10 ms chirp (100_000 iterations) is 0.05 MHz.
+            # The maximum error for a 10 ms chirp (100_000 iterations) is 0.05 MHz.
             f_step = round(f_step)
             w_chirpI, w_chirpQ, delta_phase = self._waves.get_chirp(chirp_loop_time, f_step, margin=3)
             n, rem = divmod(duration, chirp_loop_time)

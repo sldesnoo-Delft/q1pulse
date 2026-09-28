@@ -298,7 +298,7 @@ When a register is a program is declared with `IntVariable` or `FloatVariable` t
 externally visible. It can be set before and between program executions. The variables can also
 be read after program execution.
 
-An intial value can be assigned to a variable. This initial value can have 3 different scopes:
+An initial value can be assigned to a variable. This initial value can have 3 different scopes:
 - init_scope "load": The initial value is set when the program is loaded and can be changed before
 program start.
 - init_scope "start": The initial value is set automatically when the program is started.
@@ -410,7 +410,7 @@ else-branch). Allowed combinations:
 - with 3 or more trigger counters:
   - OR + NOR, AND + NAND, or XOR + XNOR
 
-The duration of a condtional block is fixed. All branches will have equal duration.
+The duration of a conditional block is fixed. All branches will have equal duration.
 Q1Pulse will add wait statements to enforce this equal duration.
 This results in a predictable timeline for the program.
 
