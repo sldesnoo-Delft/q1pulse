@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
-# \[1.3.0] - 2026-09-@@@ NOT RELEASED
+# \[1.3.0] - 2026-09-29
 
 - Added if/elif/else to program and sequences.
 - Added comparison operators for registers.
