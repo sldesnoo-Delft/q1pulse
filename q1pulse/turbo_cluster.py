@@ -93,7 +93,7 @@ class TurboCluster(Cluster):
                     self._connections[slot] = scpi._slot_connections[slot]
         else:
             self._override_transport_calls()
-            # SCPI transaction map is added in v0.18 and used for commands with multiple reads like get_acquistion_data
+            # SCPI transaction map is added in v0.18 and used for commands with multiple reads like get_acquisition_data
             if hasattr(self, "_scpi_transaction_connection_map"):
                 for slot, conn in self._connections.items():
                     self._scpi_transaction_connection_map[slot] = Ieee488_2Connection(conn)
@@ -502,7 +502,7 @@ class TurboCluster(Cluster):
     def _set_pre_distortion_config(self, slot: int, pre_distortion_config: Any) -> None:
         """
         Set pre-distortion configuration. The configuration consists of multiple parameters in a JSON format.
-        If the configation does not have the correct format, an error is set in system error..
+        If the configuration does not have the correct format, an error is set in system error..
 
         Parameters
         ----------
@@ -530,7 +530,7 @@ class TurboCluster(Cluster):
     def _get_pre_distortion_config(self, slot: int) -> Any:
         """
         Get pre-distortion configuration. The configuration consists of multiple parameters in a JSON format.
-        If the configation does not have the correct format, an error is set in system error..
+        If the configuration does not have the correct format, an error is set in system error..
 
         Parameters
         ----------

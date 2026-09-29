@@ -40,7 +40,7 @@ class InstructionQueue:
         self.add_comments = add_comments
         self.isa_version = isa_version
         if isa_version not in [(1, 0), (2, 0), (2, 1)]:
-            raise Exception(f"Unsupport ISA version {isa_version}")
+            raise Exception(f"Unsupported ISA version {isa_version}")
         self.isa_v2 = isa_version[0] == 2
         self._header = []
         self._init_section = []

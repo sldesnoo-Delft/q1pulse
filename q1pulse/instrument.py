@@ -37,7 +37,7 @@ class Q1Instrument:
     cache_routing = True
 
     # Postpone error checking till the end to save communication overhead.
-    # System errors are only reported for SCPI errors. It's higly unlikely to
+    # System errors are only reported for SCPI errors. It's highly unlikely to
     # get an error, because everything is already checked in qblox-instruments code.
     # Note since v0.16: Default cluster behavior is like _i_feel_lucky = True.
     _i_feel_lucky = True
@@ -677,7 +677,7 @@ class Q1Instrument:
                         with DelayedKeyboardInterrupt("check status"):
                             res = instrument.get_sequencer_status_multiple(sequencers)
                     except KeyboardInterrupt:
-                        logger.info(f"Interrupted during get_sequencer_status_multiple. Statusses: {res}")
+                        logger.info(f"Interrupted during get_sequencer_status_multiple. Statuses: {res}")
                         raise
 
                     for slot, seq_num, status in res:

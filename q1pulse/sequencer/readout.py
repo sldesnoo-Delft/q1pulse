@@ -189,7 +189,7 @@ class ReadoutBuilder(ControlBuilder):
                                 weight1: str | AcquisitionWeight | None = None,
                                 t_offset: int = 0):
         """
-        Aquire `n` values with interval `period` while stepping frequency from `f_start` till `f_stop`.
+        Acquire `n` values with interval `period` while stepping frequency from `f_start` till `f_stop`.
 
         Args:
             n: number of values to acquire
