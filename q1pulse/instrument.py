@@ -330,7 +330,7 @@ class Q1Instrument:
 
         if self._running:
             self.dump_program(self._last_started, "stop", "Not properly stopped")
-            self.stop_program(all_zero=True)
+            self.stop_program()
 
         if self._loaded_program is None or program.uuid != self._loaded_program.uuid:
             self.load_program(program)
@@ -349,7 +349,7 @@ class Q1Instrument:
         sequencers = {**self.controllers, **self.readouts}
         n_configured = 0
 
-        # sort on (seq_num, slot)
+        # sort on (seq_num, slot) for optimal upload performance.
         sequencers = dict(sorted(sequencers.items(),
                                  key=lambda kv: (kv[1].seq_nr, self.modules[kv[1].module_name].slot_idx)))
 
@@ -367,14 +367,10 @@ class Q1Instrument:
                 n_configured += 1
                 instruments_with_sequence.add(module.root_instrument)
                 module.set_label(seq.seq_nr, name)
-                module.invalidate_cache(seq.seq_nr, "offset_awg_path0")
-                module.invalidate_cache(seq.seq_nr, "offset_awg_path1")
                 module.enable_seq(seq)
                 prog_seq = program[name]
                 module.set_nco(seq.seq_nr, prog_seq.nco_frequency)
                 module.set_real_mode(seq.seq_nr, seq.real_mode)
-                if prog_seq.modifies_frequency:
-                    module.invalidate_cache(seq.seq_nr, "nco_freq")
                 if prog_seq.mixer_gain_ratio is not None:
                     module.set_mixer_gain_ratio(seq.seq_nr, prog_seq.mixer_gain_ratio)
                 if prog_seq.mixer_phase_offset_degree is not None:
@@ -491,17 +487,14 @@ class Q1Instrument:
                 logger.warning("Retrying execution after unexpected 'forced stop'.")
                 self.start_program(self._last_started)
                 self._wait_stopped(timeout_minutes)
-            all_okay = True
         except KeyboardInterrupt:
-            all_okay = False
             raise
         except Exception as ex:
-            all_okay = False
             logger.error("Exception", exc_info=True)
             self.dump_program(self._last_started, "q1error", "Exception in stop", ex)
             raise
         finally:
-            self.stop_program(all_zero=not all_okay)
+            self.stop_program()
 
     def _wait_stopped(self, timeout_minutes: float = 1):
         # Wait for completion
@@ -530,9 +523,6 @@ class Q1Instrument:
                 has_critical_errors |= status.level >= logging.ERROR
             if status.status != "OKAY" or status.state != "STOPPED" or status.level >= logging.WARNING:
                 errors[seq.label] = str(status)
-                # reset awg offsets in case of any error.
-                with DelayedKeyboardInterrupt("set offsets"):
-                    module.set_awg_offsets(seq.seq_nr, 0.0, 0.0)
             if status.input_overloaded:
                 if Q1Instrument._exception_on_overload:
                     raise Q1InputOverloaded(
@@ -552,19 +542,13 @@ class Q1Instrument:
         if forced_stop:
             raise ForcedStopError()
 
-    def stop_program(self, all_zero: bool = False) -> None:
+    def stop_program(self) -> None:
         with DelayedKeyboardInterrupt("stop sequencers"):
             logger.debug("Stop sequencers")
             # for instrument in self.root_instruments:
             #     instrument.stop_sequencer()
             for module in self.modules.values():
                 module.stop_sequencers()
-            if all_zero:
-                sequencers = {**self.controllers, **self.readouts}
-                for name, seq in sequencers.items():
-                    module = self.modules[seq.module_name]
-                    if module.enabled(seq.seq_nr):
-                        module.set_awg_offsets(seq.seq_nr, 0.0, 0.0)
 
         self._running = False
 
