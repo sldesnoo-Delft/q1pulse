@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to Q1Pulse will be documented in this file.
 
+# \[1.3.1] - NOT RELEASED
+
+- Corrected behavior for qcodes vs q1asm settings. Qcodes parameters are independent of q1asm settings.
+- Removed setting awg offset to 0.0. `stop_sequencer` automatically sets output to 0.0.
+
 # \[1.3.0] - 2026-09-29
 
 - Added if/elif/else to program and sequences.
