@@ -248,6 +248,7 @@ class Q1asmGenerator(InstructionQueue):
         self._repetitions = 1
         self._last_rt_settings = LastRtSettings()
         self._conditional_block_state = None
+        self._reset_phase_delta_after_condition = False
         self._if_block_state: list[IfBlockState] = []
         self._data = GeneratorData()
         self._registers = SequencerRegisters(self._add_reg_comment if add_comments else None)
@@ -340,6 +341,13 @@ class Q1asmGenerator(InstructionQueue):
         # add wait command if there is no pending rt command with wait_after time
         if self._last_rt_command is None:
             self._add_rt_command("wait", time=self._rt_time)
+
+        # NOTE: If the condition didn't match, then all latched instructions will still be pending.
+        #       This can cause unexpected output. The only one that can be properly removed is
+        #       Is the phase delta. Insert and let pending till next upd_param later in sequence.
+        if self._reset_phase_delta_after_condition:
+            self._add_instruction("set_ph_delta", 0)
+            self._reset_phase_delta_after_condition = False
 
         cbs.add_branch(self._rt_time, self._n_rt_instructions, self._last_rt_command)
         self.add_comment(f"End condition. (t_end={self._rt_time}; {cbs.branch_states[-1].n_instr} RT instructions)")
@@ -669,6 +677,8 @@ class Q1asmGenerator(InstructionQueue):
 
 #    @register_args(signature="tFo") -- handled in _convert_phase()
     def add_phase(self, time, delta, hires_regs):
+        if self._conditional_block_state is not None:
+            self._reset_phase_delta_after_condition = True
         with self.scope():
             iphase = self._convert_phase(delta, hires_regs)
             # FIXME accumulate phase shifts at same time. Currently they are overwritten.
