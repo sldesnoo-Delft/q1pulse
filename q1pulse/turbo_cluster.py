@@ -64,6 +64,7 @@ class TurboCluster(Cluster):
             identifier: str | None = None,
             port: int | None = None,
             debug: int | None = None,
+            **kwargs,  # forwards optional arguments independent of version.
     ):
         check_qblox_instrument_version()
         self._identifier = identifier
@@ -83,7 +84,7 @@ class TurboCluster(Cluster):
                 transport = IpTransport(ip_config.address, ip_config.scpi_port, timeout=5.0)
                 self._connections[slot] = Ieee488_2(transport)
 
-        super().__init__(name, identifier, port, debug=debug)
+        super().__init__(name, identifier, port, debug=debug, **kwargs)
 
         if qblox_version >= Version("1.3.0"):
             scpi = self._scpi
