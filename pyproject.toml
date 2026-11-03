@@ -10,14 +10,14 @@ authors = [
 ]
 description = "Compiler for Qblox Q1ASM in Python."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "numpy >= 1.24",
-    "qblox_instruments",
+    "numpy >= 2.2",
+    "qblox_instruments >= 0.17",
 ]
 license = "MIT"
 license-files = [
