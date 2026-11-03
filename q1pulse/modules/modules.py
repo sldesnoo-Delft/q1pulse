@@ -218,6 +218,7 @@ class QbloxModule:
             self.enable_out(seq_nr, sequencer.channels)
 
     def _sset(self, seq_nr, name, value, cache=True):
+        # TODO QBI 1.4 also implements the same caching. This method can be removed in future.
         full_name = f"sequencer{seq_nr}.{name}"
         seq = getattr(self.pulsar, f"sequencer{seq_nr}")
         param = seq.parameters[name]
@@ -234,18 +235,16 @@ class QbloxModule:
 
     def _mset(self, name, value, cache=True):
         """Set module parameter using cache"""
+        # TODO QBI 1.4 also implements the same caching. This method can be removed in future.
         param = self.pulsar.parameters[name]
         try:
             if cache and param.cache.valid and param.cache() == value:
+                if QbloxModule.verbose:
+                    logger.debug(f"# {name}={value} -- cached")
                 return
         except Exception:
             pass
         param(value)
-
-    def invalidate_cache(self, seq_nr, param_name):
-        seq = getattr(self.pulsar, f"sequencer{seq_nr}")
-        param = seq.parameters[param_name]
-        param.cache.invalidate()
 
     def set_out_offset(self, channel, offset_mV):
         if self.pulsar.is_rf_type:
@@ -255,18 +254,11 @@ class QbloxModule:
             name = f"out{channel}_offset"
             value = offset_mV/1000
 
-        param = self.pulsar.parameters[name]
-        if param.cache() == value:
-            if QbloxModule.verbose:
-                logger.debug(f"# {name}={value} -- cached")
-            return
-        param(value)
+        self._mset(name, value)
 
     def set_marker_invert(self, number: int, invert: bool):
         name = f"marker{number}_inv_en"
-        param = self.pulsar.parameters[name]
-        if param.cache() != invert:
-            param(invert)
+        self._mset(name, invert)
 
     def _update_sequence(self, seq_nr, sequence):
         seq = getattr(self.pulsar, f"sequencer{seq_nr}")
