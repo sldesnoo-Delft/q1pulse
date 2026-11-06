@@ -1,4 +1,4 @@
-import qcodes as qc
+from qcodes.station import Station
 
 from qblox_instruments import Cluster, ClusterType, PlugAndPlay
 # from pprint import pprint
@@ -9,12 +9,12 @@ try:
 except Exception:
     print('package q1simulator not found')
     _q1simulator_found = False
+    raise
 
-
-if not qc.Station.default:
-    station = qc.Station()
+if not Station.default:
+    station = Station()
 else:
-    station = qc.Station.default
+    station = Station.default
 
 
 _simulator_isa_v2 = True
