@@ -9,7 +9,7 @@ class SequencerRegisters:
     def __init__(self, log_func):
         super().__init__()
         self._log = log_func
-        self._allocated_regs = {}
+        self._allocated_regs: dict[str, str] = {}
         # stack for registers allocated in scope
         self._stack_ptr = 0
         self._n_static = 0

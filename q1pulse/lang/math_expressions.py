@@ -231,6 +231,12 @@ class Multiply(BinaryExpression):
             generator.mul32l(lhs, rhs, destination, signed=True)
         else:
             generator.mul32h(lhs, rhs, destination, signed=True)
+            # Shift 1 bit. Float is 31 bit with sign. Mutliplication is 62 bit with sign.
+            # Note thas lsb is always 0. This minor accuracy is accepted, because proper
+            # solutions would be: mul32 Ra,Rb,Rc,Rd; lsr Rd,31,Rd; lsl Rc,1,Rc; add Rc,Rd,Rc.
+            # It would cost 7+3+3+1+3 = 17 cycles instead of 6+1+3 = 10 cycles.
+            # So, effectively the floats become 30 bit instead of 31 bit + sign.
+            generator.lsl(destination, 1, destination)
 
     def _get_dtype(self):
         lhs_dtype = get_dtype(self.lhs)
