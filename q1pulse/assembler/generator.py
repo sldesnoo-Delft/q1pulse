@@ -95,7 +95,7 @@ def register_args(signature):
         elif get_dtype(arg) == float:
             value = _float_to_f32(arg)
             if conversion_comments is not None:
-                conversion_comments += [f"{arg} -> {asm_reg}"]
+                conversion_comments += [f"{arg} -> {value}"]
             return value
         else:
             # make unsigned
@@ -931,9 +931,10 @@ class Q1asmGenerator(InstructionQueue):
         # it should be an Operand
         if self.isa_v2:
             reg = self._to_asm_reg(phase)
+            dest = self.get_temp_reg()
             # float range -1.0 ... +1.0 == unsigned integer 2**32-1 .. 0.
-            self._add_reg_instruction("mulu32h", reg, 1_000_000_000, reg)
-            return reg
+            self._add_reg_instruction("mulu32h", reg, 1_000_000_000, dest)
+            return dest
 
         if isinstance(phase, Expression):
             # evaluate expression and store result in register
