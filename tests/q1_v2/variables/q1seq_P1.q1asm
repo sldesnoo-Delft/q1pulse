@@ -66,18 +66,20 @@ _start:
     add            R3,R30,R35 # L0021 
 # Rs.v2:float = R.x * R.y 
     muls32h        R33,R34,R36 # L0022 
+    nop                       # L0023  lsl wait for R36
+    lsl            R36,1,R36  # L0024 
 # Rs.a1:int = 3 
-    move           3,R4       # L0023 R4: Rs.a1
+    move           3,R4       # L0025 R4: Rs.a1
 # Rs.b1:int = Rs.a1 & 5 
-    nop                       # L0024  and wait for R4
-    and            R4,5,R5    # L0025 R5: Rs.b1
+    nop                       # L0026  and wait for R4
+    and            R4,5,R5    # L0027 R5: Rs.b1
 # Rs.c1:int = Rs.a1 | 5 
-    or             R4,5,R6    # L0026 R6: Rs.c1
+    or             R4,5,R6    # L0028 R6: Rs.c1
 # Rs.d1:int = 5 ^ Rs.a1 
-    xor            R4,5,R7    # L0027 R7: Rs.d1
+    xor            R4,5,R7    # L0029 R7: Rs.d1
 # Rs.e1:int = ~Rs.a1 
-    not            R4,R8      # L0028 R8: Rs.e1
+    not            R4,R8      # L0030 R8: Rs.e1
 # --END-- 
-    stop                      # L0029 
+    stop                      # L0031 
 """
 

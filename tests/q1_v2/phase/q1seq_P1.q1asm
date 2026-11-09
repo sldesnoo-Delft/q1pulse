@@ -27,21 +27,21 @@ _start:
     set_ph         250000000  # L0008 @ 60
     upd_param      348        # L0009 t=60
 # set_phase R.phase1 t=408 
-    mulu32h        R2,1000000000,R2 # L0010 
-    nop                       # L0011  set_ph wait for R2
-    set_ph         R2         # L0012 @ 408
+    mulu32h        R2,1000000000,R4 # L0010 temp R4
+    nop                       # L0011  set_ph wait for R4
+    set_ph         R4         # L0012 @ 408
     upd_param      188        # L0013 t=408
 # phase_delta Rs.phase2 t=596 
-    mulu32h        R3,1000000000,R3 # L0014 
-    nop                       # L0015  set_ph_delta wait for R3
-    set_ph_delta   R3         # L0016 @ 596
+    mulu32h        R3,1000000000,R4 # L0014 temp R4
+    nop                       # L0015  set_ph_delta wait for R4
+    set_ph_delta   R4         # L0016 @ 596
     upd_param      348        # L0017 t=596
 # phase_delta Rs.phase2 + 0.1 t=944 
     add            R3,214748364,R4 # L0018 temp R4
     nop                       # L0019  mulu32h wait for R4
-    mulu32h        R4,1000000000,R4 # L0020 
-    nop                       # L0021  set_ph_delta wait for R4
-    set_ph_delta   R4         # L0022 @ 944
+    mulu32h        R4,1000000000,R5 # L0020 temp R5
+    nop                       # L0021  set_ph_delta wait for R5
+    set_ph_delta   R5         # L0022 @ 944
 # --END-- 
     sub            R1,1,R1    # L0023 
     jg             @_start    # L0024 
