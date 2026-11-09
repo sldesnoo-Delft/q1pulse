@@ -19,6 +19,11 @@ dependencies = [
     "numpy >= 2.2",
     "qblox_instruments >= 0.17",
 ]
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
 license = "MIT"
 license-files = [
     "LICENSE",
@@ -30,6 +35,15 @@ Documentation = "https://github.com/sldesnoo-Delft/q1pulse/blob/main/README.md"
 Repository = "https://github.com/sldesnoo-Delft/q1pulse"
 # Issues = "https://github.com/me/spam/issues"
 Changelog = "https://github.com/sldesnoo-Delft/q1pulse/blob/main/CHANGELOG.md"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+markers = [
+    "hw_only: test only makes sense on hardware, e.g. for checking on an oscilloscope",
+    "isa_v2: test requires Q1ASM ISA v2",
+    "slow: test takes long on the simulator; deselect with -m 'not slow'",
+]
 
 [tool.tbump]
 # Uncomment this if your project is hosted on GitHub:

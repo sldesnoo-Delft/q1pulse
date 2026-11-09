@@ -1,27 +1,25 @@
+from q1test import Target, run_interactive
 
 
-from init_pulsars import qcm0, q1asm_isa_v2
+def build(t: Target):
+    instrument = t.new_instrument()
+    instrument.add_qcm(t.qcm)
+    instrument.add_control('q1', t.qcm.name, [0, 1], nco_frequency=0)
 
-from plot_util import plot_output
+    p = instrument.new_program('chirp')
+    p.repetitions = 1
 
-# %%
-from q1pulse.instrument import Q1Instrument
-instrument = Q1Instrument('q1_v2' if q1asm_isa_v2 else 'q1')
-instrument.add_qcm(qcm0)
-instrument.add_control('q1', qcm0.name, [0, 1], nco_frequency=0)
+    q1 = p.q1
 
-# %%
-p = instrument.new_program('chirp')
-p.repetitions = 1
+    q1.chirp(20_000, 0.5, 1e6, 10e6)
 
-q1 = p.q1
+    p.compile(listing=True, annotate=True)
+    return instrument, p
 
-q1.chirp(20_000, 0.5, 1e6, 10e6)
 
-p.describe()
+def test_chirp(q1):
+    q1.run(build)
 
-p.compile(listing=True, annotate=True)
 
-instrument.run_program(p)
-
-plot_output([qcm0])
+if __name__ == "__main__":
+    run_interactive(test_chirp)

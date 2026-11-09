@@ -1,39 +1,36 @@
+from q1test import Target, run_interactive
 
-from q1pulse.instrument import Q1Instrument
 
-from init_pulsars import qcm0, q1asm_isa_v2
-from plot_util import plot_output
+def build(t: Target):
+    instrument = t.new_instrument()
+    instrument.add_qcm(t.qcm)
+    instrument.add_control('P1', t.qcm.name, [0])
+    instrument.add_control('P2', t.qcm.name, [1])
+    instrument.add_control('P3', t.qcm.name, [2])
 
-instrument = Q1Instrument('q1_v2' if q1asm_isa_v2 else 'q1')
-instrument.add_qcm(qcm0)
-instrument.add_control('P1', qcm0.name, [0])
-instrument.add_control('P2', qcm0.name, [1])
-instrument.add_control('P3', qcm0.name, [2])
+    p = instrument.new_program('ramp_slow')
+    p.repetitions = 2
 
-# %%
+    P1 = p.P1
+    P2 = p.P2
+    P3 = p.P3
 
-p = instrument.new_program('ramp_slow')
-p.repetitions = 2
+    c = 1
+    with p.parallel():
+        # ramp just below stepping limit
+        P1.ramp(6580, -0.001*c, 0.001*c)
+        # ramp just above stepping limit
+        P2.ramp(6580, -0.00101*c, 0.00101*c)
+        P3.ramp(6580, -0.0011*c, 0.0011*c)
+    p.wait(100)
 
-P1 = p.P1
-P2 = p.P2
-P3 = p.P3
+    p.compile(listing=True, annotate=True)
+    return instrument, p
 
-c = 1
 
-with p.parallel():
-    # ramp just below stepping limit
-    P1.ramp(6580, -0.001*c, 0.001*c)
-    # ramp just above stepping limit
-    P2.ramp(6580, -0.00101*c, 0.00101*c)
-    P3.ramp(6580, -0.0011*c, 0.0011*c)
+def test_slow_ramp(q1):
+    q1.run(build)
 
-p.wait(100)
 
-p.describe()
-
-p.compile(listing=True, annotate=True)
-
-instrument.run_program(p)
-
-plot_output([qcm0])
+if __name__ == "__main__":
+    run_interactive(test_slow_ramp)

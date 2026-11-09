@@ -1,47 +1,44 @@
-from q1pulse.instrument import Q1Instrument
 import numpy as np
 
-from init_pulsars import qcm0, qrm1, q1asm_isa_v2
-from plot_util import plot_output
-
-instrument = Q1Instrument('q1_v2' if q1asm_isa_v2 else 'q1')
-instrument.add_qcm(qcm0)
-instrument.add_qrm(qrm1)
-instrument.add_control('q1', qcm0.name, [0, 1], nco_frequency=100e6)
-instrument.add_control('P1', qcm0.name, [2])
-instrument.add_control('P2', qcm0.name, [3])
-instrument.add_readout('R1', qrm1.name, [])
-
-p = instrument.new_program('shaped_block')
-p.repetitions = 2
-
-q1 = p.q1
-P1 = p.P1
-P2 = p.P2
-R1 = p.R1
+from q1test import Target, run_interactive
 
 
-block80 = q1.add_wave('block80', np.ones(80))
-block80 = P1.add_wave('block80', np.ones(80))
+def build(t: Target):
+    instrument = t.new_instrument()
+    instrument.add_qcm(t.qcm)
+    instrument.add_qrm(t.qrm)
+    instrument.add_control('q1', t.qcm.name, [0, 1], nco_frequency=100e6)
+    instrument.add_control('P1', t.qcm.name, [2])
+    instrument.add_control('P2', t.qcm.name, [3])
+    instrument.add_readout('R1', t.qrm.name, [])
 
-R1.add_acquisition_bins('acq_bins', p.repetitions)
-R1.integration_length_acq = 80
+    p = instrument.new_program('shaped_block')
+    p.repetitions = 2
 
-amplitude = 0.125
-p.R.wait = 20
+    q1 = p.q1
+    P1 = p.P1
+    R1 = p.R1
 
-with p.loop_range(4):
-    q1.shaped_pulse(block80, 0.5, block80, 0.5)
-    P1.shaped_pulse(block80, 0.1)
-    p.wait(20)
-    p.wait(p.R.wait)
+    block80 = q1.add_wave('block80', np.ones(80))
+    block80 = P1.add_wave('block80', np.ones(80))
+    R1.add_acquisition_bins('acq_bins', p.repetitions)
+    R1.integration_length_acq = 80
 
-p.compile(listing=True, annotate=True)
+    p.R.wait = 20
 
-instrument.run_program(p)
+    with p.loop_range(4):
+        q1.shaped_pulse(block80, 0.5, block80, 0.5)
+        P1.shaped_pulse(block80, 0.1)
+        p.wait(20)
+        p.wait(p.R.wait)
 
-plot_output([qcm0, qrm1])
+    p.compile(listing=True, annotate=True)
+    return instrument, p
 
-if hasattr(qrm1, 'print_acquisitions'):
-    # get acquisition timing and counts from Q1Simulator
-    qrm1.print_acquisitions()
+
+def test_shaped_block_pulses(q1):
+    q1.run(build)
+
+
+if __name__ == "__main__":
+    run_interactive(test_shaped_block_pulses)

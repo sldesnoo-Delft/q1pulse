@@ -1,86 +1,63 @@
-import matplotlib.pyplot as plt
-from pprint import pprint
-from q1pulse.instrument import Q1Instrument
-from q1pulse.lang.program_variables import IntVariable, FloatVariable
+import pytest
 
-from init_pulsars import qcm0, q1asm_isa_v2
+from q1pulse.lang.program_variables import IntVariable
 
-if not q1asm_isa_v2:
-    raise Exception("'test_if_...' cannot be executed for Q1ASM v1.0")
+from q1test import Target, run_interactive
 
-instrument = Q1Instrument('q1_v2' if q1asm_isa_v2 else 'q1')
-instrument.add_qcm(qcm0)
-instrument.add_control('P1', qcm0.name, [2])
-
-p = instrument.new_program('if_rt')
-
-P1 = p.P1
-
-# just add some waiting time to prevent error messages on real-time executor
-p.wait(100)
-P1.set_offset(0.0)
+pytestmark = pytest.mark.isa_v2
 
 
-p.R.a = IntVariable(init_scope='load', initial_value=10)  # Name is "a"
-p.R.b = IntVariable(init_scope='load', initial_value=10)
-p.R.c = IntVariable()
-p.R.d = IntVariable()
+def build(t: Target):
+    instrument = t.new_instrument()
+    instrument.add_qcm(t.qcm)
+    instrument.add_control('P1', t.qcm.name, [2])
 
-p.R.d = 0
-p.R.c = 1
+    p = instrument.new_program('if_rt')
 
-with p.if_(p.R.a > p.R.b):
-    p.R.c = 10
+    P1 = p.P1
 
-with p.if_(p.R.a == p.R.b):
-    p.R.d = 2
-    P1.wait(10)
-    P1.block_pulse(100, 0.2)
-with p.elif_(p.R.a < p.R.b):
-    p.R.d = 3
-    P1.wait(20)
-    P1.block_pulse(10, 0.4)
-with p.else_:
-    p.R.d = 4
-    P1.wait(10)
-    P1.block_pulse(80, 0.6)
+    # just add some waiting time to prevent error messages on real-time executor
+    p.wait(100)
+    P1.set_offset(0.0)
 
-p.wait(10)
+    p.R.a = IntVariable(init_scope='load', initial_value=10)  # Name is "a"
+    p.R.b = IntVariable(init_scope='load', initial_value=10)
+    p.R.c = IntVariable()
+    p.R.d = IntVariable()
 
-P1.describe()
+    p.R.d = 0
+    p.R.c = 1
 
-p.compile(annotate=True, listing=True, optimize=0)
+    with p.if_(p.R.a > p.R.b):
+        p.R.c = 10
 
-print(p.list_variables())
+    with p.if_(p.R.a == p.R.b):
+        p.R.d = 2
+        P1.wait(10)
+        P1.block_pulse(100, 0.2)
+    with p.elif_(p.R.a < p.R.b):
+        p.R.d = 3
+        P1.wait(20)
+        P1.block_pulse(10, 0.4)
+    with p.else_:
+        p.R.d = 4
+        P1.wait(10)
+        P1.block_pulse(80, 0.6)
 
-instrument.load_program(p)
-instrument.start_program(p)
-instrument.wait_stopped()
+    p.wait(10)
 
-# if hasattr(qcm0, 'print_registers'):
-#     # get result from Q1Simulator
-#     qcm0.print_registers(0, range(20))
-
-pprint(instrument.get_variables())
-plt.figure()
-qcm0.plot()
+    p.compile(annotate=True, listing=True, optimize=0)
+    return instrument, p
 
 
-instrument.set_variables({
-    "a": 0,
-    })
-instrument.start_program(p)
-instrument.wait_stopped()
-pprint(instrument.get_variables())
-plt.figure()
-qcm0.plot()
+@pytest.mark.parametrize("a, c, d", [(10, 1, 2), (0, 1, 3), (20, 10, 4)])
+def test_if_rt(q1, a, c, d):
+    run = q1.prepare(build)
+    run.execute(variables={"a": a}, label=f"a={a}")
+    variables = run.main.get_variables()['P1']
+    assert variables['c'] == c
+    assert variables['d'] == d
 
 
-instrument.set_variables({
-    "a": 20,
-    })
-instrument.start_program(p)
-instrument.wait_stopped()
-pprint(instrument.get_variables())
-plt.figure()
-qcm0.plot()
+if __name__ == "__main__":
+    run_interactive(test_if_rt, a=0, c=1, d=3)

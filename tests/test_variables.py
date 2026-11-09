@@ -1,77 +1,82 @@
-from pprint import pprint
-from q1pulse.instrument import Q1Instrument
+import pytest
+
 from q1pulse.lang.program_variables import IntVariable, FloatVariable
 
-from init_pulsars import qcm0, q1asm_isa_v2
+from q1test import Target, run_interactive
 
-if not q1asm_isa_v2:
-    raise Exception("'test_variables' cannot be executed for Q1ASM v1.0")
-
-instrument = Q1Instrument('q1_v2' if q1asm_isa_v2 else 'q1')
-instrument.add_qcm(qcm0)
-instrument.add_control('P1', qcm0.name, [2])
-
-p = instrument.new_program('variables')
-
-seq = p.P1
-
-# just add some waiting time to prevent error messages on real-time executor
-p.wait(1000)
-p.P1.set_offset(0.0)
+pytestmark = pytest.mark.isa_v2
 
 
-p.R.a = IntVariable(init_scope='load', initial_value=10)  # Name is "a"
-p.R.b = IntVariable()
-p.R.c = IntVariable()
+def build(t: Target):
+    instrument = t.new_instrument()
+    instrument.add_qcm(t.qcm)
+    instrument.add_control('P1', t.qcm.name, [2])
 
-p.R.b = p.R.a + 1
-p.R.b = 5 + p.R.a + 1
-p.R.c = p.R.a * p.R.b
+    p = instrument.new_program('variables')
 
-# floating point
-p.R.x = FloatVariable(init_scope="load", initial_value=1.0)
-p.R.x -= 0.8
+    seq = p.P1
 
-p.R.y = FloatVariable()
-p.R.y = 0.5
-p.R.z = p.R.x - p.R.y
+    # just add some waiting time to prevent error messages on real-time executor
+    p.wait(1000)
+    p.P1.set_offset(0.0)
 
-# sequencer registers
-seq.Rs.p1 = 9
-seq.Rs.q1 = seq.Rs.p1 + p.R.b
-seq.Rs.v1 = IntVariable(init_scope="load", initial_value=0)
-seq.Rs.v1 = seq.Rs.q1 + p.R.a
+    p.R.a = IntVariable(init_scope='load', initial_value=10)  # Name is "a"
+    p.R.b = IntVariable()
+    p.R.c = IntVariable()
 
-seq.Rs.v2 = FloatVariable()
-seq.Rs.v2 = p.R.x * p.R.y
+    p.R.b = p.R.a + 1
+    p.R.b = 5 + p.R.a + 1
+    p.R.c = p.R.a * p.R.b
 
-# bitwise
-seq.Rs.a1 = 0b0011
-seq.Rs.b1 = seq.Rs.a1 & 0b0101
-seq.Rs.c1 = seq.Rs.a1 | 0b0101
-seq.Rs.d1 = 0b0101 ^ seq.Rs.a1
-seq.Rs.e1 = ~seq.Rs.a1
+    # floating point
+    p.R.x = FloatVariable(init_scope="load", initial_value=1.0)
+    p.R.x -= 0.8
+    p.R.y = FloatVariable()
+    p.R.y = 0.5
+    p.R.z = p.R.x - p.R.y
 
-seq.describe()
+    # sequencer registers
+    seq.Rs.p1 = 9
+    seq.Rs.q1 = seq.Rs.p1 + p.R.b
+    seq.Rs.v1 = IntVariable(init_scope="load", initial_value=0)
+    seq.Rs.v1 = seq.Rs.q1 + p.R.a
+    seq.Rs.v2 = FloatVariable()
+    seq.Rs.v2 = p.R.x * p.R.y
 
-p.compile(annotate=True, listing=True, optimize=0)
+    # bitwise
+    seq.Rs.a1 = 0b0011
+    seq.Rs.b1 = seq.Rs.a1 & 0b0101
+    seq.Rs.c1 = seq.Rs.a1 | 0b0101
+    seq.Rs.d1 = 0b0101 ^ seq.Rs.a1
+    seq.Rs.e1 = ~seq.Rs.a1
 
-print(p.list_variables())
+    p.compile(annotate=True, listing=True, optimize=0)
+    return instrument, p
 
-instrument.load_program(p)
-instrument.start_program(p)
-instrument.wait_stopped()
 
-if hasattr(qcm0, 'print_registers'):
-    # get result from Q1Simulator
-    qcm0.print_registers(0, range(20))
+def test_variables(q1):
+    run = q1.prepare(build)
 
-pprint(instrument.get_variables())
+    run.execute()
+    variables = run.main.get_variables()['P1']
+    assert variables['a'] == 10
+    assert variables['b'] == 16
+    assert variables['c'] == 160
+    assert variables['x'] == pytest.approx(0.2, abs=1e-6)
+    assert variables['y'] == pytest.approx(0.5, abs=1e-6)
+    assert run.main.get_registers('P1')['R.z'] == pytest.approx(-0.3, abs=1e-6)
+    assert variables['v1'] == 35
+    assert variables['v2'] == pytest.approx(0.1, abs=1e-6)
 
-instrument.set_variables({
-    "a": -2,
-    "x": 0.0,
-    })
-instrument.start_program(p)
-instrument.wait_stopped()
-pprint(instrument.get_variables())
+    run.execute(variables={"a": -2, "x": 0.0}, label="a=-2, x=0.0")
+    variables = run.main.get_variables()['P1']
+    assert variables['a'] == -2
+    assert variables['b'] == 4
+    assert variables['c'] == -8
+    assert variables['x'] == pytest.approx(-0.8, abs=1e-6)
+    assert variables['v1'] == 11
+    assert variables['v2'] == pytest.approx(-0.4, abs=1e-6)
+
+
+if __name__ == "__main__":
+    run_interactive(test_variables)

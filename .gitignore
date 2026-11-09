@@ -129,3 +129,6 @@ dmypy.json
 .pyre/
 /tests/tmp.q1asm
 /tests/tmp.hex
+
+# Q1Pulse test output
+/tests/output/

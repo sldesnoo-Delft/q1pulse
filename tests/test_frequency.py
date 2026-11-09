@@ -1,36 +1,37 @@
+from q1test import Target, run_interactive
 
-from q1pulse.instrument import Q1Instrument
 
-from init_pulsars import qcm0, q1asm_isa_v2
-from plot_util import plot_output
+def build(t: Target):
+    instrument = t.new_instrument()
+    instrument.add_qcm(t.qcm)
+    instrument.add_control('P1', t.qcm.name, [2])
 
-instrument = Q1Instrument('q1_v2' if q1asm_isa_v2 else 'q1')
-instrument.add_qcm(qcm0)
-instrument.add_control('P1', qcm0.name, [2])
+    p = instrument.new_program('frequency')
+    p.repetitions = 2
 
-p = instrument.new_program('frequency')
-p.repetitions = 2
+    P1 = p.P1
+    P1.nco_frequency = 1e6
 
-P1 = p.P1
-P1.nco_frequency = 1e6
+    p.R.frequency = int(12e6)
+    P1.Rs.frequency = int(30e6)
 
-p.R.frequency = int(12e6)
-P1.Rs.frequency = int(30e6)
+    P1.set_offset(0.5)
+    P1.set_frequency(10e6)
+    p.wait(100)
+    P1.set_frequency(5e6)
+    p.wait(100)
+    P1.set_frequency(p.R.frequency)
+    p.wait(100)
+    P1.set_frequency(P1.Rs.frequency)
+    p.wait(100)
 
-P1.set_offset(0.5)
-P1.set_frequency(10e6)
-p.wait(100)
-P1.set_frequency(5e6)
-p.wait(100)
-P1.set_frequency(p.R.frequency)
-p.wait(100)
-P1.set_frequency(P1.Rs.frequency)
-p.wait(100)
+    p.compile(listing=True, annotate=True)
+    return instrument, p
 
-p.describe()
 
-p.compile(listing=True, annotate=True)
+def test_frequency(q1):
+    q1.run(build)
 
-instrument.run_program(p)
 
-plot_output([qcm0])
+if __name__ == "__main__":
+    run_interactive(test_frequency)

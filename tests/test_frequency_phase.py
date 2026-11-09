@@ -1,58 +1,52 @@
 import matplotlib.pyplot as pt
 import numpy as np
 
-from q1pulse.instrument import Q1Instrument
+from q1test import Target, run_interactive
 
-from init_pulsars import qcm0, q1asm_isa_v2
-from plot_util import plot_output
-# %%
-instrument = Q1Instrument('q1_v2' if q1asm_isa_v2 else 'q1')
-instrument.add_qcm(qcm0)
-instrument.add_control('q1', qcm0.name, [0, 1], nco_frequency=0)
-# %%
-p = instrument.new_program('frequency_phase')
-p.repetitions = 1
 
-q1 = p.q1
-q1.set_offset(1.0)
-q1.set_frequency(10e6)
-p.wait(100)
-q1.shift_phase(0.5)
-p.wait(100)
+def build(t: Target):
+    instrument = t.new_instrument()
+    instrument.add_qcm(t.qcm)
+    instrument.add_control('q1', t.qcm.name, [0, 1], nco_frequency=0)
 
-q1.set_offset(0.0)
-q1.shift_phase(-0.5)
-p.wait(100)
-q1.set_phase(0.0)
-q1.set_offset(1.0)
-q1.set_offset(1.0)
-q1.set_frequency(-10e6)
-p.wait(100)
-q1.shift_phase(0.5)
-p.wait(100)
-q1.set_offset(0.0)
-p.wait(20)
+    p = instrument.new_program('frequency_phase')
+    p.repetitions = 1
 
-p.describe()
+    q1 = p.q1
 
-p.compile(listing=True, annotate=True)
+    q1.set_offset(1.0)
+    q1.set_frequency(10e6)
+    p.wait(100)
+    q1.shift_phase(0.5)
+    p.wait(100)
+    q1.set_offset(0.0)
+    q1.shift_phase(-0.5)
+    p.wait(100)
+    q1.set_phase(0.0)
+    q1.set_offset(1.0)
+    q1.set_offset(1.0)
+    q1.set_frequency(-10e6)
+    p.wait(100)
+    q1.shift_phase(0.5)
+    p.wait(100)
+    q1.set_offset(0.0)
+    p.wait(20)
 
-instrument.run_program(p)
+    p.compile(listing=True, annotate=True)
+    return instrument, p
 
-plot_output([qcm0])
 
-pt.ylim(-3, 3.5)
-pt.grid()
+def test_frequency_phase(q1):
+    run = q1.run(build)
 
-# %%
-t = np.arange(520)
-renderer = qcm0.sequencer0.rt_renderer
+    if q1.plotting:
+        output = run.simulation.get_output('q1')
+        phase = np.angle(output['q1-I'] + 1j*output['q1-Q'])
+        q1.new_figure('phase')
+        pt.plot(phase, label='phase')
+        pt.grid()
+        pt.legend()
 
-out0 = np.concatenate(renderer.out0)
-out1 = np.concatenate(renderer.out1)
 
-phase = np.angle(out0+1j*out1)
-pt.figure()
-pt.plot(t, phase, label='phase')
-pt.grid()
-pt.legend()
+if __name__ == "__main__":
+    run_interactive(test_frequency_phase)

@@ -1,51 +1,51 @@
+from q1test import Target, run_interactive
 
-from q1pulse.instrument import Q1Instrument
 
-from init_pulsars import qcm0, q1asm_isa_v2
-from plot_util import plot_output
+def build(t: Target):
+    instrument = t.new_instrument()
+    instrument.add_qcm(t.qcm)
+    instrument.add_control('P1', t.qcm.name, [2])
+    instrument.add_control('P2', t.qcm.name, [3])
 
-instrument = Q1Instrument('q1_v2' if q1asm_isa_v2 else 'q1')
-instrument.add_qcm(qcm0)
-instrument.add_control('P1', qcm0.name, [2])
-instrument.add_control('P2', qcm0.name, [3])
+    p = instrument.new_program('baseband')
+    p.repetitions = 3
 
-p = instrument.new_program('baseband')
-p.repetitions = 3
+    P1 = p.P1
+    P2 = p.P2
 
-P1 = p.P1
-P2 = p.P2
+    p.R.amplitude = 0.125
+    P1.Rs.amplitude = -0.125
 
-p.R.amplitude = 0.125
-P1.Rs.amplitude = -0.125
+    P1.block_pulse(200, p.R.amplitude)
+    P1.block_pulse(200, P1.Rs.amplitude)
+    P1.block_pulse(200, p.R.amplitude + 0.5)
+    p.wait(1000)
+    P1.block_pulse(100, 0.5)
+    P2.block_pulse(100, -0.5)
 
-P1.block_pulse(200, p.R.amplitude)
-P1.block_pulse(200, P1.Rs.amplitude)
-P1.block_pulse(200, p.R.amplitude + 0.5)
-p.wait(1000)
-P1.block_pulse(100, 0.5)
-P2.block_pulse(100, -0.5)
+    p.wait(1000)
+    with p.parallel():
+        P1.block_pulse(100, 0.25)
+        P2.block_pulse(100, -0.25)
 
-p.wait(1000)
-with p.parallel():
-    P1.block_pulse(100, 0.25)
-    P2.block_pulse(100, -0.25)
+    p.add_comment('--- long wait')
+    p.wait(100_000)
+    P1.block_pulse(500, -1.0)
+    p.add_comment('--- longer wait')
+    p.wait(160_000)
+    P1.block_pulse(500, 0.5)
+    p.add_comment('--- very long wait')
+    p.wait(500_000)
+    P1.block_pulse(1000, 0.75)
+    P2.block_pulse(1000, -0.75)
 
-p.add_comment('--- long wait')
-p.wait(100_000)
-P1.block_pulse(500, -1.0)
-p.add_comment('--- longer wait')
-p.wait(160_000)
-P1.block_pulse(500, 0.5)
-p.add_comment('--- very long wait')
-p.wait(500_000)
-P1.block_pulse(1000, 0.75)
-P2.block_pulse(1000, -0.75)
+    p.compile(listing=True, annotate=True)
+    return instrument, p
 
-# p.describe()
-# print()
 
-p.compile(listing=True, annotate=True)
+def test_baseband(q1):
+    q1.run(build)
 
-instrument.run_program(p)
 
-plot_output([qcm0])
+if __name__ == "__main__":
+    run_interactive(test_baseband)
