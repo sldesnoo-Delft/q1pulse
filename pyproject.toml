@@ -19,14 +19,14 @@ dependencies = [
     "numpy >= 2.2",
     "qblox_instruments >= 0.17",
 ]
-[project.optional-dependencies]
-dev = [
-    "pytest",
-]
-
 license = "MIT"
 license-files = [
     "LICENSE",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
 ]
 
 [project.urls]
@@ -35,6 +35,9 @@ Documentation = "https://github.com/sldesnoo-Delft/q1pulse/blob/main/README.md"
 Repository = "https://github.com/sldesnoo-Delft/q1pulse"
 # Issues = "https://github.com/me/spam/issues"
 Changelog = "https://github.com/sldesnoo-Delft/q1pulse/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -75,7 +78,7 @@ src = "pyproject.toml"
 search = 'version = "{current_version}" # tbump: version'
 
 [[tool.tbump.file]]
-src = "q1pulse/__init__.py"
+src = "src/q1pulse/__init__.py"
 search = '__version__ = "{current_version}"'
 
 # You can specify a list of commands to
